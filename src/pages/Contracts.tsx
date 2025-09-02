@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ContractEditModal } from '@/components/ContractEditModal';
 import ContractViewer from '@/components/ContractViewer';
+import { ContractEditor } from '@/components/ContractEditor';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Contracts() {
@@ -34,6 +35,8 @@ export default function Contracts() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [viewingContract, setViewingContract] = useState<Contract | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editorContract, setEditorContract] = useState<Contract | null>(null);
   const [contracts, setContracts] = useState<Contract[]>(mockContracts);
   const { toast } = useToast();
 
@@ -49,8 +52,13 @@ export default function Contracts() {
   });
 
   const handleEditContract = (contract: Contract) => {
-    setEditingContract(contract);
-    setIsEditModalOpen(true);
+    setEditorContract(contract);
+    setIsEditorOpen(true);
+  };
+
+  const handleNewContract = () => {
+    setEditorContract(null);
+    setIsEditorOpen(true);
   };
 
   const handleViewContract = (contract: Contract) => {
@@ -59,13 +67,20 @@ export default function Contracts() {
   };
 
   const handleSaveContract = (updatedContract: Contract) => {
-    setContracts(prev => 
-      prev.map(contract => 
-        contract.id === updatedContract.id ? updatedContract : contract
-      )
-    );
+    setContracts(prev => {
+      const existingIndex = prev.findIndex(contract => contract.id === updatedContract.id);
+      if (existingIndex >= 0) {
+        // Update existing
+        return prev.map(contract => 
+          contract.id === updatedContract.id ? updatedContract : contract
+        );
+      } else {
+        // Add new
+        return [...prev, updatedContract];
+      }
+    });
     toast({
-      title: "Vertrag aktualisiert",
+      title: updatedContract.id ? "Vertrag aktualisiert" : "Vertrag erstellt",
       description: "Die Änderungen wurden erfolgreich gespeichert.",
     });
   };
@@ -108,7 +123,7 @@ export default function Contracts() {
             Verwalten Sie alle Ihre Verträge an einem Ort
           </p>
         </div>
-        <Button className="sm:w-auto w-full">
+        <Button className="sm:w-auto w-full" onClick={handleNewContract}>
           <Plus className="mr-2 h-4 w-4" />
           Neuer Vertrag
         </Button>
@@ -253,7 +268,7 @@ export default function Contracts() {
             <p className="text-muted-foreground mb-4">
               Passen Sie Ihre Suchkriterien an oder erstellen Sie einen neuen Vertrag.
             </p>
-            <Button>
+            <Button onClick={handleNewContract}>
               <Plus className="mr-2 h-4 w-4" />
               Neuer Vertrag
             </Button>
@@ -261,10 +276,10 @@ export default function Contracts() {
         </Card>
       )}
       
-      <ContractEditModal
-        contract={editingContract}
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
+      <ContractEditor
+        contract={editorContract}
+        isOpen={isEditorOpen}
+        onClose={() => setIsEditorOpen(false)}
         onSave={handleSaveContract}
       />
 
