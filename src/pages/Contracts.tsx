@@ -23,12 +23,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+import { ContractEditModal } from '@/components/ContractEditModal';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Contracts() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [contracts, setContracts] = useState<Contract[]>(mockContracts);
+  const { toast } = useToast();
 
-  const filteredContracts = mockContracts.filter(contract => {
+  const filteredContracts = contracts.filter(contract => {
     const matchesSearch = 
       contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contract.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -38,6 +44,23 @@ export default function Contracts() {
     
     return matchesSearch && matchesFilter;
   });
+
+  const handleEditContract = (contract: Contract) => {
+    setEditingContract(contract);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveContract = (updatedContract: Contract) => {
+    setContracts(prev => 
+      prev.map(contract => 
+        contract.id === updatedContract.id ? updatedContract : contract
+      )
+    );
+    toast({
+      title: "Vertrag aktualisiert",
+      description: "Die Änderungen wurden erfolgreich gespeichert.",
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -156,7 +179,7 @@ export default function Contracts() {
                       <Eye className="mr-2 h-4 w-4" />
                       Anzeigen
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleEditContract(contract)}>
                       <Edit className="mr-2 h-4 w-4" />
                       Bearbeiten
                     </DropdownMenuItem>
@@ -204,7 +227,7 @@ export default function Contracts() {
                   <Eye className="mr-2 h-3 w-3" />
                   Details
                 </Button>
-                <Button size="sm" className="flex-1">
+                <Button size="sm" className="flex-1" onClick={() => handleEditContract(contract)}>
                   <Edit className="mr-2 h-3 w-3" />
                   Bearbeiten
                 </Button>
@@ -229,6 +252,13 @@ export default function Contracts() {
           </CardContent>
         </Card>
       )}
+      
+      <ContractEditModal
+        contract={editingContract}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleSaveContract}
+      />
     </div>
   );
 }
