@@ -13,6 +13,10 @@ export interface Contract {
   tags: string[];
   lastModified: string;
   progress: number;
+  // Neue Template-Felder
+  contractType?: 'ep_standard' | 'ep_rollout';
+  templateVariables?: Record<string, any>;
+  globalVariables?: Record<string, any>;
 }
 
 export interface User {
@@ -93,6 +97,36 @@ export const mockContracts: Contract[] = [
     tags: ['Security', 'Monitoring', 'FinTech'],
     lastModified: '2024-12-14',
     progress: 10
+  },
+  {
+    id: '6',
+    title: 'shyftplan Enterprise Standard',
+    client: 'AutoMotive AG',
+    status: 'draft',
+    value: 25000,
+    startDate: '2025-01-01',
+    endDate: '2027-12-31',
+    assignedTo: 'Maria Schmidt',
+    description: 'Enterprise Standard Vertrag mit shyftconnect Integration',
+    tags: ['SaaS', 'Enterprise', 'Template'],
+    lastModified: '2025-01-15',
+    progress: 0,
+    contractType: 'ep_standard',
+    globalVariables: {
+      angebot_nr: 'Q-2025-5678',
+      datum: '2025-01-15',
+      firma: 'AutoMotive AG',
+      ansprechpartner: 'Dr. Klaus Weber',
+      strasse_nr: 'Industriestraße 42',
+      plz_stadt: '80335 München'
+    },
+    templateVariables: {
+      std_vertragsbeginn: '2025-01-01',
+      std_vertragslaufzeit: 3,
+      std_lizenzen: 1000,
+      std_basispreis: 25000,
+      std_zusatzlizenz: 25
+    }
   }
 ];
 
@@ -135,4 +169,64 @@ export const mockStats = {
   pendingContracts: mockContracts.filter(c => c.status === 'pending').length,
   totalValue: mockContracts.reduce((sum, contract) => sum + contract.value, 0),
   avgContractValue: mockContracts.reduce((sum, contract) => sum + contract.value, 0) / mockContracts.length
+};
+
+// Contract Template System
+export interface ContractTemplate {
+  contractTypes: Record<string, string>;
+  globalVariables: Array<{
+    id: string;
+    label: string;
+    type: 'text' | 'date' | 'email' | 'number' | 'currency';
+    value: string | number;
+  }>;
+  modules: Record<string, any>;
+}
+
+export const contractTemplate: ContractTemplate = {
+  contractTypes: {
+    ep_standard: "Enterprise Standard",
+    ep_rollout: "Enterprise mit Rollout"
+  },
+  globalVariables: [
+    { id: "angebot_nr", label: "Angebots-Nr.", type: "text", value: "Q-2025-1234" },
+    { id: "datum", label: "Datum", type: "date", value: "2025-08-31" },
+    { id: "firma", label: "Firma", type: "text", value: "" },
+    { id: "ansprechpartner", label: "Ansprechpartner:in", type: "text", value: "" },
+    { id: "strasse_nr", label: "Straße, Nr.", type: "text", value: "" },
+    { id: "plz_stadt", label: "PLZ, Stadt", type: "text", value: "" },
+    { id: "rechnungs_email", label: "Rechnungs-E-Mail", type: "email", value: "" },
+    { id: "ust_id", label: "USt-ID (EU)", type: "text", value: "" },
+    { id: "zusatzinfo", label: "Zusatzinformation (Referenznr., etc.)", type: "text", value: "" },
+    { id: "lieferantennr", label: "Lieferantennummer/BANF/PO", type: "text", value: "" },
+    { id: "invoice_strasse_nr", label: "Rechnungsadresse: Straße, Nr.", type: "text", value: "" },
+    { id: "invoice_plz_stadt", label: "Rechnungsadresse: PLZ, Stadt", type: "text", value: "" }
+  ],
+  modules: {
+    conditions_ep_standard: {
+      title_de: "(3) Vertragskonditionen",
+      variables: [
+        { id: "std_vertragsbeginn", label: "Vertragsbeginn", type: "date", value: "2025-01-01" },
+        { id: "std_vertragslaufzeit", label: "Vertragslaufzeit (Jahre)", type: "number", value: 3 },
+        { id: "std_lizenzen", label: "Anzahl User-Lizenzen", type: "number", value: 1000 },
+        { id: "std_basispreis", label: "Jährlicher Basispreis", type: "currency", value: 25000 },
+        { id: "std_zusatzlizenz", label: "Preis pro zusätzlicher Lizenz p.a.", type: "currency", value: 25 }
+      ]
+    },
+    conditions_ep_rollout_poc: {
+      title_de: "(a) Proof of concept (POC):",
+      variables: [
+        { id: "poc_beginn", label: "Vertragsbeginn POC", type: "date", value: "2025-10-01" },
+        { id: "poc_laufzeit", label: "Laufzeit POC (Monate)", type: "number", value: 3 },
+        { id: "poc_lizenzen", label: "Max. Lizenzen POC", type: "number", value: 50 },
+        { id: "poc_pauschale", label: "Pauschale POC", type: "currency", value: 1500 }
+      ]
+    },
+    other_agreements: {
+      title_de: "§4 Sonstige Vereinbarungen",
+      variables: [
+        { id: "gueltig_bis", label: "Angebot gültig bis", type: "date", value: "2025-09-30" }
+      ]
+    }
+  }
 };
