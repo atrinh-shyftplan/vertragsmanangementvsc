@@ -307,9 +307,97 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
                     })}
                   </div>
                 </div>
-              )}
+               )}
             </div>
           ))}
+
+          {/* Appendices */}
+          {(() => {
+            const assembly = templateData.assembly && templateData.assembly[selectedContractType];
+            const appendicesList = assembly && assembly.appendices ? assembly.appendices : [];
+            
+            if (appendicesList.length === 0) return null;
+            
+            return (
+              <div className="mt-12">
+                <div className="grid grid-cols-2 gap-6 mb-6">
+                  <div className="pr-3">
+                    <h2 className="text-lg font-bold text-foreground border-b border-border pb-2">Anhänge</h2>
+                  </div>
+                  <div className="pl-3">
+                    <h2 className="text-lg font-bold text-foreground border-b border-border pb-2">Annexes</h2>
+                  </div>
+                </div>
+                
+                {appendicesList.map((appendixKey: string, index: number) => {
+                  const appendix = templateData.appendices && templateData.appendices[appendixKey];
+                  if (!appendix) return null;
+                  
+                  return (
+                    <div key={appendixKey} className="mb-8">
+                      <div className="grid grid-cols-2 gap-6 mb-4">
+                        <div className="pr-3">
+                          <h3 className="text-sm font-bold text-foreground mb-3">{appendix.title_de}</h3>
+                        </div>
+                        <div className="pl-3">
+                          <h3 className="text-sm font-bold text-foreground mb-3">{appendix.title_en}</h3>
+                        </div>
+                      </div>
+                      
+                      {appendix.sections && (
+                        <div className="grid grid-cols-2 gap-6 text-sm">
+                          <div className="pr-3 space-y-3">
+                            {appendix.sections.map((section: any, sectionIndex: number) => (
+                              <div key={sectionIndex}>
+                                {section.type === 'heading' && (
+                                  <h4 className="font-semibold text-foreground text-sm mt-4 mb-2">{section.text_de}</h4>
+                                )}
+                                {section.type === 'paragraph' && (
+                                  <div>
+                                    {section.number && <span className="font-semibold">({section.number}) </span>}
+                                    <span className="text-muted-foreground">{section.text_de}</span>
+                                  </div>
+                                )}
+                                {section.type === 'ul' && section.items_de && (
+                                  <ul className="list-disc ml-6 space-y-1">
+                                    {section.items_de.map((item: string, itemIndex: number) => (
+                                      <li key={itemIndex} className="text-muted-foreground">{item}</li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="pl-3 space-y-3">
+                            {appendix.sections.map((section: any, sectionIndex: number) => (
+                              <div key={sectionIndex}>
+                                {section.type === 'heading' && (
+                                  <h4 className="font-semibold text-foreground text-sm mt-4 mb-2">{section.text_en}</h4>
+                                )}
+                                {section.type === 'paragraph' && (
+                                  <div>
+                                    {section.number && <span className="font-semibold">({section.number}) </span>}
+                                    <span className="text-muted-foreground">{section.text_en}</span>
+                                  </div>
+                                )}
+                                {section.type === 'ul' && section.items_en && (
+                                  <ul className="list-disc ml-6 space-y-1">
+                                    {section.items_en.map((item: string, itemIndex: number) => (
+                                      <li key={itemIndex} className="text-muted-foreground">{item}</li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
       </div>
     );
