@@ -78,6 +78,22 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
   const activeModules = getActiveModules();
   const activeConfiguratorVariables = activeModules.filter(m => m.variables && m.variables.length > 0);
 
+  // Format content with markdown-like syntax
+  const formatContent = (text: string) => {
+    if (!text) return text;
+    
+    // Split by double asterisks for bold formatting
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+        const boldText = part.slice(2, -2);
+        return <strong key={index} className="font-bold text-foreground">{boldText}</strong>;
+      }
+      return part;
+    });
+  };
+
   // Variable interpolation
   const interpolateContent = (content: string, lang: string = 'de') => {
     if (!content) return '';
@@ -248,17 +264,21 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
                 <div className="grid grid-cols-2 gap-6 mb-4 text-sm">
                   <div className="pr-3 space-y-3">
                     {mod.paragraphs_de && mod.paragraphs_de.map((para: any, index: number) => (
-                      <div key={index}>
-                        {para.number && <span className="font-semibold">({para.number}) </span>}
-                        <span className="text-muted-foreground">{interpolateContent(para.text, 'de')}</span>
+                      <div key={index} className="mb-4">
+                        {para.number && <span className="font-bold text-primary">({para.number}) </span>}
+                        <span className="text-foreground leading-relaxed">
+                          {formatContent(interpolateContent(para.text, 'de'))}
+                        </span>
                       </div>
                     ))}
                   </div>
                   <div className="pl-3 space-y-3">
                     {mod.paragraphs_en && mod.paragraphs_en.map((para: any, index: number) => (
-                      <div key={index}>
-                        {para.number && <span className="font-semibold">({para.number}) </span>}
-                        <span className="text-muted-foreground">{interpolateContent(para.text, 'en')}</span>
+                      <div key={index} className="mb-4">
+                        {para.number && <span className="font-bold text-primary">({para.number}) </span>}
+                        <span className="text-foreground leading-relaxed">
+                          {formatContent(interpolateContent(para.text, 'en'))}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -269,10 +289,26 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
               {(mod.content_de || mod.content_en) && (
                 <div className="grid grid-cols-2 gap-6 mb-4 text-sm">
                   <div className="pr-3">
-                    {mod.content_de && <div className="text-muted-foreground whitespace-pre-line">{interpolateContent(mod.content_de, 'de')}</div>}
+                    {mod.content_de && (
+                      <div className="text-foreground leading-relaxed space-y-3">
+                        {interpolateContent(mod.content_de, 'de').split('\n').map((line, lineIndex) => (
+                          <div key={lineIndex}>
+                            {formatContent(line)}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="pl-3">
-                    {mod.content_en && <div className="text-muted-foreground whitespace-pre-line">{interpolateContent(mod.content_en, 'en')}</div>}
+                    {mod.content_en && (
+                      <div className="text-foreground leading-relaxed space-y-3">
+                        {interpolateContent(mod.content_en, 'en').split('\n').map((line, lineIndex) => (
+                          <div key={lineIndex}>
+                            {formatContent(line)}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -353,9 +389,11 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
                                   <h4 className="font-semibold text-foreground text-sm mt-4 mb-2">{section.text_de}</h4>
                                 )}
                                 {section.type === 'paragraph' && (
-                                  <div>
-                                    {section.number && <span className="font-semibold">({section.number}) </span>}
-                                    <span className="text-muted-foreground">{section.text_de}</span>
+                                  <div className="mb-3">
+                                    {section.number && <span className="font-bold text-primary">({section.number}) </span>}
+                                    <span className="text-foreground leading-relaxed">
+                                      {formatContent(section.text_de)}
+                                    </span>
                                   </div>
                                 )}
                                 {section.type === 'ul' && section.items_de && (
@@ -375,9 +413,11 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
                                   <h4 className="font-semibold text-foreground text-sm mt-4 mb-2">{section.text_en}</h4>
                                 )}
                                 {section.type === 'paragraph' && (
-                                  <div>
-                                    {section.number && <span className="font-semibold">({section.number}) </span>}
-                                    <span className="text-muted-foreground">{section.text_en}</span>
+                                  <div className="mb-3">
+                                    {section.number && <span className="font-bold text-primary">({section.number}) </span>}
+                                    <span className="text-foreground leading-relaxed">
+                                      {formatContent(section.text_en)}
+                                    </span>
                                   </div>
                                 )}
                                 {section.type === 'ul' && section.items_en && (
