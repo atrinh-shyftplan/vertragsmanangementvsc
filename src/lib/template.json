@@ -4,18 +4,78 @@
     "ep_rollout": "Enterprise mit Rollout"
   },
   "global_variables": [
-    { "id": "angebot_nr", "label": "Angebots-Nr.", "type": "text", "value": "Q-2025-1234" },
-    { "id": "datum", "label": "Datum", "type": "date", "value": "2025-08-31" },
-    { "id": "firma", "label": "Firma", "type": "text", "value": "" },
-    { "id": "ansprechpartner", "label": "Ansprechpartner:in", "type": "text", "value": "" },
-    { "id": "strasse_nr", "label": "Straße, Nr.", "type": "text", "value": "" },
-    { "id": "plz_stadt", "label": "PLZ, Stadt", "type": "text", "value": "" },
-    { "id": "rechnungs_email", "label": "Rechnungs-E-Mail", "type": "email", "value": "" },
-    { "id": "ust_id", "label": "USt-ID (EU)", "type": "text", "value": "" },
-    { "id": "zusatzinfo", "label": "Zusatzinformation (Referenznr., etc.)", "type": "text", "value": "" },
-    { "id": "lieferantennr", "label": "Lieferantennummer/BANF/PO", "type": "text", "value": "" },
-    { "id": "invoice_strasse_nr", "label": "Rechnungsadresse: Straße, Nr.", "type": "text", "value": "" },
-    { "id": "invoice_plz_stadt", "label": "Rechnungsadresse: PLZ, Stadt", "type": "text", "value": "" }
+    {
+      "id": "angebot_nr",
+      "label": "Angebots-Nr.",
+      "type": "text",
+      "value": "Q-2025-1234"
+    },
+    {
+      "id": "datum",
+      "label": "Datum",
+      "type": "date",
+      "value": "2025-08-31"
+    },
+    {
+      "id": "firma",
+      "label": "Firma",
+      "type": "text",
+      "value": ""
+    },
+    {
+      "id": "ansprechpartner",
+      "label": "Ansprechpartner:in",
+      "type": "text",
+      "value": ""
+    },
+    {
+      "id": "strasse_nr",
+      "label": "Straße, Nr.",
+      "type": "text",
+      "value": ""
+    },
+    {
+      "id": "plz_stadt",
+      "label": "PLZ, Stadt",
+      "type": "text",
+      "value": ""
+    },
+    {
+      "id": "rechnungs_email",
+      "label": "Rechnungs-E-Mail",
+      "type": "email",
+      "value": ""
+    },
+    {
+      "id": "ust_id",
+      "label": "USt-ID (EU)",
+      "type": "text",
+      "value": ""
+    },
+    {
+      "id": "zusatzinfo",
+      "label": "Zusatzinformation (Referenznr., etc.)",
+      "type": "text",
+      "value": ""
+    },
+    {
+      "id": "lieferantennr",
+      "label": "Lieferantennummer/BANF/PO",
+      "type": "text",
+      "value": ""
+    },
+    {
+      "id": "invoice_strasse_nr",
+      "label": "Rechnungsadresse: Straße, Nr.",
+      "type": "text",
+      "value": ""
+    },
+    {
+      "id": "invoice_plz_stadt",
+      "label": "Rechnungsadresse: PLZ, Stadt",
+      "type": "text",
+      "value": ""
+    }
   ],
   "modules": {
     "preamble": {
@@ -28,23 +88,60 @@
       "title_de": "§1 Vertragsgegenstand",
       "title_en": "§1 Object of agreement",
       "paragraphs_de": [
-        { "number": 1, "text": "Gegenstand dieses Vertrags ist die Dienstleistung, die shyftplan über ihre Internet-Plattform https://shyftplan.com/ anbietet. Es gelten die angehängten AGB vom 24.01.2023." },
-        { "number": 2, "text": "**Leistungspaket: “Enterprise + shyftconnect”**\nDer Dienstleistungsvertrag umfasst die unter Anhang 2 festgelegten Funktionen. Zudem stellt shyftplan dem Kunden den Integration Layer “shyftconnect” zum regelmäßigen und vereinfachten Austausch von Daten zwischen shyftplan und Kundensystemen zur Verfügung. Es werden vorgegebene Workflows seitens shyftplan für den Transfer der Primärdaten von Stammdaten, Abwesenheiten, Zeitwirtschaft (inkl. Mehrarbeit & Vertretungen), und Bedarfsplanung (Produktionsplanung) und Reporting (inklusive interne Verleihung) angeboten. Die Leistung umfasst die Beratung und Anleitung zur Nutzung der Workflows innerhalb des unter §3 (3) dieses Vertrags genannten Zeitraums. Zudem umfasst die Leistung auch die fortlaufende Wartung des Integration Layers. Eine Leistungsbeschreibung von shyftconnect ist in Anhang 4 beschrieben." }
+        {
+          "number": 1,
+          "text": "Gegenstand dieses Vertrags ist die Dienstleistung, die shyftplan über ihre Internet-Plattform https://shyftplan.com/ anbietet. Es gelten die angehängten AGB vom 24.01.2023."
+        },
+        {
+          "number": 2,
+          "text": "**Leistungspaket: “Enterprise + shyftconnect”**\nDer Dienstleistungsvertrag umfasst die unter Anhang 2 festgelegten Funktionen. Zudem stellt shyftplan dem Kunden den Integration Layer “shyftconnect” zum regelmäßigen und vereinfachten Austausch von Daten zwischen shyftplan und Kundensystemen zur Verfügung. Es werden vorgegebene Workflows seitens shyftplan für den Transfer der Primärdaten von Stammdaten, Abwesenheiten, Zeitwirtschaft (inkl. Mehrarbeit & Vertretungen), und Bedarfsplanung (Produktionsplanung) und Reporting (inklusive interne Verleihung) angeboten. Die Leistung umfasst die Beratung und Anleitung zur Nutzung der Workflows innerhalb des unter §3 (3) dieses Vertrags genannten Zeitraums. Zudem umfasst die Leistung auch die fortlaufende Wartung des Integration Layers. Eine Leistungsbeschreibung von shyftconnect ist in Anhang 4 beschrieben."
+        }
       ],
       "paragraphs_en": [
-        { "number": 1, "text": "The subject of this contract is the service that shyftplan offers via its internet platform https://shyftplan.com/. The attached General Terms and Conditions (GTC) dated 24.01.2023 apply." },
-        { "number": 2, "text": "**Service package: “Enterprise + shyftconnect”**\nThe service contract comprises the functions defined in Annex 2. In addition, shyftplan provides the customer with the \"shyftconnect\" integration layer for the regular and simplified exchange of data between shyftplan and customer systems. Predefined workflows are offered by shyftplan for the transfer of primary data of master data, absences, time management (incl. overtime & substitutions), and demand planning (production planning) and reporting (including internal secondment). The service includes advice and guidance on the use of the workflows within the period specified under §3 (3) of this contract. The service also includes the ongoing maintenance of the Integration Layer. A service description of shyftconnect is described in Annex 4." }
+        {
+          "number": 1,
+          "text": "The subject of this contract is the service that shyftplan offers via its internet platform https://shyftplan.com/. The attached General Terms and Conditions (GTC) dated 24.01.2023 apply."
+        },
+        {
+          "number": 2,
+          "text": "**Service package: “Enterprise + shyftconnect”**\nThe service contract comprises the functions defined in Annex 2. In addition, shyftplan provides the customer with the \"shyftconnect\" integration layer for the regular and simplified exchange of data between shyftplan and customer systems. Predefined workflows are offered by shyftplan for the transfer of primary data of master data, absences, time management (incl. overtime & substitutions), and demand planning (production planning) and reporting (including internal secondment). The service includes advice and guidance on the use of the workflows within the period specified under §3 (3) of this contract. The service also includes the ongoing maintenance of the Integration Layer. A service description of shyftconnect is described in Annex 4."
+        }
       ]
     },
     "conditions_ep_standard": {
       "title_de": "(3) Vertragskonditionen",
       "title_en": "(3) Contract conditions",
       "variables": [
-        { "id": "std_vertragsbeginn", "label": "Vertragsbeginn", "type": "date", "value": "2025-01-01" },
-        { "id": "std_vertragslaufzeit", "label": "Vertragslaufzeit (Jahre)", "type": "number", "value": 3 },
-        { "id": "std_lizenzen", "label": "Anzahl User-Lizenzen", "type": "number", "value": 1000 },
-        { "id": "std_basispreis", "label": "Jährlicher Basispreis", "type": "currency", "value": 25000 },
-        { "id": "std_zusatzlizenz", "label": "Preis pro zusätzlicher Lizenz p.a.", "type": "currency", "value": 25 }
+        {
+          "id": "std_vertragsbeginn",
+          "label": "Vertragsbeginn",
+          "type": "date",
+          "value": "2025-01-01"
+        },
+        {
+          "id": "std_vertragslaufzeit",
+          "label": "Vertragslaufzeit (Jahre)",
+          "type": "number",
+          "value": 3
+        },
+        {
+          "id": "std_lizenzen",
+          "label": "Anzahl User-Lizenzen",
+          "type": "number",
+          "value": 1000
+        },
+        {
+          "id": "std_basispreis",
+          "label": "Jährlicher Basispreis",
+          "type": "currency",
+          "value": 25000
+        },
+        {
+          "id": "std_zusatzlizenz",
+          "label": "Preis pro zusätzlicher Lizenz p.a.",
+          "type": "currency",
+          "value": 25
+        }
       ],
       "content_de": "Vertragsbeginn: {{std_vertragsbeginn}}\nVertragslaufzeit: {{std_vertragslaufzeit}} Jahre\nJährlicher Basispreis für shyftconnect und {{std_lizenzen}} User-Lizenzen: {{std_basispreis}}\nJährlicher Preis pro zusätzlicher User-Lizenz: {{std_zusatzlizenz}}\nAbrechnung: Jährlich vorab\nZahlungsziel nach Rechnungsstellung: 14 Tage",
       "content_en": "Contract start: {{std_vertragsbeginn}}\nContract duration: {{std_vertragslaufzeit}} years\nAnnual base price for shyftplan and {{std_lizenzen}} user licenses: {{std_basispreis}}\nAnnual price per additional user license: {{std_zusatzlizenz}}\nBilling: Annual prepayment\nPayment terms: 14 days"
@@ -53,119 +150,297 @@
       "title_de": "(3) Vertragskonditionen",
       "title_en": "(3) Contract conditions"
     },
-      "conditions_ep_rollout_poc": {
+    "conditions_ep_rollout_poc": {
       "title_de": "(a) Proof of concept (POC):",
       "title_en": "(a) Proof of concept (POC):",
       "variables": [
-        { "id": "poc_beginn", "label": "Vertragsbeginn POC", "type": "date", "value": "2025-10-01" },
-        { "id": "poc_laufzeit", "label": "Laufzeit POC (Monate)", "type": "number", "value": 3 },
-        { "id": "poc_lizenzen", "label": "Max. Lizenzen POC", "type": "number", "value": 50 },
-        { "id": "poc_pauschale", "label": "Pauschale POC", "type": "currency", "value": 1500 }
+        {
+          "id": "poc_beginn",
+          "label": "Vertragsbeginn POC",
+          "type": "date",
+          "value": "2025-10-01"
+        },
+        {
+          "id": "poc_laufzeit",
+          "label": "Laufzeit POC (Monate)",
+          "type": "number",
+          "value": 3
+        },
+        {
+          "id": "poc_lizenzen",
+          "label": "Max. Lizenzen POC",
+          "type": "number",
+          "value": 50
+        },
+        {
+          "id": "poc_pauschale",
+          "label": "Pauschale POC",
+          "type": "currency",
+          "value": 1500
+        }
       ],
-        "content_de": "Vertragsbeginn POC: {{poc_beginn}}\nVertragslaufzeit: {{poc_laufzeit}} Monate\nEinmalige Pauschale mit bis zu {{poc_lizenzen}} Lizenzen: {{poc_pauschale}}\nAbrechnung: Jährlich vorab\nZahlungsziel nach Rechnungsstellung: EOM45",
-        "content_en": "Start of contract POC: {{poc_beginn}}\nContract term: {{poc_laufzeit}} months\nOne-off fee with up to {{poc_lizenzen}} licenses: {{poc_pauschale}}\nBilling: Annual prepayment\nPayment terms: EOM45"
+      "content_de": "Vertragsbeginn POC: {{poc_beginn}}\nVertragslaufzeit: {{poc_laufzeit}} Monate\nEinmalige Pauschale mit bis zu {{poc_lizenzen}} Lizenzen: {{poc_pauschale}}\nAbrechnung: Jährlich vorab\nZahlungsziel nach Rechnungsstellung: EOM45",
+      "content_en": "Start of contract POC: {{poc_beginn}}\nContract term: {{poc_laufzeit}} months\nOne-off fee with up to {{poc_lizenzen}} licenses: {{poc_pauschale}}\nBilling: Annual prepayment\nPayment terms: EOM45"
     },
     "conditions_ep_rollout_rollout": {
       "title_de": "(b) Rollout-Phase:",
       "title_en": "(b) Rollout phase:",
       "variables": [
-        { "id": "rollout_beginn", "label": "Vertragsbeginn Rollout", "type": "date", "value": "2026-01-01" },
-        { "id": "rollout_laufzeit", "label": "Laufzeit Rollout (Monate)", "type": "number", "value": 6 },
-        { "id": "rollout_pauschale", "label": "Pauschale Rollout", "type": "currency", "value": 10000 },
-        { "id": "rollout_zusatzlizenz", "label": "Preis pro zusätzlicher Lizenz p.M.", "type": "currency", "value": 2.50 }
+        {
+          "id": "rollout_beginn",
+          "label": "Vertragsbeginn Rollout",
+          "type": "date",
+          "value": "2026-01-01"
+        },
+        {
+          "id": "rollout_laufzeit",
+          "label": "Laufzeit Rollout (Monate)",
+          "type": "number",
+          "value": 6
+        },
+        {
+          "id": "rollout_pauschale",
+          "label": "Pauschale Rollout",
+          "type": "currency",
+          "value": 10000
+        },
+        {
+          "id": "rollout_zusatzlizenz",
+          "label": "Preis pro zusätzlicher Lizenz p.M.",
+          "type": "currency",
+          "value": 2.5
+        }
       ],
       "content_de": "Vertragsbeginn Rollout: {{rollout_beginn}}\nVertragslaufzeit: {{rollout_laufzeit}} Monate\nEinmalige Pauschale mit bis zu 10.000 Lizenzen: {{rollout_pauschale}}\nPreis pro zusätzlicher User-Lizenz pro Monat: {{rollout_zusatzlizenz}}\nAbrechnung: Jährlich vorab\nZahlungsziel nach Rechnungsstellung: EOM45",
       "content_en": "Start of contract Rollout: {{rollout_beginn}}\nContract term: {{rollout_laufzeit}} months\nOne-off fee with up to 10,000 licenses: {{rollout_pauschale}}\nPrice per additional user license per month: {{rollout_zusatzlizenz}}\nBilling: Annual prepayment\nPayment terms: EOM45"
     },
-      "conditions_ep_rollout_prod": {
+    "conditions_ep_rollout_prod": {
       "title_de": "(c) Produktiv-Phase:",
       "title_en": "(c) Productive phase:",
       "variables": [
-          { "id": "prod_beginn", "label": "Vertragsbeginn Produktiv", "type": "date", "value": "2026-07-01" },
-          { "id": "prod_laufzeit", "label": "Laufzeit Produktiv (Jahre)", "type": "number", "value": 3 },
-          { "id": "prod_lizenzen", "label": "Basis-Lizenzen", "type": "number", "value": 1000 },
-          { "id": "prod_basispreis", "label": "Basispreis p.a.", "type": "currency", "value": 25000 },
-          { "id": "prod_zusatzlizenz", "label": "Preis pro zusätzlicher Lizenz p.a.", "type": "currency", "value": 25 }
+        {
+          "id": "prod_beginn",
+          "label": "Vertragsbeginn Produktiv",
+          "type": "date",
+          "value": "2026-07-01"
+        },
+        {
+          "id": "prod_laufzeit",
+          "label": "Laufzeit Produktiv (Jahre)",
+          "type": "number",
+          "value": 3
+        },
+        {
+          "id": "prod_lizenzen",
+          "label": "Basis-Lizenzen",
+          "type": "number",
+          "value": 1000
+        },
+        {
+          "id": "prod_basispreis",
+          "label": "Basispreis p.a.",
+          "type": "currency",
+          "value": 25000
+        },
+        {
+          "id": "prod_zusatzlizenz",
+          "label": "Preis pro zusätzlicher Lizenz p.a.",
+          "type": "currency",
+          "value": 25
+        }
       ],
       "content_de": "Vertragsbeginn Produktiv: {{prod_beginn}}\nVertragslaufzeit: {{prod_laufzeit}} Jahre\nBasispreis für {{prod_lizenzen}} User-Lizenzen pro Jahr: {{prod_basispreis}}\nPreis pro zusätzlicher User-Lizenz pro Jahr: {{prod_zusatzlizenz}}\nAbrechnung: Jährlich vorab\nZahlungsziel nach Rechnungsstellung: EOM45",
       "content_en": "Start of contract Productive: {{prod_beginn}}\nContract Term: {{prod_laufzeit}} Years\nBase price for {{prod_lizenzen}} employee licenses per year: {{prod_basispreis}}\nPrice per user license per year: {{prod_zusatzlizenz}}\nBilling: Annual prepayment\nPayment terms: EOM45"
     },
     "further_contract_conditions": {
       "paragraphs_de": [
-        { "number": 4, "text": "Es wird eine Vertragslaufzeit von [Bei Mehrjahresverträgen >1 Jahren] X Jahren vereinbart. Während dieser Laufzeit wird der vereinbarte Basispreis sowie der Preis pro zusätzlicher User-Lizenz zu Beginn jedes Vertragsjahres erhöht, jedoch nur dann, wenn die Inflationsrate, basierend auf dem Verbraucherpreisindex (VPI) des Statistischen Bundesamts, den Zielwert von 2% übersteigt. Die Erhöhung des Basispreises und des Preises pro zusätzlicher User-Lizenz entspricht der Differenz zwischen der tatsächlich festgestellten Inflationsrate und dem Zielwert von 2% p.a. innerhalb des Zeitraums der Vertragslaufzeit. Eine solche Preisanpassung wird erst im Monat nach der schriftlichen Ankündigung seitens shyftplan für den Kunden wirksam. Es gelten die jeweiligen Zahlungsbedingungen gemäß §1 (3) dieses Vertrags. Beträgt beispielsweise die Inflationsrate im ersten Jahr der Vertragslaufzeit 3%, werden der Basispreis und der Preis pro zusätzlicher User-Lizenz um 1% erhöht." },
-        { "number": 5, "text": "Die Laufzeit dieses Dienstleistungsvertrags verlängert sich jeweils automatisch um die unter §1 (3) dieses Vertrags bestimmte Vertragslaufzeit, sofern er nicht fristgerecht gekündigt wurde. Eine Kündigung kann spätestens 3 Monate vor Ende der Vertragslaufzeit per E-Mail an service@shyftplan.com erfolgen. Im Falle einer Laufzeitverlängerung wird der vertraglich vereinbarte Basispreis beibehalten. Die Anzahl der in Rechnung gestellten zusätzlichen User-Lizenzen bleibt ebenfalls bestehen. Der Kunde kann die Zahl der zusätzlichen User-Lizenzen im Kalendermonat vor Ablauf der Kündigungsfrist durch schriftliche Bekanntgabe vor Ende der Kündigungsfrist per E-Mail an service@shyftplan.com reduzieren. Hierfür ist die Zahl der zusätzlichen User in der E-Mail für die neue Vertragslaufzeit vom Kunden neu festzulegen. Hierbei ist zu beachten, dass der Kunde selbst dafür Sorge zu tragen hat, dass vor Beginn der neuen Vertragslaufzeit auch die dem Firmenkonto zugeordneten User entsprechend reduziert werden." },
-        { "number": 6, "text": "Zusätzliche User-Lizenzen (siehe §1 (3)) werden für die gesamte verbleibende Vertragsdauer abgerechnet." },
-        { "number": 7, "text": "Dem Kunden wird die Möglichkeit eingeräumt, zum Vertragsbeginn eine technische Begrenzung (\"Cap\") der maximal zulässigen User-Lizenzen auf dem Firmenkonto von shyftplan zu vereinbaren. Hierzu genügt eine Mitteilung vor Vertragsbeginn per E-Mail an service@shyftplan.com. Erfolgt keine ausdrückliche Vereinbarung einer solchen Begrenzung oder wird diese später auf Kundenanfrage aufgehoben, ist die Nutzung weiterer Lizenzen möglich und führt zur Zahlungsverpflichtung des Kunden gemäß der vertraglichen Konditionen. Der Kunde stimmt ausdrücklich zu, dass shyftplan in diesem Fall zusätzliche User-Lizenzen entsprechend den vereinbarten Lizenzpreisen gemäß dieser Vereinbarung abrechnen wird, ohne dass hierfür eine gesonderte Bestellanforderung (BANF) oder ein Bestellschein (PO) erforderlich ist. Lediglich klarstellend wird festgehalten, dass eine solche technische Begrenzung ausschließlich eine Einschränkung des nutzbaren Lizenzumfangs darstellt und keinen Verzicht auf Zahlungsansprüche für tatsächlich genutzte oder vom Kunden beauftragte Leistungen bedeutet." }
+        {
+          "number": 4,
+          "text": "Es wird eine Vertragslaufzeit von [Bei Mehrjahresverträgen >1 Jahren] X Jahren vereinbart. Während dieser Laufzeit wird der vereinbarte Basispreis sowie der Preis pro zusätzlicher User-Lizenz zu Beginn jedes Vertragsjahres erhöht, jedoch nur dann, wenn die Inflationsrate, basierend auf dem Verbraucherpreisindex (VPI) des Statistischen Bundesamts, den Zielwert von 2% übersteigt. Die Erhöhung des Basispreises und des Preises pro zusätzlicher User-Lizenz entspricht der Differenz zwischen der tatsächlich festgestellten Inflationsrate und dem Zielwert von 2% p.a. innerhalb des Zeitraums der Vertragslaufzeit. Eine solche Preisanpassung wird erst im Monat nach der schriftlichen Ankündigung seitens shyftplan für den Kunden wirksam. Es gelten die jeweiligen Zahlungsbedingungen gemäß §1 (3) dieses Vertrags. Beträgt beispielsweise die Inflationsrate im ersten Jahr der Vertragslaufzeit 3%, werden der Basispreis und der Preis pro zusätzlicher User-Lizenz um 1% erhöht."
+        },
+        {
+          "number": 5,
+          "text": "Die Laufzeit dieses Dienstleistungsvertrags verlängert sich jeweils automatisch um die unter §1 (3) dieses Vertrags bestimmte Vertragslaufzeit, sofern er nicht fristgerecht gekündigt wurde. Eine Kündigung kann spätestens 3 Monate vor Ende der Vertragslaufzeit per E-Mail an service@shyftplan.com erfolgen. Im Falle einer Laufzeitverlängerung wird der vertraglich vereinbarte Basispreis beibehalten. Die Anzahl der in Rechnung gestellten zusätzlichen User-Lizenzen bleibt ebenfalls bestehen. Der Kunde kann die Zahl der zusätzlichen User-Lizenzen im Kalendermonat vor Ablauf der Kündigungsfrist durch schriftliche Bekanntgabe vor Ende der Kündigungsfrist per E-Mail an service@shyftplan.com reduzieren. Hierfür ist die Zahl der zusätzlichen User in der E-Mail für die neue Vertragslaufzeit vom Kunden neu festzulegen. Hierbei ist zu beachten, dass der Kunde selbst dafür Sorge zu tragen hat, dass vor Beginn der neuen Vertragslaufzeit auch die dem Firmenkonto zugeordneten User entsprechend reduziert werden."
+        },
+        {
+          "number": 6,
+          "text": "Zusätzliche User-Lizenzen (siehe §1 (3)) werden für die gesamte verbleibende Vertragsdauer abgerechnet."
+        },
+        {
+          "number": 7,
+          "text": "Dem Kunden wird die Möglichkeit eingeräumt, zum Vertragsbeginn eine technische Begrenzung (\"Cap\") der maximal zulässigen User-Lizenzen auf dem Firmenkonto von shyftplan zu vereinbaren. Hierzu genügt eine Mitteilung vor Vertragsbeginn per E-Mail an service@shyftplan.com. Erfolgt keine ausdrückliche Vereinbarung einer solchen Begrenzung oder wird diese später auf Kundenanfrage aufgehoben, ist die Nutzung weiterer Lizenzen möglich und führt zur Zahlungsverpflichtung des Kunden gemäß der vertraglichen Konditionen. Der Kunde stimmt ausdrücklich zu, dass shyftplan in diesem Fall zusätzliche User-Lizenzen entsprechend den vereinbarten Lizenzpreisen gemäß dieser Vereinbarung abrechnen wird, ohne dass hierfür eine gesonderte Bestellanforderung (BANF) oder ein Bestellschein (PO) erforderlich ist. Lediglich klarstellend wird festgehalten, dass eine solche technische Begrenzung ausschließlich eine Einschränkung des nutzbaren Lizenzumfangs darstellt und keinen Verzicht auf Zahlungsansprüche für tatsächlich genutzte oder vom Kunden beauftragte Leistungen bedeutet."
+        }
       ],
       "paragraphs_en": [
-        { "number": 4, "text": "A contract duration of [for multi-year contracts >3 years] X years is agreed. Within this period, the agreed base price and price per additional user license will only be increased at the beginning of each contract year if the inflation rate, based on the consumer price index (CPI) of the Federal Statistical Office of Germany, is more than 2% in the period of the previous contract year. The increase in the base price and the price per additional user license corresponds to the difference between the actual determined inflation rate and the target value of 2% p.a. within the period of the contract term. Such a price adjustment will only become effective for the customer in the month following the written announcement by shyftplan. The respective payment terms according to §1 (3) of this contract apply. If, for example, the inflation rate in the first year of the contract term is 3%, the base price and the price per additional user license will be increased by 1%." },
-        { "number": 5, "text": "The duration of this service contract is automatically extended by the contract duration specified under §1 (3) of this contract, unless it is terminated in due time. Notice of termination can be sent by email to service@shyftplan.com no later than 3 months before the end of the contract term. In the event of a contract duration extension, the contractually agreed base price is retained. The number of additional user licenses also remains the same. The customer can reduce the number of additional user licenses in the calendar month before the end of the notice period by sending a written notification to service@shyftplan.com before the end of the notice period. For this purpose, the customer must redefine the number of additional users in the email for the new contract period. It should be noted that the customer himself must ensure that the users assigned to the company account are also reduced accordingly before the new contract period starts." },
-        { "number": 6, "text": "Additional User Licenses (see §1 (3)) will be billed for the entire remaining term of the contract." },
-        { "number": 7, "text": "The customer shall have the option, at the start of the contract, to agree on a technical limitation (“cap”) for the maximum permitted number of user licenses on the company account with shyftplan. To do so, it is sufficient to notify shyftplan by email at service@shyftplan.com prior to the start of the contract. If no explicit agreement on such a limitation is made or if such a limitation is later lifted at the customer’s request, the use of additional licenses is permitted and shall give rise to the customer’s payment obligation in accordance with the contractual terms. The customer expressly agrees that in this case, shyftplan may invoice additional user licenses at the agreed license prices under this agreement without the need for a separate purchase requisition (BANF) or purchase order (PO). For the sake of clarity, it is noted that such a technical limitation merely restricts the usable scope of licenses and does not constitute a waiver of payment claims for licenses actually used or services commissioned by the customer." }
+        {
+          "number": 4,
+          "text": "A contract duration of [for multi-year contracts >3 years] X years is agreed. Within this period, the agreed base price and price per additional user license will only be increased at the beginning of each contract year if the inflation rate, based on the consumer price index (CPI) of the Federal Statistical Office of Germany, is more than 2% in the period of the previous contract year. The increase in the base price and the price per additional user license corresponds to the difference between the actual determined inflation rate and the target value of 2% p.a. within the period of the contract term. Such a price adjustment will only become effective for the customer in the month following the written announcement by shyftplan. The respective payment terms according to §1 (3) of this contract apply. If, for example, the inflation rate in the first year of the contract term is 3%, the base price and the price per additional user license will be increased by 1%."
+        },
+        {
+          "number": 5,
+          "text": "The duration of this service contract is automatically extended by the contract duration specified under §1 (3) of this contract, unless it is terminated in due time. Notice of termination can be sent by email to service@shyftplan.com no later than 3 months before the end of the contract term. In the event of a contract duration extension, the contractually agreed base price is retained. The number of additional user licenses also remains the same. The customer can reduce the number of additional user licenses in the calendar month before the end of the notice period by sending a written notification to service@shyftplan.com before the end of the notice period. For this purpose, the customer must redefine the number of additional users in the email for the new contract period. It should be noted that the customer himself must ensure that the users assigned to the company account are also reduced accordingly before the new contract period starts."
+        },
+        {
+          "number": 6,
+          "text": "Additional User Licenses (see §1 (3)) will be billed for the entire remaining term of the contract."
+        },
+        {
+          "number": 7,
+          "text": "The customer shall have the option, at the start of the contract, to agree on a technical limitation (“cap”) for the maximum permitted number of user licenses on the company account with shyftplan. To do so, it is sufficient to notify shyftplan by email at service@shyftplan.com prior to the start of the contract. If no explicit agreement on such a limitation is made or if such a limitation is later lifted at the customer’s request, the use of additional licenses is permitted and shall give rise to the customer’s payment obligation in accordance with the contractual terms. The customer expressly agrees that in this case, shyftplan may invoice additional user licenses at the agreed license prices under this agreement without the need for a separate purchase requisition (BANF) or purchase order (PO). For the sake of clarity, it is noted that such a technical limitation merely restricts the usable scope of licenses and does not constitute a waiver of payment claims for licenses actually used or services commissioned by the customer."
+        }
       ]
     },
     "training_support": {
       "title_de": "§2 Training & Support",
       "title_en": "§2 Training & Support",
       "paragraphs_de": [
-        { "number": 1, "text": "Das Kern-Projektteam des Kunden wird zu einem ganztägigen Projekt-Workshop am Standort Berlin von shyftplan empfangen. Ziel des Workshops ist die Abstimmung der wesentlichen Eckpfeiler des Projekts und die gemeinsame Erarbeitung des auf den Kunden zugeschnittenen Projektvorgehens. shyftplan stellt hierfür geeignete Räumlichkeiten in Berlin zur Verfügung. Die Kosten für Anreise und gegebenenfalls notwendige Übernachtungen trägt der Kunde selbst." },
-        { "number": 2, "text": "shyftplan wird außerdem mindestens X system- verantwortliche Mitarbeiter des Kunden als Trainer in einem individuellen, ganztägigen Train-the-Trainer-Seminar ebenso am Standort Berlin schulen. Anschließend werden Mitarbeiter von shyftplan bei der ersten und bei Bedarf noch der zweiten Schulung, die von den Trainern durchgeführt werden, für Zwecke der Qualitätssicherung auf virtuellem Wege beobachten (\"Shadowing\"). Desweiteren wird shyftplan diesen Trainern kostenlose Online-Schulungen zu Produkt-Updates bereitstellen. Die Schulung aller übrigen Planer und Mitarbeiter der Organisation obliegt den Trainern des Kunden. Im gegenseitigen Interesse sollten geeignete Trainer ausgewählt werden, um Nachschulungen zu vermeiden. Sofern einem Trainer eine ausreichende Wissensvermittlung nicht gelingt und shyftplan Trainer nachschulen muss, finden diese ebenfalls am Standort Berlin statt und sind im Gegensatz zur initialen Trainerschulung kostenpflichtig." },
-        { "number": 3, "text": "Die geschulten Trainer des Kunden werden einen First-Level Support unterhalten, welcher Meldungen der Endbenutzer über Fehlfunktionen oder Anwenderprobleme entgegennimmt und versucht, deren Anwenderprobleme zu lösen. Wenn dies innerhalb angemessener Zeit nicht gelingt, können die Systemverantwortlichen des Kunden bei shyftplan Unterstützung anfragen. Anfragen von anderen Personen als den geschulten Trainern werden nicht beantwortet." },
-        { "number": 4, "text": "Meldungen von Störungen sind derart zu dokumentieren, dass Fehlfunktionen oder Probleme nachvollziehbar und reproduzierbar sind. Zur Meldung eines Fehlers sind kundenseitig mindestens folgende Informationen bereitzustellen: Die Account-Nummer ('Company ID') der betroffenen Instanz, eine kurze Beschreibung der Schritte, die zum Fehler führen, eine Erläuterung des erwarteten Verhaltens sowie des tatsächlich beobachteten Verhaltens inklusive jeglicher Fehlermeldungen. Die E-Mail-Adresse der betroffenen Nutzer ist ebenfalls anzugeben, sofern der Fehler nicht übergreifend für alle Nutzer auftritt. Ebenfalls sind das Datum und die Uhrzeit des Auftretens sowie die Häufigkeit bei wiederholtem Auftreten zu übermitteln. Wenn der Fehler in der grafischen Oberfläche auftritt, sind zusätzlich ein kurzes Bildschirmvideo oder Screenshots beizufügen. Tritt der Fehler in der Schnittstelle auf, sind folgende zusätzliche Angaben erforderlich: das verwendete System (z.B. shyftplan API Dokumentation, eigene Testumgebung, Live-Schnittstelle), der betroffene API- oder shyftconnect-Endpunkt (z.B. /api/v1/ absences), die verwendete Methode (z.B. POST), der Payload (als Text, ohne Credentials) und die erhaltene Antwort (ebenfalls als Text). Alle Fehlermeldungen sind durch den First-Level Support des Kunden zu erfassen und müssen immer mindestens an service@shyftplan.com sowie an den dedizierten shyftplan- Ansprechpartner gesendet werden. Ein gemeldeter Fehler kann nur als solcher angenommen werden, wenn ein Mitarbeiter von shyftplan ein fehlerhaftes Verhalten der Software reproduzieren kann." },
-        { "number": 5, "text": "Der Second-Level Support von shyftplan umfasst die Beantwortung von Anfragen per Mail sowie die Buchung von virtuellen Terminen über die Homepage und richtet sich im Weiteren nach den AGB. Grundlegende Fragen zur Softwarenutzung, welche bereits in der Train-the-Trainer-Schulung behandelt wurden, sind nicht Gegenstand des Second-Level Supports." }
+        {
+          "number": 1,
+          "text": "Das Kern-Projektteam des Kunden wird zu einem ganztägigen Projekt-Workshop am Standort Berlin von shyftplan empfangen. Ziel des Workshops ist die Abstimmung der wesentlichen Eckpfeiler des Projekts und die gemeinsame Erarbeitung des auf den Kunden zugeschnittenen Projektvorgehens. shyftplan stellt hierfür geeignete Räumlichkeiten in Berlin zur Verfügung. Die Kosten für Anreise und gegebenenfalls notwendige Übernachtungen trägt der Kunde selbst."
+        },
+        {
+          "number": 2,
+          "text": "shyftplan wird außerdem mindestens X system- verantwortliche Mitarbeiter des Kunden als Trainer in einem individuellen, ganztägigen Train-the-Trainer-Seminar ebenso am Standort Berlin schulen. Anschließend werden Mitarbeiter von shyftplan bei der ersten und bei Bedarf noch der zweiten Schulung, die von den Trainern durchgeführt werden, für Zwecke der Qualitätssicherung auf virtuellem Wege beobachten (\"Shadowing\"). Desweiteren wird shyftplan diesen Trainern kostenlose Online-Schulungen zu Produkt-Updates bereitstellen. Die Schulung aller übrigen Planer und Mitarbeiter der Organisation obliegt den Trainern des Kunden. Im gegenseitigen Interesse sollten geeignete Trainer ausgewählt werden, um Nachschulungen zu vermeiden. Sofern einem Trainer eine ausreichende Wissensvermittlung nicht gelingt und shyftplan Trainer nachschulen muss, finden diese ebenfalls am Standort Berlin statt und sind im Gegensatz zur initialen Trainerschulung kostenpflichtig."
+        },
+        {
+          "number": 3,
+          "text": "Die geschulten Trainer des Kunden werden einen First-Level Support unterhalten, welcher Meldungen der Endbenutzer über Fehlfunktionen oder Anwenderprobleme entgegennimmt und versucht, deren Anwenderprobleme zu lösen. Wenn dies innerhalb angemessener Zeit nicht gelingt, können die Systemverantwortlichen des Kunden bei shyftplan Unterstützung anfragen. Anfragen von anderen Personen als den geschulten Trainern werden nicht beantwortet."
+        },
+        {
+          "number": 4,
+          "text": "Meldungen von Störungen sind derart zu dokumentieren, dass Fehlfunktionen oder Probleme nachvollziehbar und reproduzierbar sind. Zur Meldung eines Fehlers sind kundenseitig mindestens folgende Informationen bereitzustellen: Die Account-Nummer ('Company ID') der betroffenen Instanz, eine kurze Beschreibung der Schritte, die zum Fehler führen, eine Erläuterung des erwarteten Verhaltens sowie des tatsächlich beobachteten Verhaltens inklusive jeglicher Fehlermeldungen. Die E-Mail-Adresse der betroffenen Nutzer ist ebenfalls anzugeben, sofern der Fehler nicht übergreifend für alle Nutzer auftritt. Ebenfalls sind das Datum und die Uhrzeit des Auftretens sowie die Häufigkeit bei wiederholtem Auftreten zu übermitteln. Wenn der Fehler in der grafischen Oberfläche auftritt, sind zusätzlich ein kurzes Bildschirmvideo oder Screenshots beizufügen. Tritt der Fehler in der Schnittstelle auf, sind folgende zusätzliche Angaben erforderlich: das verwendete System (z.B. shyftplan API Dokumentation, eigene Testumgebung, Live-Schnittstelle), der betroffene API- oder shyftconnect-Endpunkt (z.B. /api/v1/ absences), die verwendete Methode (z.B. POST), der Payload (als Text, ohne Credentials) und die erhaltene Antwort (ebenfalls als Text). Alle Fehlermeldungen sind durch den First-Level Support des Kunden zu erfassen und müssen immer mindestens an service@shyftplan.com sowie an den dedizierten shyftplan- Ansprechpartner gesendet werden. Ein gemeldeter Fehler kann nur als solcher angenommen werden, wenn ein Mitarbeiter von shyftplan ein fehlerhaftes Verhalten der Software reproduzieren kann."
+        },
+        {
+          "number": 5,
+          "text": "Der Second-Level Support von shyftplan umfasst die Beantwortung von Anfragen per Mail sowie die Buchung von virtuellen Terminen über die Homepage und richtet sich im Weiteren nach den AGB. Grundlegende Fragen zur Softwarenutzung, welche bereits in der Train-the-Trainer-Schulung behandelt wurden, sind nicht Gegenstand des Second-Level Supports."
+        }
       ],
       "paragraphs_en": [
-        { "number": 1, "text": "The customer’s core project team will be hosted by shyftplan for a full-day project workshop at the Berlin location. The objective of the workshop is to align on the key project pillars and jointly develop a project approach tailored to the customer. Shyftplan will provide suitable facilities in Berlin for this purpose. Travel expenses and any necessary accommodation costs shall be borne by the customer." },
-        { "number": 2, "text": "shyftplan will also train at least X system-responsible employees of the customer as trainers in an individual, full-day train-the-trainer seminar at the Berlin location. Subsequently, shyftplan employees will virtually observe the first and, if necessary, the second training session conducted by the trainers for quality assurance purposes (“shadowing”). Furthermore, shyftplan will provide these trainers with free online training on product updates. The training of all other planners and employees of the organization will be the responsibility of the customer’s trainers. In the mutual interest of both parties, suitable trainers should be selected in order to avoid retraining. If a trainer fails to adequately convey the required knowledge and shyftplan needs to retrain the trainer, this retraining will also take place at the Berlin location and, unlike the initial train-the-trainer session, will be subject to a fee." },
-        { "number": 3, "text": "The customer's trainers for the shyftplan software will provide first-level support, which will include to receive reports from end users about malfunctions or user problems and to try to solve their user problems. If this is not possible within a reasonable time, the customer's system managers can request support from shyftplan. Inquiries from persons other than trainers will not be answered." },
-        { "number": 4, "text": "Reports of failures must be documented in such a way that malfunctions or problems are traceable and reproducible. To report an error, the customer must provide at least the following information: The account number ('Company ID') of the affected instance, a brief description of the steps leading to the error, an explanation of the expected behavior as well as the actual observed behavior including any error messages. The e-mail address of the affected users must also be provided if the error does not occur for all users. The date and time of occurrence and the frequency of repeated occurrences must also be provided. If the error occurs in the graphical user interface, a short screen video or screenshots must also be included. If the error occurs in the integration, the following information is required: the system used (e.g. shyftplan API documentation, own test environment, live interface), the affected API or shyftconnect endpoint (e.g. /api/v1/absences), the method used (e.g. POST), the payload (as text, without credentials) and the response received (also as text). All error messages must be recorded by the customer First-Level Support and must always be sent at least to service@shyftplan.com and to the dedicated shyftplan contact person. A reported error can only be accepted as such if an employee of shyftplan can reproduce a faulty behavior of the software." },
-        { "number": 5, "text": "Second-level support from shyftplan includes answering inquiries by email and booking virtual appointments via the homepage. Further second-level support is governed by the GTC. Basic questions on the use of the software, which have already been dealt with in the train-the-trainer course, are not covered by second-level support." }
+        {
+          "number": 1,
+          "text": "The customer’s core project team will be hosted by shyftplan for a full-day project workshop at the Berlin location. The objective of the workshop is to align on the key project pillars and jointly develop a project approach tailored to the customer. Shyftplan will provide suitable facilities in Berlin for this purpose. Travel expenses and any necessary accommodation costs shall be borne by the customer."
+        },
+        {
+          "number": 2,
+          "text": "shyftplan will also train at least X system-responsible employees of the customer as trainers in an individual, full-day train-the-trainer seminar at the Berlin location. Subsequently, shyftplan employees will virtually observe the first and, if necessary, the second training session conducted by the trainers for quality assurance purposes (“shadowing”). Furthermore, shyftplan will provide these trainers with free online training on product updates. The training of all other planners and employees of the organization will be the responsibility of the customer’s trainers. In the mutual interest of both parties, suitable trainers should be selected in order to avoid retraining. If a trainer fails to adequately convey the required knowledge and shyftplan needs to retrain the trainer, this retraining will also take place at the Berlin location and, unlike the initial train-the-trainer session, will be subject to a fee."
+        },
+        {
+          "number": 3,
+          "text": "The customer's trainers for the shyftplan software will provide first-level support, which will include to receive reports from end users about malfunctions or user problems and to try to solve their user problems. If this is not possible within a reasonable time, the customer's system managers can request support from shyftplan. Inquiries from persons other than trainers will not be answered."
+        },
+        {
+          "number": 4,
+          "text": "Reports of failures must be documented in such a way that malfunctions or problems are traceable and reproducible. To report an error, the customer must provide at least the following information: The account number ('Company ID') of the affected instance, a brief description of the steps leading to the error, an explanation of the expected behavior as well as the actual observed behavior including any error messages. The e-mail address of the affected users must also be provided if the error does not occur for all users. The date and time of occurrence and the frequency of repeated occurrences must also be provided. If the error occurs in the graphical user interface, a short screen video or screenshots must also be included. If the error occurs in the integration, the following information is required: the system used (e.g. shyftplan API documentation, own test environment, live interface), the affected API or shyftconnect endpoint (e.g. /api/v1/absences), the method used (e.g. POST), the payload (as text, without credentials) and the response received (also as text). All error messages must be recorded by the customer First-Level Support and must always be sent at least to service@shyftplan.com and to the dedicated shyftplan contact person. A reported error can only be accepted as such if an employee of shyftplan can reproduce a faulty behavior of the software."
+        },
+        {
+          "number": 5,
+          "text": "Second-level support from shyftplan includes answering inquiries by email and booking virtual appointments via the homepage. Further second-level support is governed by the GTC. Basic questions on the use of the software, which have already been dealt with in the train-the-trainer course, are not covered by second-level support."
+        }
       ]
     },
     "system_integration": {
       "title_de": "§3 Systemanbindung mittels shyftconnect",
       "title_en": "§3 Technical integration via shyftconnect",
       "paragraphs_de": [
-        { "number": 1, "text": "shyftplan wird an die notwendigen Systeme und Applikationen des Kunden angebunden, soweit dies technisch machbar und wirtschaftlich sinnvoll ist. Die Spezifikation der anzubindenden Systeme inkl. der entsprechend relevanten Workflows in shyftconnect und die technischen Anforderungen sind im Anhang 4 dieses Vertrags aufgelistet." },
-        { "number": 2, "text": "Für eine vereinfachte Integration von shyftplan mit den Kundensystemen über shyftconnect, empfiehlt shyftplan, externe IT-Berater zu nutzen, sofern im IT-Team des Kunden keine einschlägige Erfahrung in der Anbindung von Cloud-Software vorhanden ist." },
-        { "number": 3, "text": "Zu diesem Zweck wird shyftplan für einen Zeitraum von X Monaten ab Vertragsbeginn für fachliche und technische Fragen zur Verfügung stehen, um die effektive Integration und Nutzung von shyftplan zu unterstützen. shyftplan behält sich vor, weitere Beratung nach Ablauf dieses Zeitraums nur noch als zusätzliche Leistung zu einem Stundensatz von € 175 zu erbringen. Dies betrifft zu keiner Zeit den Second-Level Support." }
+        {
+          "number": 1,
+          "text": "shyftplan wird an die notwendigen Systeme und Applikationen des Kunden angebunden, soweit dies technisch machbar und wirtschaftlich sinnvoll ist. Die Spezifikation der anzubindenden Systeme inkl. der entsprechend relevanten Workflows in shyftconnect und die technischen Anforderungen sind im Anhang 4 dieses Vertrags aufgelistet."
+        },
+        {
+          "number": 2,
+          "text": "Für eine vereinfachte Integration von shyftplan mit den Kundensystemen über shyftconnect, empfiehlt shyftplan, externe IT-Berater zu nutzen, sofern im IT-Team des Kunden keine einschlägige Erfahrung in der Anbindung von Cloud-Software vorhanden ist."
+        },
+        {
+          "number": 3,
+          "text": "Zu diesem Zweck wird shyftplan für einen Zeitraum von X Monaten ab Vertragsbeginn für fachliche und technische Fragen zur Verfügung stehen, um die effektive Integration und Nutzung von shyftplan zu unterstützen. shyftplan behält sich vor, weitere Beratung nach Ablauf dieses Zeitraums nur noch als zusätzliche Leistung zu einem Stundensatz von € 175 zu erbringen. Dies betrifft zu keiner Zeit den Second-Level Support."
+        }
       ],
       "paragraphs_en": [
-        { "number": 1, "text": "shyftplan will be connected to all necessary systems and applications of the customer, as far as this is technically feasible and economically reasonable. The specification of the systems to be connected incl. the corresponding relevant workflows in shyftconnect and the technical requirements are listed in annex 4 of this contract." },
-        { "number": 2, "text": "For a simplified integration of shyftplan with the customer systems via shyftconnect, shyftplan recommends using external IT consultants if the customer's IT team has no relevant experience in connecting cloud software." },
-        { "number": 3, "text": "For this purpose, shyftplan will be available for a period of X months from the start of the contract for subject-specific and technical questions in order to support the effective integration and use of shyftplan. shyftplan reserves the right to provide further consulting after this period only as an additional service at an hourly rate of € 175. This does not affect second-level support at any time." }
+        {
+          "number": 1,
+          "text": "shyftplan will be connected to all necessary systems and applications of the customer, as far as this is technically feasible and economically reasonable. The specification of the systems to be connected incl. the corresponding relevant workflows in shyftconnect and the technical requirements are listed in annex 4 of this contract."
+        },
+        {
+          "number": 2,
+          "text": "For a simplified integration of shyftplan with the customer systems via shyftconnect, shyftplan recommends using external IT consultants if the customer's IT team has no relevant experience in connecting cloud software."
+        },
+        {
+          "number": 3,
+          "text": "For this purpose, shyftplan will be available for a period of X months from the start of the contract for subject-specific and technical questions in order to support the effective integration and use of shyftplan. shyftplan reserves the right to provide further consulting after this period only as an additional service at an hourly rate of € 175. This does not affect second-level support at any time."
+        }
       ]
     },
     "other_agreements": {
-        "title_de": "§4 Sonstige Vereinbarungen",
-        "title_en": "§4 Other agreements",
-        "variables": [
-            { "id": "gueltig_bis", "label": "Angebot gültig bis", "type": "date", "value": "2025-09-30" }
-        ],
-        "paragraphs_de": [
-            { "number": 1, "text": "Dieser Vertrag inkl. der angehängten AGB stellt die vollständige und ausschließliche Vereinbarung zwischen den Parteien in Bezug auf dessen Gegenstand dar. Alle vorherigen Vereinbarungen, Verhandlungen, Gespräche und Verständigungen zwischen den Parteien in Bezug auf den Gegenstand dieses Vertrags sind hiermit ersetzt. Der Abschluss, die Kündigung, Änderungen, einschließlich dieser Schriftformklausel, Ergänzungen oder Nebenabreden zu diesem Vertrag bedürfen der Schriftform oder der elektronischen Unterzeichnung mit der Software \"Adobe Sign\" oder \"DocuSign\" oder - mit Zustimmung der Parteien - mit einer anderen geeigneten, dem Stand der Technik entsprechenden Software für elektronische Signaturen." },
-            { "number": 2, "text": "Der Kunde erteilt shyftplan die Erlaubnis, seinen Firmennamen als Referenz auf ihrer Webseite oder in Präsentationen zu nennen." },
-            { "number": 3, "text": "Dieses Vertragsangebot ist gültig bis zum {{gueltig_bis}}." }
-        ],
-        "paragraphs_en": [
-            { "number": 1, "text": "This Agreement, including all attachments, constitutes the complete and exclusive agreement between the parties with respect to its subject matter. All prior agreements, negotiations, discussions and understandings between the parties with respect to the subject matter of this Agreement are hereby superseded. The conclusion, termination, amendments, including this written form clause, supplements or ancillary agreements to this contract must be made in writing or signed electronically using the “Adobe Sign” or “DocuSign” software or - with the consent of the parties - using other suitable, electronic signature software." },
-            { "number": 2, "text": "The customer grants shyftplan permission to use the customer's company name as a reference on its website or in presentations." },
-            { "number": 3, "text": "This contract offer is valid until {{gueltig_bis}}." }
-        ]
+      "title_de": "§4 Sonstige Vereinbarungen",
+      "title_en": "§4 Other agreements",
+      "variables": [
+        {
+          "id": "gueltig_bis",
+          "label": "Angebot gültig bis",
+          "type": "date",
+          "value": "2025-09-30"
+        }
+      ],
+      "paragraphs_de": [
+        {
+          "number": 1,
+          "text": "Dieser Vertrag inkl. der angehängten AGB stellt die vollständige und ausschließliche Vereinbarung zwischen den Parteien in Bezug auf dessen Gegenstand dar. Alle vorherigen Vereinbarungen, Verhandlungen, Gespräche und Verständigungen zwischen den Parteien in Bezug auf den Gegenstand dieses Vertrags sind hiermit ersetzt. Der Abschluss, die Kündigung, Änderungen, einschließlich dieser Schriftformklausel, Ergänzungen oder Nebenabreden zu diesem Vertrag bedürfen der Schriftform oder der elektronischen Unterzeichnung mit der Software \"Adobe Sign\" oder \"DocuSign\" oder - mit Zustimmung der Parteien - mit einer anderen geeigneten, dem Stand der Technik entsprechenden Software für elektronische Signaturen."
+        },
+        {
+          "number": 2,
+          "text": "Der Kunde erteilt shyftplan die Erlaubnis, seinen Firmennamen als Referenz auf ihrer Webseite oder in Präsentationen zu nennen."
+        },
+        {
+          "number": 3,
+          "text": "Dieses Vertragsangebot ist gültig bis zum {{gueltig_bis}}."
+        }
+      ],
+      "paragraphs_en": [
+        {
+          "number": 1,
+          "text": "This Agreement, including all attachments, constitutes the complete and exclusive agreement between the parties with respect to its subject matter. All prior agreements, negotiations, discussions and understandings between the parties with respect to the subject matter of this Agreement are hereby superseded. The conclusion, termination, amendments, including this written form clause, supplements or ancillary agreements to this contract must be made in writing or signed electronically using the “Adobe Sign” or “DocuSign” software or - with the consent of the parties - using other suitable, electronic signature software."
+        },
+        {
+          "number": 2,
+          "text": "The customer grants shyftplan permission to use the customer's company name as a reference on its website or in presentations."
+        },
+        {
+          "number": 3,
+          "text": "This contract offer is valid until {{gueltig_bis}}."
+        }
+      ]
     },
     "final_provisions": {
-        "title_de": "§5 Schlussbestimmungen",
-        "title_en": "§5 Final provisions",
-        "paragraphs_de": [
-          { "number": 1, "text": "Die Vereinbarung unterliegt deutschem Recht. Ausschließlicher Gerichtsstand ist – soweit zulässig – Berlin." },
-          { "number": 2, "text": "Nur der deutsche Text des Vertrags ist als rechtsverbindliche Version vereinbart." },
-          { "number": 3, "text": "Sollten einzelne Bestimmungen dieser Vereinbarung unwirksam oder undurchführbar sein, so soll die Wirksamkeit der Vereinbarung im Übrigen dadurch nicht berührt werden. Die unwirksame oder undurchführbare Bestimmung soll durch eine solche ersetzt werden, die wirtschaftlich oder rechtlich dem am Nächsten kommt, was die Parteien mit der ursprünglichen Bestimmung beabsichtigt haben. Dies gilt auch für etwaige Vertragslücken." }
-        ],
-        "paragraphs_en": [
-          { "number": 1, "text": "The agreement is subject to German law. The exclusive place of jurisdiction is – as far as permissible – Berlin." },
-          { "number": 2, "text": "Only the German text of the contract is agreed as the legally binding version." },
-          { "number": 3, "text": "Should individual provisions of this agreement be invalid or unenforceable, the validity of the remainder of the agreement shall not be affected thereby. The invalid or unenforceable provision shall be replaced by one that comes as close as possible economically or legally to what the parties intended with the original provision. This also applies to any contractual loopholes." }
-        ]
+      "title_de": "§5 Schlussbestimmungen",
+      "title_en": "§5 Final provisions",
+      "paragraphs_de": [
+        {
+          "number": 1,
+          "text": "Die Vereinbarung unterliegt deutschem Recht. Ausschließlicher Gerichtsstand ist – soweit zulässig – Berlin."
+        },
+        {
+          "number": 2,
+          "text": "Nur der deutsche Text des Vertrags ist als rechtsverbindliche Version vereinbart."
+        },
+        {
+          "number": 3,
+          "text": "Sollten einzelne Bestimmungen dieser Vereinbarung unwirksam oder undurchführbar sein, so soll die Wirksamkeit der Vereinbarung im Übrigen dadurch nicht berührt werden. Die unwirksame oder undurchführbare Bestimmung soll durch eine solche ersetzt werden, die wirtschaftlich oder rechtlich dem am Nächsten kommt, was die Parteien mit der ursprünglichen Bestimmung beabsichtigt haben. Dies gilt auch für etwaige Vertragslücken."
+        }
+      ],
+      "paragraphs_en": [
+        {
+          "number": 1,
+          "text": "The agreement is subject to German law. The exclusive place of jurisdiction is – as far as permissible – Berlin."
+        },
+        {
+          "number": 2,
+          "text": "Only the German text of the contract is agreed as the legally binding version."
+        },
+        {
+          "number": 3,
+          "text": "Should individual provisions of this agreement be invalid or unenforceable, the validity of the remainder of the agreement shall not be affected thereby. The invalid or unenforceable provision shall be replaced by one that comes as close as possible economically or legally to what the parties intended with the original provision. This also applies to any contractual loopholes."
+        }
+      ]
     }
   },
   "appendices": {
@@ -293,10 +568,10 @@
           ]
         },
         {
-            "type": "paragraph",
-            "number": "3.2.2.",
-            "text_de": "Auswertung: Die über shyftplan verfügbaren Schichtdaten können mit der Funktion Auswertung auf der Plattform direkt ausgewertet werden. Die Leistung von shyftplan im Rahmen des Dienstes Auswertung umfasst die elektronische Bereitstellung verschiedener auf dem Portal vorhandener Daten, die sich auf einen Arbeitnehmer und einen Kalendermonat beziehen. In der Auswertung werden u.a. Arbeitszeitbeginn und -ende sowie Pausenzeiten dargestellt. Grundlage sind die Daten, die im Hinblick auf ein Unternehmen und dessen Angestellte auf dem Portal hinterlegt sind, insbesondere die Schichtpläne, aus welchen sich die geleisteten Arbeitszeiten des Arbeitnehmers ergeben. Sofern zusätzlich die Funktion Zeitstempeluhr vertraglich vereinbart wurde, können auch die sich daraus ergebenden tatsächlich geleisteten Ist-Arbeitszeiten erfasst werden. Es obliegt allein dem Kunden, die vorhandenen Daten vor einer weiteren Verwendung auf ihre inhaltliche Richtigkeit und Vollständigkeit zu überprüfen. Die Daten werden zusätzlich in einem Dateiformat (z.B. *.csv) zur Verfügung gestellt, um den Export aus dem Portal zu ermöglichen.",
-            "text_en": "Evaluation: The shift data available via shyftplan can be evaluated directly with the function Evaluation on the platform. The service of shyftplan within the service Evaluation includes the electronic provision of various data available on the portal, which refer to an employee and a calendar month. The evaluation shows, among other things, the start and end of working hours as well as break times. This is based on the data stored on the portal with regard to a company and its employees, in particular the shift schedules from which the employee's working hours are derived. If, in addition, the time stamp clock function has been contractually agreed, the actual working hours resulting from this can also be recorded. It is the sole responsibility of the customer to check the existing data for correctness and completeness of content before further use. The data is additionally provided in a file format (e.g. *.csv) to enable export from the portal."
+          "type": "paragraph",
+          "number": "3.2.2.",
+          "text_de": "Auswertung: Die über shyftplan verfügbaren Schichtdaten können mit der Funktion Auswertung auf der Plattform direkt ausgewertet werden. Die Leistung von shyftplan im Rahmen des Dienstes Auswertung umfasst die elektronische Bereitstellung verschiedener auf dem Portal vorhandener Daten, die sich auf einen Arbeitnehmer und einen Kalendermonat beziehen. In der Auswertung werden u.a. Arbeitszeitbeginn und -ende sowie Pausenzeiten dargestellt. Grundlage sind die Daten, die im Hinblick auf ein Unternehmen und dessen Angestellte auf dem Portal hinterlegt sind, insbesondere die Schichtpläne, aus welchen sich die geleisteten Arbeitszeiten des Arbeitnehmers ergeben. Sofern zusätzlich die Funktion Zeitstempeluhr vertraglich vereinbart wurde, können auch die sich daraus ergebenden tatsächlich geleisteten Ist-Arbeitszeiten erfasst werden. Es obliegt allein dem Kunden, die vorhandenen Daten vor einer weiteren Verwendung auf ihre inhaltliche Richtigkeit und Vollständigkeit zu überprüfen. Die Daten werden zusätzlich in einem Dateiformat (z.B. *.csv) zur Verfügung gestellt, um den Export aus dem Portal zu ermöglichen.",
+          "text_en": "Evaluation: The shift data available via shyftplan can be evaluated directly with the function Evaluation on the platform. The service of shyftplan within the service Evaluation includes the electronic provision of various data available on the portal, which refer to an employee and a calendar month. The evaluation shows, among other things, the start and end of working hours as well as break times. This is based on the data stored on the portal with regard to a company and its employees, in particular the shift schedules from which the employee's working hours are derived. If, in addition, the time stamp clock function has been contractually agreed, the actual working hours resulting from this can also be recorded. It is the sole responsibility of the customer to check the existing data for correctness and completeness of content before further use. The data is additionally provided in a file format (e.g. *.csv) to enable export from the portal."
         },
         {
           "type": "paragraph",
@@ -657,15 +932,15 @@
           "text_en": "<strong>(b) Additional services of \"Enterprise\" package:</strong>"
         },
         {
-            "type": "ul",
-            "items_de": [
-                "(i) Schichtrotationen: Planer erstellen Schichten anhand von Schichtrotationen (3-Schicht- und 4-Schichtsystem).",
-                "(ii) Automatisierung der Schichtplanung: shyftplan besetzt automatisch die Schichten auf Basis der hinterlegten Kriterien und ausgewählten Gewichtungen."
-            ],
-            "items_en": [
-                "(i) Shift rotations: planners create shifts using shift rotations (3-shift and 4-shift pattern).",
-                "(ii) Automation of shift planning: shyftplan automatically fills the shifts based on the stored criteria and selected weightings."
-            ]
+          "type": "ul",
+          "items_de": [
+            "(i) Schichtrotationen: Planer erstellen Schichten anhand von Schichtrotationen (3-Schicht- und 4-Schichtsystem).",
+            "(ii) Automatisierung der Schichtplanung: shyftplan besetzt automatisch die Schichten auf Basis der hinterlegten Kriterien und ausgewählten Gewichtungen."
+          ],
+          "items_en": [
+            "(i) Shift rotations: planners create shifts using shift rotations (3-shift and 4-shift pattern).",
+            "(ii) Automation of shift planning: shyftplan automatically fills the shifts based on the stored criteria and selected weightings."
+          ]
         },
         {
           "type": "paragraph",
@@ -700,8 +975,12 @@
         },
         {
           "type": "ul",
-          "items_de": ["(i) Upload von Arbeitsunfähigkeitsbescheinigung: Arbeitsunfähigkeitsbescheinigungen können selbständig hochgeladen werden."],
-          "items_en": ["(i) Upload of certificates of incapacity for work: Certificates of incapacity for work can be uploaded independently."]
+          "items_de": [
+            "(i) Upload von Arbeitsunfähigkeitsbescheinigung: Arbeitsunfähigkeitsbescheinigungen können selbständig hochgeladen werden."
+          ],
+          "items_en": [
+            "(i) Upload of certificates of incapacity for work: Certificates of incapacity for work can be uploaded independently."
+          ]
         },
         {
           "type": "paragraph",
@@ -758,8 +1037,12 @@
         },
         {
           "type": "ul",
-          "items_de": ["(i) Single Sign-on (SSO)"],
-          "items_en": ["(i) Single sign-on (SSO)"]
+          "items_de": [
+            "(i) Single Sign-on (SSO)"
+          ],
+          "items_en": [
+            "(i) Single sign-on (SSO)"
+          ]
         },
         {
           "type": "paragraph",
@@ -984,72 +1267,362 @@
       ]
     },
     "technical_connection_description": {
-        "title_de": "Anhang 5: Technische Anbindung",
-        "title_en": "Annex 5: Technical Connection",
-        "sections": [
+      "title_de": "Anhang 5: Technische Anbindung",
+      "title_en": "Annex 5: Technical Connection",
+      "sections": [
+        {
+          "type": "paragraph",
+          "text_de": "Die folgende Übersicht definiert, welche Anwendungsfälle in der Implementierung der Systeme des Kunden und shyftplan Integration enthalten sind und WO die Verantwortlichkeiten liegen. Die Verantwortung für die Programmierung der Schnittstellen durch Dritte verantwortet der Kunde.",
+          "text_en": "The following overview defines which use cases are included in the implementation of the customer's systems and shyftplan integration and WHERE the responsibilities lie. The customer is responsible for the programming of the interfaces by third parties."
+        },
+        {
+          "type": "heading",
+          "text_de": "A: Zielbild der relevanten technischen Komponenten für eine vollständige shyftplan-Integration",
+          "text_en": "A: Target picture of the relevant technical components for a complete shyftplan integration"
+        },
+        {
+          "type": "image",
+          "src": "https://storage.googleapis.com/maker-me/media/images/shyftplan_schema_1.width-1024.png",
+          "alt_de": "Diagramm der technischen Komponenten für die shyftplan-Integration",
+          "alt_en": "Diagram of the technical components for the shyftplan integration"
+        },
+        {
+          "type": "heading",
+          "text_de": "B: Wesentliche Teile der Businesslogik sind durch shyftplan connect abgedeckt",
+          "text_en": "B: Essential parts of the business logic are covered by shyftplan connect"
+        },
+        {
+          "type": "image",
+          "src": "https://storage.googleapis.com/maker-me/media/images/shyftplan_schema_2.width-1024.png",
+          "alt_de": "Diagramm der Businesslogik in shyftplan connect",
+          "alt_en": "Diagram of the business logic in shyftplan connect"
+        },
+        {
+          "type": "table",
+          "headers_de": [
+            "Category",
+            "Component",
+            "Flow",
+            "Needed for roll-out"
+          ],
+          "headers_en": [
+            "Category",
+            "Component",
+            "Flow",
+            "Needed for roll-out"
+          ],
+          "rows": [
             {
-                "type": "paragraph",
-                "text_de": "Die folgende Übersicht definiert, welche Anwendungsfälle in der Implementierung der Systeme des Kunden und shyftplan Integration enthalten sind und WO die Verantwortlichkeiten liegen. Die Verantwortung für die Programmierung der Schnittstellen durch Dritte verantwortet der Kunde.",
-                "text_en": "The following overview defines which use cases are included in the implementation of the customer's systems and shyftplan integration and WHERE the responsibilities lie. The customer is responsible for the programming of the interfaces by third parties."
+              "de": [
+                "Master Data",
+                "Org structure",
+                "Locations and (core) positions are automatically created in shyftplan",
+                "✔"
+              ],
+              "en": [
+                "Master Data",
+                "Org structure",
+                "Locations and (core) positions are automatically created in shyftplan",
+                "✔"
+              ]
             },
             {
-                "type": "heading",
-                "text_de": "A: Zielbild der relevanten technischen Komponenten für eine vollständige shyftplan-Integration",
-                "text_en": "A: Target picture of the relevant technical components for a complete shyftplan integration"
+              "de": [
+                "",
+                "HR data",
+                "User data (eg name, work email, working hours) is synced to shyftplan",
+                "✔"
+              ]
             },
             {
-                "type": "image",
-                "src": "https://storage.googleapis.com/maker-me/media/images/shyftplan_schema_1.width-1024.png",
-                "alt_de": "Diagramm der technischen Komponenten für die shyftplan-Integration",
-                "alt_en": "Diagram of the technical components for the shyftplan integration"
+              "de": [
+                "",
+                "Qualifications",
+                "Qualifications are synced to shyftplan users are assigned to positions",
+                "✔"
+              ]
             },
             {
-                "type": "heading",
-                "text_de": "B: Wesentliche Teile der Businesslogik sind durch shyftplan connect abgedeckt",
-                "text_en": "B: Essential parts of the business logic are covered by shyftplan connect"
+              "de": [
+                "",
+                "Rotations",
+                "Shift rotation and assignment to rotation groups completed automatically",
+                "✔"
+              ]
             },
             {
-                "type": "image",
-                "src": "https://storage.googleapis.com/maker-me/media/images/shyftplan_schema_2.width-1024.png",
-                "alt_de": "Diagramm der Businesslogik in shyftplan connect",
-                "alt_en": "Diagram of the business logic in shyftplan connect"
-            },
-             {
-                "type": "table",
-                "headers_de": ["Category", "Component", "Flow", "Needed for roll-out"],
-                "headers_en": ["Category", "Component", "Flow", "Needed for roll-out"],
-                "rows": [
-                    { "de": ["Master Data", "Org structure", "Locations and (core) positions are automatically created in shyftplan", "✔"], "en": ["Master Data", "Org structure", "Locations and (core) positions are automatically created in shyftplan", "✔"] },
-                    { "de": ["", "HR data", "User data (eg name, work email, working hours) is synced to shyftplan", "✔"] },
-                    { "de": ["", "Qualifications", "Qualifications are synced to shyftplan users are assigned to positions", "✔"] },
-                    { "de": ["", "Rotations", "Shift rotation and assignment to rotation groups completed automatically", "✔"] },
-                    { "de": ["Absences", "Absence reasons", "\"Major\" absence reasons are mapped to shyftplan eg vacation, sick leave,", "✔"] },
-                    { "de": ["", "Absence entitlement", "Absence entitlements are managed in other system and synced to shyftplan", "✔"] },
-                    { "de": ["", "Absences (shyftplan)", "\"Major\" absences are entered by employees, managed in shyftplan and synced", "✔"] },
-                    { "de": ["", "Absences (other system)", "\"Longtail\" absences (such as parental leave) are managed in other system", "✔"] },
-                    { "de": ["Time & Attendance", "Time stamps", "Live status of attendance in shyftplan: Clock-in/clock-out synced frequently", "✔"] },
-                    { "de": ["", "Substitutions", "Shift assignments evoking temporary switches of rotation are synced", "✔"] },
-                    { "de": ["", "Internal rentals", "Shift assignments evoking temporary switches of cost centres are synced", "✔"] },
-                    { "de": ["", "Short-term overtime", "Short-term overtime is managed in shyftplan and synced", "✔"] },
-                    { "de": ["", "Planned overtime", "Planned overtime is managed in shyftplan and synced", "✔"] },
-                    { "de": ["Demand", "Automatic creation", "Shifts are automatically created converting production demand into shift demands", "✔"] },
-                    { "de": ["", "Capacity report", "Reporting of available capacity (planned employees on positions)", "✔"] },
-                    { "de": ["Reporting", "Evaluations", "Raw data for evaluating shifts, productivity or machine utilization in other tool", "✔"] },
-                    { "de": ["", "Absences", "Raw data delivered for absence monitoring in other tool", "✔"] }
-                ]
+              "de": [
+                "Absences",
+                "Absence reasons",
+                "\"Major\" absence reasons are mapped to shyftplan eg vacation, sick leave,",
+                "✔"
+              ]
             },
             {
-                "type": "heading",
-                "text_de": "C: Fokus der Programmierung liegt im OData Interface und CPI Service",
-                "text_en": "C: Focus of programming is on the OData Interface and CPI Service"
+              "de": [
+                "",
+                "Absence entitlement",
+                "Absence entitlements are managed in other system and synced to shyftplan",
+                "✔"
+              ]
             },
             {
-                "type": "image",
-                "src": "https://storage.googleapis.com/maker-me/media/images/shyftplan_schema_3.width-1024.png",
-                "alt_de": "Diagramm zum Fokus der Programmierung",
-                "alt_en": "Diagram of the programming focus"
+              "de": [
+                "",
+                "Absences (shyftplan)",
+                "\"Major\" absences are entered by employees, managed in shyftplan and synced",
+                "✔"
+              ]
+            },
+            {
+              "de": [
+                "",
+                "Absences (other system)",
+                "\"Longtail\" absences (such as parental leave) are managed in other system",
+                "✔"
+              ]
+            },
+            {
+              "de": [
+                "Time & Attendance",
+                "Time stamps",
+                "Live status of attendance in shyftplan: Clock-in/clock-out synced frequently",
+                "✔"
+              ]
+            },
+            {
+              "de": [
+                "",
+                "Substitutions",
+                "Shift assignments evoking temporary switches of rotation are synced",
+                "✔"
+              ]
+            },
+            {
+              "de": [
+                "",
+                "Internal rentals",
+                "Shift assignments evoking temporary switches of cost centres are synced",
+                "✔"
+              ]
+            },
+            {
+              "de": [
+                "",
+                "Short-term overtime",
+                "Short-term overtime is managed in shyftplan and synced",
+                "✔"
+              ]
+            },
+            {
+              "de": [
+                "",
+                "Planned overtime",
+                "Planned overtime is managed in shyftplan and synced",
+                "✔"
+              ]
+            },
+            {
+              "de": [
+                "Demand",
+                "Automatic creation",
+                "Shifts are automatically created converting production demand into shift demands",
+                "✔"
+              ]
+            },
+            {
+              "de": [
+                "",
+                "Capacity report",
+                "Reporting of available capacity (planned employees on positions)",
+                "✔"
+              ]
+            },
+            {
+              "de": [
+                "Reporting",
+                "Evaluations",
+                "Raw data for evaluating shifts, productivity or machine utilization in other tool",
+                "✔"
+              ]
+            },
+            {
+              "de": [
+                "",
+                "Absences",
+                "Raw data delivered for absence monitoring in other tool",
+                "✔"
+              ]
             }
-        ]
+          ]
+        },
+        {
+          "type": "heading",
+          "text_de": "C: Fokus der Programmierung liegt im OData Interface und CPI Service",
+          "text_en": "C: Focus of programming is on the OData Interface and CPI Service"
+        },
+        {
+          "type": "image",
+          "src": "https://storage.googleapis.com/maker-me/media/images/shyftplan_schema_3.width-1024.png",
+          "alt_de": "Diagramm zum Fokus der Programmierung",
+          "alt_en": "Diagram of the programming focus"
+        }
+      ]
+    },
+    "sla_service_level_agreement": {
+      "title_de": "Anhang 6: Service Level Agreement (SLA)",
+      "title_en": "Annex 6: Service Level Agreement (SLA)",
+      "sections": [
+        {
+          "type": "heading",
+          "text_de": "1. shyftplan Service-Verpflichtung",
+          "text_en": "1. shyftplan service commitment"
+        },
+        {
+          "type": "paragraph",
+          "number": "1.1.",
+          "text_de": "Verfügbarkeit: shyftplan gewährleistet eine durchschnittliche jährliche Verfügbarkeit der Schichtplanungs-Software von 99,5 %. Ausgenommen sind geplante Wartungsarbeiten, die mindestens 10 Tage im Voraus angekündigt werden und jeweils weniger als 12 Stunden dauern.",
+          "text_en": "Availability: shyftplan guarantees an average annual availability of the shift planning software of 99.5%. Exceptions are planned maintenance announced at least 10 days in advance and lasting less than 12 hours."
+        },
+        {
+          "type": "paragraph",
+          "number": "1.2.",
+          "text_de": "Support & technische Unterstützung: Kunden melden Störungen über den festgelegten Support‑Kanal; der Support reagiert gemäß den unten definierten Fehlerklassen.",
+          "text_en": "Support & technical assistance: Customers report incidents via the designated support channel; support responds in accordance with the error classes defined below."
+        },
+        {
+          "type": "paragraph",
+          "number": "1.3.",
+          "text_de": "Reaktionszeiten: Reaktionszeiten beschreiben die Zeit bis zur ersten Rückmeldung von shyftplan. Die tatsächlichen Zeiten können im Einzelfall schneller sein.",
+          "text_en": "Response times: Response times describe the time to first reply by shyftplan. Actual times may be faster in individual cases."
+        },
+        {
+          "type": "heading",
+          "text_de": "2. SLA‑Ausschlüsse",
+          "text_en": "2. SLA exclusions"
+        },
+        {
+          "type": "paragraph",
+          "number": "2.1.",
+          "text_de": "Außerhalb der Kontrolle: Ausfallzeiten aufgrund höherer Gewalt, genereller Internet‑/Provider‑Störungen oder Ereignissen außerhalb des Netzwerks von shyftplan sind ausgeschlossen.",
+          "text_en": "Beyond control: Downtime due to force majeure, general internet/provider outages, or events outside shyftplan’s network are excluded."
+        },
+        {
+          "type": "paragraph",
+          "number": "2.2.",
+          "text_de": "Kundenseitige Änderungen: Probleme durch unautorisierte Änderungen, Skripte oder Integrationen des Kunden sind ausgeschlossen.",
+          "text_en": "Customer changes: Issues caused by unauthorized changes, scripts, or integrations by the customer are excluded."
+        },
+        {
+          "type": "paragraph",
+          "number": "2.3.",
+          "text_de": "Kundengeräte & Software: Störungen durch Endgeräte, Firewalls, Proxys oder Software des Kunden sind ausgeschlossen; der Kunde stellt die Kompatibilität sicher.",
+          "text_en": "Customer devices & software: Disruptions caused by the customer’s devices, firewalls, proxies, or software are excluded; the customer ensures compatibility."
+        },
+        {
+          "type": "paragraph",
+          "number": "2.4.",
+          "text_de": "Drittsystem‑Integrationen: Fehler aus Integrationen in Drittsysteme sind ausgeschlossen, sofern sie nicht von shyftplan implementiert oder entgegen der shyftplan‑Vorgaben betrieben wurden.",
+          "text_en": "Third‑party integrations: Errors arising from integrations into third‑party systems are excluded unless implemented by shyftplan or operated against shyftplan’s guidance."
+        },
+        {
+          "type": "heading",
+          "text_de": "3. Fehlerklassen",
+          "text_en": "3. Error classes"
+        },
+        {
+          "type": "paragraph",
+          "number": "3.1.",
+          "text_de": "Klasse 1 – Systemausfall: Dienst vollständig unzugänglich/funktionsunfähig; alle Nutzer betroffen. Erstreaktion: 1 Arbeitstag. Workaround: 2 Arbeitstage. Patch: 5 Arbeitstage. Sofortige Analyse; Eskalation bis Management möglich.",
+          "text_en": "Class 1 – System outage: Service completely inaccessible/inoperable; all users affected. First response: 1 working day. Workaround: 2 working days. Patch: 5 working days. Immediate analysis; escalation up to management possible."
+        },
+        {
+          "type": "paragraph",
+          "number": "3.2.",
+          "text_de": "Klasse 2 – Schwere Beeinträchtigung: Zentrale Funktionen erheblich gestört; ≥ 20 % aktive Nutzer betroffen. Erstreaktion: 1 Arbeitstag. Workaround: 5 Arbeitstage. Patch: 10 Arbeitstage.",
+          "text_en": "Class 2 – Severe impairment: Core functions heavily affected; ≥ 20% active users impacted. First response: 1 working day. Workaround: 5 working days. Patch: 10 working days."
+        },
+        {
+          "type": "paragraph",
+          "number": "3.3.",
+          "text_de": "Klasse 3 – Mäßige Beeinträchtigung: Bedienung möglich, jedoch stark verlangsamt (z. B. ≥ 10 s Antwortzeit oder dreifache Eingabedauer); ≥ 20 % aktiv Betroffene. Erstreaktion: 3 Arbeitstage. Workaround: 7 Arbeitstage. Patch: 30 Arbeitstage.",
+          "text_en": "Class 3 – Moderate impairment: Operation possible but significantly slowed (e.g., ≥ 10 s response time or triple input duration); ≥ 20% actively affected. First response: 3 working days. Workaround: 7 working days. Patch: 30 working days."
+        },
+        {
+          "type": "paragraph",
+          "number": "3.4.",
+          "text_de": "Klasse 4 – Geringe Beeinträchtigung/Anfrage: Erstreaktion: 30 Arbeitstage. Bei Datenfehlern führt shyftplan Bulk‑Korrekturen durch.",
+          "text_en": "Class 4 – Minor impairment/request: First response: 30 working days. For data errors, shyftplan performs bulk corrections."
+        },
+        {
+          "type": "heading",
+          "text_de": "4. Reaktions‑ und Behebungszeiten",
+          "text_en": "4. Response and remediation times"
+        },
+        {
+          "type": "paragraph",
+          "number": "4.1.",
+          "text_de": "Sofortmaßnahmen für Klasse 1/2: Nach Meldung über den Notfallkanal startet shyftplan umgehend Gegenmaßnahmen.",
+          "text_en": "Immediate actions for Class 1/2: After reporting via the emergency channel, shyftplan immediately initiates countermeasures."
+        },
+        {
+          "type": "paragraph",
+          "number": "4.2.",
+          "text_de": "Workaround‑Bereitstellung: Kann eine dauerhafte Behebung nicht unmittelbar erfolgen, stellt shyftplan fristgerecht einen Workaround bereit und priorisiert Folgearbeiten.",
+          "text_en": "Workaround provision: If a permanent fix cannot be implemented immediately, shyftplan provides a workaround within the deadline and prioritizes follow‑up work."
+        },
+        {
+          "type": "paragraph",
+          "number": "4.3.",
+          "text_de": "Patch‑Bereitstellung: 2nd‑Level‑Support liefert Patches innerhalb der oben genannten Fristen; Verzögerungen werden transparent kommuniziert.",
+          "text_en": "Patch delivery: 2nd‑level support delivers patches within the deadlines above; delays are communicated transparently."
+        },
+        {
+          "type": "paragraph",
+          "number": "4.4.",
+          "text_de": "Einbindung in Releases: Workarounds/Patches werden in reguläre Releases integriert; Auswirkungen werden dokumentiert.",
+          "text_en": "Release integration: Workarounds/patches are integrated into regular releases; impacts are documented."
+        },
+        {
+          "type": "heading",
+          "text_de": "5. Service & Support",
+          "text_en": "5. Service & Support"
+        },
+        {
+          "type": "paragraph",
+          "number": "5.1.",
+          "text_de": "Service‑Levels: 1st‑Level (Kunde), 2nd‑Level (shyftplan), 3rd‑Level (nur durch 2nd‑Level kontaktiert).",
+          "text_en": "Service levels: 1st level (customer), 2nd level (shyftplan), 3rd level (contacted only by 2nd level)."
+        },
+        {
+          "type": "ul",
+          "items_de": [
+            "1st‑Level‑Support: Vom Kunden gestellt; kann externe Unterstützung nutzen.",
+            "2nd‑Level‑Support: Betreuung via service@shyftplan.com; regelmäßige Status‑Updates.",
+            "Virtuelle Termine: Über die Website buchbar, vorbehaltlich Verfügbarkeit.",
+            "Notfallkontakt (24/7): +49 30 31193680 – ausschließlich durch den 1st‑Level‑Support des Kunden zu nutzen.",
+            "Sprachen: Deutsch und Englisch."
+          ],
+          "items_en": [
+            "1st‑level support: provided by the customer; may use external support.",
+            "2nd‑level support: via service@shyftplan.com; regular status updates.",
+            "Virtual meetings: bookable via website, subject to availability.",
+            "Emergency contact (24/7): +49 30 31193680 – to be used only by the customer’s 1st‑level support.",
+            "Languages: German and English."
+          ]
+        },
+        {
+          "type": "heading",
+          "text_de": "6. Sonderkündigung",
+          "text_en": "6. Special termination"
+        },
+        {
+          "type": "paragraph",
+          "number": "6.1.",
+          "text_de": "Erreicht shyftplan die vereinbarte Verfügbarkeit oder die festgelegten Behebungsfristen in drei aufeinanderfolgenden Monaten nicht, kann der Kunde binnen 30 Tagen nach Ablauf dieses Zeitraums mit sofortiger Wirkung kündigen. Nichteinhaltung ist binnen 30 Tagen schriftlich zu melden. Vorauszahlungen für nicht erbrachte Leistungen werden vollständig erstattet.",
+          "text_en": "If shyftplan fails to meet the agreed availability or remediation deadlines in three consecutive months, the customer may terminate with immediate effect within 30 days after this period. Non‑compliance must be notified in writing within 30 days. Prepayments for undelivered services will be refunded in full."
+        }
+      ]
     }
   },
   "assembly": {
@@ -1064,7 +1637,14 @@
         "other_agreements",
         "final_provisions"
       ],
-      "appendices": ["agb_20230124", "shyftplan_service_description", "shyftskills_service_description", "shyftconnect_service_description", "technical_connection_description"]
+      "appendices": [
+        "agb_20230124",
+        "shyftplan_service_description",
+        "shyftskills_service_description",
+        "shyftconnect_service_description",
+        "technical_connection_description",
+        "sla_service_level_agreement"
+      ]
     },
     "ep_rollout": {
       "modules": [
@@ -1080,7 +1660,14 @@
         "other_agreements",
         "final_provisions"
       ],
-      "appendices": ["agb_20230124", "shyftplan_service_description", "shyftskills_service_description", "shyftconnect_service_description", "technical_connection_description"]
+      "appendices": [
+        "agb_20230124",
+        "shyftplan_service_description",
+        "shyftskills_service_description",
+        "shyftconnect_service_description",
+        "technical_connection_description",
+        "sla_service_level_agreement"
+      ]
     }
   }
 }
