@@ -24,7 +24,7 @@ const contractTemplate = {
     { id: "angebot_nr", label: "Angebots-Nr.", type: "text", value: "Q-2025-1234" },
     { id: "datum", label: "Datum", type: "date", value: "2025-08-31" },
     { id: "firma", label: "Firma / Company", type: "text", value: "" },
-    { id: "ansprechpartner", label: "Ansprechpartner:in / Contact Person", type: "text", value: "" },
+    { id: "ansprechpartner", label: "Ansprechpartner / Contact Person", type: "text", value: "" },
     { id: "strasse_nr", label: "Straße, Nr. / Street, No.", type: "text", value: "" },
     { id: "plz_stadt", label: "PLZ, Stadt / ZIP, City", type: "text", value: "" },
     { id: "rechnungs_email", label: "Rechnungs-E-Mail / Invoice Email", type: "email", value: "" },
@@ -187,12 +187,8 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
       <div className="space-y-6 text-sm">
         {/* Header */}
         <div className="flex justify-end mb-8">
-          <div className="flex items-center gap-1">
-            <svg width="32" height="32" viewBox="0 0 100 100" className="text-primary">
-              <circle cx="50" cy="50" r="45" fill="#8b5cf6" />
-              <text x="50" y="65" textAnchor="middle" fontSize="50" fontWeight="bold" fill="white">s</text>
-            </svg>
-            <span className="text-2xl font-bold text-foreground">hyftplan</span>
+          <div className="flex items-center">
+            <img src="/src/assets/shyftplan-logo.svg" alt="shyftplan" className="h-8" />
           </div>
         </div>
 
@@ -204,8 +200,10 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
             <p className="mt-1"><strong>USt-ID / VAT ID:</strong> DE288650176</p>
           </div>
           <div className="text-xs">
-            <p><strong>Ansprechpartner:in shyftplan</strong></p>
-            <p className="text-muted-foreground">Max Mustermann, xxx@shyftplan.com, +49 xxx</p>
+            <p><strong>Ansprechpartner shyftplan</strong></p>
+            <p className="text-muted-foreground">Max Mustermann</p>
+            <p className="text-muted-foreground">xxx@shyftplan.com</p>
+            <p className="text-muted-foreground">+49 xxx</p>
           </div>
           <div className="text-xs">
             <p><strong>Bankverbindung</strong></p>
@@ -393,12 +391,12 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
                       {contractTemplate.global_variables.map((variable) => (
                         <div key={variable.id}>
                           <Label className="text-muted-foreground text-sm font-medium">{variable.label}</Label>
-                          <Input
-                            type={variable.type}
-                            value={formValues[variable.id] || ''}
-                            onChange={(e) => setFormValues(prev => ({ ...prev, [variable.id]: e.target.value }))}
-                            className="mt-1 bg-background border-input focus:border-primary focus:bg-background transition-all text-foreground"
-                          />
+                           <Input
+                             type={variable.type}
+                             value={formValues[variable.id] || ''}
+                             onChange={(e) => setFormValues(prev => ({ ...prev, [variable.id]: e.target.value }))}
+                             className="mt-1 bg-card border-input focus:border-primary focus:bg-card transition-all text-foreground placeholder:text-muted-foreground"
+                           />
                         </div>
                       ))}
                     </div>
@@ -418,23 +416,23 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
                       <div className="space-y-6">
                         {activeConfiguratorVariables.map((module) => (
                           <div key={module.id}>
-                            <h3 className="text-sm font-semibold text-primary mb-4">{module.title_de}</h3>
+                            
                             <div className="grid grid-cols-2 gap-4">
                               {module.variables.map((variable: any) => (
                                 <div key={variable.id}>
                                   <Label className="text-muted-foreground text-sm font-medium">{variable.label}</Label>
-                                  <Input
-                                    type={variable.type}
-                                    step={variable.type === 'currency' ? '0.01' : undefined}
-                                    value={formValues[variable.id] || variable.value || ''}
-                                    onChange={(e) => setFormValues(prev => ({ 
-                                      ...prev, 
-                                      [variable.id]: variable.type === 'number' || variable.type === 'currency' 
-                                        ? Number(e.target.value) || 0 
-                                        : e.target.value 
-                                    }))}
-                                    className="mt-1 bg-background border-input focus:border-primary focus:bg-background transition-all text-foreground"
-                                  />
+                                   <Input
+                                     type={variable.type}
+                                     step={variable.type === 'currency' ? '0.01' : undefined}
+                                     value={formValues[variable.id] || variable.value || ''}
+                                     onChange={(e) => setFormValues(prev => ({ 
+                                       ...prev, 
+                                       [variable.id]: variable.type === 'number' || variable.type === 'currency' 
+                                         ? Number(e.target.value) || 0 
+                                         : e.target.value 
+                                     }))}
+                                     className="mt-1 bg-card border-input focus:border-primary focus:bg-card transition-all text-foreground placeholder:text-muted-foreground"
+                                   />
                                 </div>
                               ))}
                             </div>
