@@ -4,8 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, Save, FileText, Info, Clock, Building2 } from 'lucide-react';
 import { Contract } from '@/lib/mockData';
+import templateDataRaw from '@/lib/template.json';
+
+// Type the template data properly
+const templateData = templateDataRaw as any;
 
 interface ContractEditorProps {
   contract?: Contract | null;
@@ -14,63 +19,6 @@ interface ContractEditorProps {
   onSave: (contract: Contract) => void;
 }
 
-// Extended contract template with sophisticated structure like in Vue
-const contractTemplate = {
-  contractTypes: {
-    ep_standard: "Enterprise Standard",
-    ep_rollout: "Enterprise mit Rollout"
-  },
-  global_variables: [
-    { id: "angebot_nr", label: "Angebots-Nr.", type: "text", value: "Q-2025-1234" },
-    { id: "datum", label: "Datum", type: "date", value: "2025-08-31" },
-    { id: "firma", label: "Firma / Company", type: "text", value: "" },
-    { id: "ansprechpartner", label: "Ansprechpartner / Contact Person", type: "text", value: "" },
-    { id: "strasse_nr", label: "Straße, Nr. / Street, No.", type: "text", value: "" },
-    { id: "plz_stadt", label: "PLZ, Stadt / ZIP, City", type: "text", value: "" },
-    { id: "rechnungs_email", label: "Rechnungs-E-Mail / Invoice Email", type: "email", value: "" },
-    { id: "ust_id", label: "USt-ID / VAT ID", type: "text", value: "" },
-    { id: "invoice_strasse_nr", label: "Rechnungsadresse: Straße, Nr. / Invoice Address: Street, No.", type: "text", value: "" },
-    { id: "invoice_plz_stadt", label: "Rechnungsadresse: PLZ, Stadt / Invoice Address: ZIP, City", type: "text", value: "" }
-  ],
-  modules: {
-    conditions_ep_standard: {
-      title_de: "Vertragskonditionen",
-      title_en: "Contract Conditions",
-      variables: [
-        { id: "std_vertragsbeginn", label: "Vertragsbeginn", type: "date", value: "2025-01-01" },
-        { id: "std_vertragslaufzeit", label: "Vertragslaufzeit (Jahre)", type: "number", value: 3 },
-        { id: "std_lizenzen", label: "Anzahl User-Lizenzen", type: "number", value: 1000 },
-        { id: "std_basispreis", label: "Jährlicher Basispreis", type: "currency", value: 25000 },
-        { id: "std_zusatzlizenz", label: "Preis pro zusätzlicher Lizenz p.a.", type: "currency", value: 25 }
-      ],
-      content_de: "Die Konditionen für den Enterprise Standard Vertrag umfassen die nachfolgend definierten Leistungen und Preise.",
-      content_en: "The conditions for the Enterprise Standard contract include the services and prices defined below."
-    },
-    conditions_ep_rollout: {
-      title_de: "(3) Rollout-Konditionen", 
-      title_en: "(3) Rollout Conditions",
-      variables: [
-        { id: "poc_beginn", label: "Vertragsbeginn POC", type: "date", value: "2025-10-01" },
-        { id: "poc_laufzeit", label: "Laufzeit POC (Monate)", type: "number", value: 3 },
-        { id: "poc_lizenzen", label: "Max. Lizenzen POC", type: "number", value: 50 },
-        { id: "poc_pauschale", label: "Pauschale POC", type: "currency", value: 1500 },
-        { id: "rollout_beginn", label: "Rollout-Beginn", type: "date", value: "2026-01-01" },
-        { id: "rollout_lizenzen", label: "Rollout Lizenzen", type: "number", value: 2000 }
-      ],
-      content_de: "Der Rollout erfolgt in zwei Phasen: Zunächst ein Proof of Concept, gefolgt vom vollständigen Rollout.",
-      content_en: "The rollout is conducted in two phases: First a Proof of Concept, followed by the full rollout."
-    }
-  },
-  assembly: {
-    ep_standard: {
-      modules: ["conditions_ep_standard"]
-    },
-    ep_rollout: {
-      modules: ["conditions_ep_rollout"]
-    }
-  }
-};
-
 export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEditorProps) {
   const [selectedContractType, setSelectedContractType] = useState('ep_standard');
   const [formValues, setFormValues] = useState<Record<string, any>>({});
@@ -78,8 +26,8 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
   // Initialize form values
   const initializeFormValues = () => {
     const allVars = new Set();
-    contractTemplate.global_variables.forEach(v => allVars.add(v));
-    Object.values(contractTemplate.modules).forEach((module: any) => {
+    templateData.global_variables.forEach(v => allVars.add(v));
+    Object.values(templateData.modules).forEach((module: any) => {
       if (module.variables) {
         module.variables.forEach(v => allVars.add(v));
       }
@@ -104,9 +52,46 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
     }
   }, [contract, isOpen]);
 
-  const activeAssembly = contractTemplate.assembly[selectedContractType] || { modules: [] };
-  const activeModuleKeys = activeAssembly.modules || [];
-  const activeModules = activeModuleKeys.map(key => ({ id: key, ...contractTemplate.modules[key] }));
+  // Get active modules based on contract type
+  const getActiveModules = () => {
+    const modules = [];
+    
+    // Add preamble and object_of_agreement for all types
+    if (templateData.modules.preamble) modules.push({ id: 'preamble', ...templateData.modules.preamble });
+    if (templateData.modules.object_of_agreement) modules.push({ id: 'object_of_agreement', ...templateData.modules.object_of_agreement });
+    
+    // Add contract-specific conditions
+    if (selectedContractType === 'ep_standard') {
+      if (templateData.modules.conditions_ep_standard) {
+        modules.push({ id: 'conditions_ep_standard', ...templateData.modules.conditions_ep_standard });
+      }
+    } else if (selectedContractType === 'ep_rollout') {
+      if (templateData.modules.conditions_title_rollout) {
+        modules.push({ id: 'conditions_title_rollout', ...templateData.modules.conditions_title_rollout });
+      }
+      if (templateData.modules.conditions_ep_rollout_poc) {
+        modules.push({ id: 'conditions_ep_rollout_poc', ...templateData.modules.conditions_ep_rollout_poc });
+      }
+      if (templateData.modules.conditions_ep_rollout_rollout) {
+        modules.push({ id: 'conditions_ep_rollout_rollout', ...templateData.modules.conditions_ep_rollout_rollout });
+      }
+      if (templateData.modules.conditions_ep_rollout_prod) {
+        modules.push({ id: 'conditions_ep_rollout_prod', ...templateData.modules.conditions_ep_rollout_prod });
+      }
+    }
+    
+    // Add further conditions and training/support
+    if (templateData.modules.further_contract_conditions) {
+      modules.push({ id: 'further_contract_conditions', ...templateData.modules.further_contract_conditions });
+    }
+    if (templateData.modules.training_support) {
+      modules.push({ id: 'training_support', ...templateData.modules.training_support });
+    }
+    
+    return modules;
+  };
+
+  const activeModules = getActiveModules();
   const activeConfiguratorVariables = activeModules.filter(m => m.variables && m.variables.length > 0);
 
   // Variable interpolation
@@ -133,10 +118,10 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
   };
 
   const findVariableDefinition = (id: string) => {
-    let variable = contractTemplate.global_variables.find(v => v.id === id);
+    let variable = templateData.global_variables.find(v => v.id === id);
     if (variable) return variable;
-    for (const moduleKey in contractTemplate.modules) {
-      const module = contractTemplate.modules[moduleKey];
+    for (const moduleKey in templateData.modules) {
+      const module = templateData.modules[moduleKey];
       variable = (module.variables || []).find(v => v.id === id);
       if (variable) return variable;
     }
@@ -163,14 +148,14 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
   const handleSave = () => {
     const contractToSave: Contract = {
       id: contract?.id || `contract_${Date.now()}`,
-      title: formValues.firma ? `${contractTemplate.contractTypes[selectedContractType]} - ${formValues.firma}` : contractTemplate.contractTypes[selectedContractType],
+      title: formValues.firma ? `${templateData.contractTypes[selectedContractType]} - ${formValues.firma}` : templateData.contractTypes[selectedContractType],
       client: formValues.firma || '',
       status: 'draft',
       value: formValues.std_basispreis || formValues.poc_pauschale || 0,
       startDate: formValues.std_vertragsbeginn || formValues.poc_beginn || new Date().toISOString().split('T')[0],
       endDate: '',
       assignedTo: 'Max Mustermann',
-      description: `${contractTemplate.contractTypes[selectedContractType]} Vertrag`,
+      description: `${templateData.contractTypes[selectedContractType]} Vertrag`,
       tags: [],
       lastModified: new Date().toISOString(),
       progress: 10,
@@ -274,20 +259,43 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
                 </div>
               </div>
               
+              {/* Content paragraphs */}
+              {(mod.paragraphs_de || mod.paragraphs_en) && (
+                <div className="grid grid-cols-2 gap-6 mb-4 text-sm">
+                  <div className="pr-3 space-y-3">
+                    {mod.paragraphs_de && mod.paragraphs_de.map((para: any, index: number) => (
+                      <div key={index}>
+                        {para.number && <span className="font-semibold">({para.number}) </span>}
+                        <span className="text-muted-foreground">{interpolateContent(para.text, 'de')}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pl-3 space-y-3">
+                    {mod.paragraphs_en && mod.paragraphs_en.map((para: any, index: number) => (
+                      <div key={index}>
+                        {para.number && <span className="font-semibold">({para.number}) </span>}
+                        <span className="text-muted-foreground">{interpolateContent(para.text, 'en')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Simple content */}
               {(mod.content_de || mod.content_en) && (
                 <div className="grid grid-cols-2 gap-6 mb-4 text-sm">
                   <div className="pr-3">
-                    {mod.content_de && <div className="text-muted-foreground">{interpolateContent(mod.content_de, 'de')}</div>}
+                    {mod.content_de && <div className="text-muted-foreground whitespace-pre-line">{interpolateContent(mod.content_de, 'de')}</div>}
                   </div>
                   <div className="pl-3">
-                    {mod.content_en && <div className="text-muted-foreground">{interpolateContent(mod.content_en, 'en')}</div>}
+                    {mod.content_en && <div className="text-muted-foreground whitespace-pre-line">{interpolateContent(mod.content_en, 'en')}</div>}
                   </div>
                 </div>
               )}
 
               {/* Variables Display */}
               {mod.variables && mod.variables.length > 0 && (
-                <div className="grid grid-cols-2 gap-6 text-sm">
+                <div className="grid grid-cols-2 gap-6 text-sm mt-4 p-4 bg-muted/30 rounded-lg">
                   <div className="pr-3 space-y-1">
                     {mod.variables.map((variable: any) => {
                       const value = formValues[variable.id] || variable.value;
@@ -370,7 +378,7 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
                         onChange={(e) => setSelectedContractType(e.target.value)}
                         className="w-full h-10 px-3 mt-2 rounded-md border border-input bg-muted/50 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:bg-card transition-all"
                       >
-                        {Object.entries(contractTemplate.contractTypes).map(([key, name]) => (
+                        {Object.entries(templateData.contractTypes).map(([key, name]) => (
                           <option key={key} value={key}>{name}</option>
                         ))}
                       </select>
@@ -388,7 +396,7 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="grid grid-cols-2 gap-4">
-                      {contractTemplate.global_variables.map((variable) => (
+                      {templateData.global_variables.map((variable) => (
                         <div key={variable.id}>
                           <Label className="text-muted-foreground text-sm font-medium">{variable.label}</Label>
                            <Input
