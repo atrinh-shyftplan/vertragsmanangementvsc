@@ -23,19 +23,19 @@ const contractTemplate = {
   global_variables: [
     { id: "angebot_nr", label: "Angebots-Nr.", type: "text", value: "Q-2025-1234" },
     { id: "datum", label: "Datum", type: "date", value: "2025-08-31" },
-    { id: "firma", label: "Firma", type: "text", value: "" },
-    { id: "ansprechpartner", label: "Ansprechpartner:in", type: "text", value: "" },
-    { id: "strasse_nr", label: "Straße, Nr.", type: "text", value: "" },
-    { id: "plz_stadt", label: "PLZ, Stadt", type: "text", value: "" },
-    { id: "rechnungs_email", label: "Rechnungs-E-Mail", type: "email", value: "" },
-    { id: "ust_id", label: "USt-ID", type: "text", value: "" },
-    { id: "invoice_strasse_nr", label: "Rechnungsadresse: Straße, Nr.", type: "text", value: "" },
-    { id: "invoice_plz_stadt", label: "Rechnungsadresse: PLZ, Stadt", type: "text", value: "" }
+    { id: "firma", label: "Firma / Company", type: "text", value: "" },
+    { id: "ansprechpartner", label: "Ansprechpartner:in / Contact Person", type: "text", value: "" },
+    { id: "strasse_nr", label: "Straße, Nr. / Street, No.", type: "text", value: "" },
+    { id: "plz_stadt", label: "PLZ, Stadt / ZIP, City", type: "text", value: "" },
+    { id: "rechnungs_email", label: "Rechnungs-E-Mail / Invoice Email", type: "email", value: "" },
+    { id: "ust_id", label: "USt-ID / VAT ID", type: "text", value: "" },
+    { id: "invoice_strasse_nr", label: "Rechnungsadresse: Straße, Nr. / Invoice Address: Street, No.", type: "text", value: "" },
+    { id: "invoice_plz_stadt", label: "Rechnungsadresse: PLZ, Stadt / Invoice Address: ZIP, City", type: "text", value: "" }
   ],
   modules: {
     conditions_ep_standard: {
-      title_de: "(3) Vertragskonditionen",
-      title_en: "(3) Contract Conditions",
+      title_de: "Vertragskonditionen",
+      title_en: "Contract Conditions",
       variables: [
         { id: "std_vertragsbeginn", label: "Vertragsbeginn", type: "date", value: "2025-01-01" },
         { id: "std_vertragslaufzeit", label: "Vertragslaufzeit (Jahre)", type: "number", value: 3 },
@@ -187,7 +187,13 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
       <div className="space-y-6 text-sm">
         {/* Header */}
         <div className="flex justify-end mb-8">
-          <div className="text-2xl font-bold text-primary">shyftplan</div>
+          <div className="flex items-center gap-1">
+            <svg width="32" height="32" viewBox="0 0 100 100" className="text-primary">
+              <circle cx="50" cy="50" r="45" fill="#8b5cf6" />
+              <text x="50" y="65" textAnchor="middle" fontSize="50" fontWeight="bold" fill="white">s</text>
+            </svg>
+            <span className="text-2xl font-bold text-foreground">hyftplan</span>
+          </div>
         </div>
 
         {/* Meta Info */}
@@ -195,6 +201,7 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
           <div>
             <p><strong>Angebot Nr.:</strong> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.angebot_nr}</span></p>
             <p className="mt-1"><strong>Datum:</strong> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formatDate(formValues.datum)}</span></p>
+            <p className="mt-1"><strong>USt-ID / VAT ID:</strong> DE288650176</p>
           </div>
           <div className="text-xs">
             <p><strong>Ansprechpartner:in shyftplan</strong></p>
@@ -228,18 +235,18 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
           <div className="border border-border rounded-lg p-4 bg-card">
             <p className="text-xs text-muted-foreground mb-2">und / and</p>
             <div className="space-y-1 text-sm">
-              <p><span className="text-muted-foreground w-28 inline-block text-xs">Firma:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.firma}</span></p>
-              <p><span className="text-muted-foreground w-28 inline-block text-xs">Ansprechpartner:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.ansprechpartner}</span></p>
-              <p><span className="text-muted-foreground w-28 inline-block text-xs">Straße, Nr.:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.strasse_nr}</span></p>
-              <p><span className="text-muted-foreground w-28 inline-block text-xs">PLZ, Stadt:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.plz_stadt}</span></p>
-              <p><span className="text-muted-foreground w-28 inline-block text-xs">Rechnungs-E-Mail:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.rechnungs_email}</span></p>
-              <p><span className="text-muted-foreground w-28 inline-block text-xs">USt-ID:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.ust_id}</span></p>
+              <p><span className="text-muted-foreground w-32 inline-block text-xs">Firma / Company:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.firma}</span></p>
+              <p><span className="text-muted-foreground w-32 inline-block text-xs">Ansprechpartner / Contact:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.ansprechpartner}</span></p>
+              <p><span className="text-muted-foreground w-32 inline-block text-xs">Straße, Nr. / Street:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.strasse_nr}</span></p>
+              <p><span className="text-muted-foreground w-32 inline-block text-xs">PLZ, Stadt / ZIP, City:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.plz_stadt}</span></p>
+              <p><span className="text-muted-foreground w-32 inline-block text-xs">Rechnungs-E-Mail / Invoice Email:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.rechnungs_email}</span></p>
+              <p><span className="text-muted-foreground w-32 inline-block text-xs">USt-ID / VAT ID:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.ust_id}</span></p>
               
               {(formValues.invoice_strasse_nr || formValues.invoice_plz_stadt) && (
                 <div className="pt-3 border-t border-border mt-3">
                   <h4 className="text-xs font-semibold mb-2 text-foreground">Rechnungsadresse / Invoice address (falls abweichend / if different)</h4>
-                  <p><span className="text-muted-foreground w-28 inline-block text-xs">Straße, Nr.:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.invoice_strasse_nr}</span></p>
-                  <p><span className="text-muted-foreground w-28 inline-block text-xs">PLZ, Stadt:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.invoice_plz_stadt}</span></p>
+                  <p><span className="text-muted-foreground w-32 inline-block text-xs">Straße, Nr. / Street:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.invoice_strasse_nr}</span></p>
+                  <p><span className="text-muted-foreground w-32 inline-block text-xs">PLZ, Stadt / ZIP, City:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.invoice_plz_stadt}</span></p>
                 </div>
               )}
             </div>
@@ -390,7 +397,7 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
                             type={variable.type}
                             value={formValues[variable.id] || ''}
                             onChange={(e) => setFormValues(prev => ({ ...prev, [variable.id]: e.target.value }))}
-                            className="mt-1 bg-muted/50 border-input focus:border-primary focus:bg-card transition-all"
+                            className="mt-1 bg-background border-input focus:border-primary focus:bg-background transition-all text-foreground"
                           />
                         </div>
                       ))}
@@ -426,7 +433,7 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
                                         ? Number(e.target.value) || 0 
                                         : e.target.value 
                                     }))}
-                                    className="mt-1 bg-muted/50 border-input focus:border-primary focus:bg-card transition-all"
+                                    className="mt-1 bg-background border-input focus:border-primary focus:bg-background transition-all text-foreground"
                                   />
                                 </div>
                               ))}
