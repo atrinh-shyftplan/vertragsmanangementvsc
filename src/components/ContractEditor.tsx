@@ -52,41 +52,25 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
     }
   }, [contract, isOpen]);
 
-  // Get active modules based on contract type
+  // Get active modules based on contract type using assembly configuration
   const getActiveModules = () => {
     const modules = [];
     
-    // Add preamble and object_of_agreement for all types
-    if (templateData.modules.preamble) modules.push({ id: 'preamble', ...templateData.modules.preamble });
-    if (templateData.modules.object_of_agreement) modules.push({ id: 'object_of_agreement', ...templateData.modules.object_of_agreement });
-    
-    // Add contract-specific conditions
-    if (selectedContractType === 'ep_standard') {
-      if (templateData.modules.conditions_ep_standard) {
-        modules.push({ id: 'conditions_ep_standard', ...templateData.modules.conditions_ep_standard });
-      }
-    } else if (selectedContractType === 'ep_rollout') {
-      if (templateData.modules.conditions_title_rollout) {
-        modules.push({ id: 'conditions_title_rollout', ...templateData.modules.conditions_title_rollout });
-      }
-      if (templateData.modules.conditions_ep_rollout_poc) {
-        modules.push({ id: 'conditions_ep_rollout_poc', ...templateData.modules.conditions_ep_rollout_poc });
-      }
-      if (templateData.modules.conditions_ep_rollout_rollout) {
-        modules.push({ id: 'conditions_ep_rollout_rollout', ...templateData.modules.conditions_ep_rollout_rollout });
-      }
-      if (templateData.modules.conditions_ep_rollout_prod) {
-        modules.push({ id: 'conditions_ep_rollout_prod', ...templateData.modules.conditions_ep_rollout_prod });
-      }
+    // Get the assembly configuration for the selected contract type
+    const assembly = templateData.assembly && templateData.assembly[selectedContractType];
+    if (!assembly || !assembly.modules) {
+      return modules;
     }
     
-    // Add further conditions and training/support
-    if (templateData.modules.further_contract_conditions) {
-      modules.push({ id: 'further_contract_conditions', ...templateData.modules.further_contract_conditions });
-    }
-    if (templateData.modules.training_support) {
-      modules.push({ id: 'training_support', ...templateData.modules.training_support });
-    }
+    // Load modules in the order defined by assembly
+    assembly.modules.forEach((moduleKey: string) => {
+      if (templateData.modules[moduleKey]) {
+        modules.push({ 
+          id: moduleKey, 
+          ...templateData.modules[moduleKey] 
+        });
+      }
+    });
     
     return modules;
   };
