@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
+
 import { 
   FileText, 
   Search,
@@ -12,7 +12,6 @@ import {
   Calendar,
   User,
   Euro,
-  Eye,
   Edit,
   MoreHorizontal
 } from 'lucide-react';
@@ -107,7 +106,7 @@ export default function Contracts() {
   };
 
   const statusLabels = {
-    active: 'Aktiv',
+    active: 'Final/Aktiv',
     pending: 'Ausstehend',
     expired: 'Abgelaufen',
     draft: 'Entwurf'
@@ -155,7 +154,7 @@ export default function Contracts() {
                 size="sm"
                 onClick={() => setFilterStatus('active')}
               >
-                Aktiv
+                Final/Aktiv
               </Button>
               <Button
                 variant={filterStatus === 'pending' ? 'default' : 'outline'}
@@ -163,6 +162,13 @@ export default function Contracts() {
                 onClick={() => setFilterStatus('pending')}
               >
                 Ausstehend
+              </Button>
+              <Button
+                variant={filterStatus === 'expired' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterStatus('expired')}
+              >
+                Abgelaufen
               </Button>
               <Button
                 variant={filterStatus === 'draft' ? 'default' : 'outline'}
@@ -198,14 +204,12 @@ export default function Contracts() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleViewContract(contract)}>
-                      <Eye className="mr-2 h-4 w-4" />
-                      Anzeigen
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleEditContract(contract)}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Bearbeiten
-                    </DropdownMenuItem>
+                    {contract.status !== 'active' && (
+                      <DropdownMenuItem onClick={() => handleEditContract(contract)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Bearbeiten
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -221,13 +225,6 @@ export default function Contracts() {
                 </span>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Fortschritt</span>
-                  <span className="font-medium">{contract.progress}%</span>
-                </div>
-                <Progress value={contract.progress} className="h-2" />
-              </div>
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
@@ -245,16 +242,12 @@ export default function Contracts() {
                 <p className="text-sm font-medium">{contract.assignedTo}</p>
               </div>
 
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => handleViewContract(contract)}>
-                  <Eye className="mr-2 h-3 w-3" />
-                  Details
-                </Button>
-                <Button size="sm" className="flex-1" onClick={() => handleEditContract(contract)}>
+              {contract.status !== 'active' && (
+                <Button size="sm" className="w-full" onClick={() => handleEditContract(contract)}>
                   <Edit className="mr-2 h-3 w-3" />
                   Bearbeiten
                 </Button>
-              </div>
+              )}
             </CardContent>
           </Card>
         ))}
