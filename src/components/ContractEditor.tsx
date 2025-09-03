@@ -379,7 +379,7 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
                         className="w-full h-10 px-3 mt-2 rounded-md border border-input bg-muted/50 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:bg-card transition-all"
                       >
                         {Object.entries(templateData.contractTypes).map(([key, name]) => (
-                          <option key={key} value={key}>{name}</option>
+                          <option key={key} value={key}>{String(name)}</option>
                         ))}
                       </select>
                     </div>
