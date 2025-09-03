@@ -1,13 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, Save } from 'lucide-react';
-import { Contract, contractTemplate } from '@/lib/mockData';
+import { X, Save, FileText, Info, Clock, Building2 } from 'lucide-react';
+import { Contract } from '@/lib/mockData';
 
 interface ContractEditorProps {
   contract?: Contract | null;
@@ -16,322 +14,444 @@ interface ContractEditorProps {
   onSave: (contract: Contract) => void;
 }
 
+// Extended contract template with sophisticated structure like in Vue
+const contractTemplate = {
+  contractTypes: {
+    ep_standard: "Enterprise Standard",
+    ep_rollout: "Enterprise mit Rollout"
+  },
+  global_variables: [
+    { id: "angebot_nr", label: "Angebots-Nr.", type: "text", value: "Q-2025-1234" },
+    { id: "datum", label: "Datum", type: "date", value: "2025-08-31" },
+    { id: "firma", label: "Firma", type: "text", value: "" },
+    { id: "ansprechpartner", label: "Ansprechpartner:in", type: "text", value: "" },
+    { id: "strasse_nr", label: "Straße, Nr.", type: "text", value: "" },
+    { id: "plz_stadt", label: "PLZ, Stadt", type: "text", value: "" },
+    { id: "rechnungs_email", label: "Rechnungs-E-Mail", type: "email", value: "" },
+    { id: "ust_id", label: "USt-ID", type: "text", value: "" },
+    { id: "invoice_strasse_nr", label: "Rechnungsadresse: Straße, Nr.", type: "text", value: "" },
+    { id: "invoice_plz_stadt", label: "Rechnungsadresse: PLZ, Stadt", type: "text", value: "" }
+  ],
+  modules: {
+    conditions_ep_standard: {
+      title_de: "(3) Vertragskonditionen",
+      title_en: "(3) Contract Conditions",
+      variables: [
+        { id: "std_vertragsbeginn", label: "Vertragsbeginn", type: "date", value: "2025-01-01" },
+        { id: "std_vertragslaufzeit", label: "Vertragslaufzeit (Jahre)", type: "number", value: 3 },
+        { id: "std_lizenzen", label: "Anzahl User-Lizenzen", type: "number", value: 1000 },
+        { id: "std_basispreis", label: "Jährlicher Basispreis", type: "currency", value: 25000 },
+        { id: "std_zusatzlizenz", label: "Preis pro zusätzlicher Lizenz p.a.", type: "currency", value: 25 }
+      ],
+      content_de: "Die Konditionen für den Enterprise Standard Vertrag umfassen die nachfolgend definierten Leistungen und Preise.",
+      content_en: "The conditions for the Enterprise Standard contract include the services and prices defined below."
+    },
+    conditions_ep_rollout: {
+      title_de: "(3) Rollout-Konditionen", 
+      title_en: "(3) Rollout Conditions",
+      variables: [
+        { id: "poc_beginn", label: "Vertragsbeginn POC", type: "date", value: "2025-10-01" },
+        { id: "poc_laufzeit", label: "Laufzeit POC (Monate)", type: "number", value: 3 },
+        { id: "poc_lizenzen", label: "Max. Lizenzen POC", type: "number", value: 50 },
+        { id: "poc_pauschale", label: "Pauschale POC", type: "currency", value: 1500 },
+        { id: "rollout_beginn", label: "Rollout-Beginn", type: "date", value: "2026-01-01" },
+        { id: "rollout_lizenzen", label: "Rollout Lizenzen", type: "number", value: 2000 }
+      ],
+      content_de: "Der Rollout erfolgt in zwei Phasen: Zunächst ein Proof of Concept, gefolgt vom vollständigen Rollout.",
+      content_en: "The rollout is conducted in two phases: First a Proof of Concept, followed by the full rollout."
+    }
+  },
+  assembly: {
+    ep_standard: {
+      modules: ["conditions_ep_standard"]
+    },
+    ep_rollout: {
+      modules: ["conditions_ep_rollout"]
+    }
+  }
+};
+
 export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEditorProps) {
-  const [formData, setFormData] = useState<Contract>({
-    id: '',
-    title: '',
-    client: '',
-    status: 'draft',
-    value: 0,
-    startDate: '',
-    endDate: '',
-    assignedTo: '',
-    description: '',
-    tags: [],
-    lastModified: new Date().toISOString(),
-    progress: 0,
-    contractType: 'ep_standard',
-    globalVariables: {},
-    templateVariables: {}
-  });
+  const [selectedContractType, setSelectedContractType] = useState('ep_standard');
+  const [formValues, setFormValues] = useState<Record<string, any>>({});
+
+  // Initialize form values
+  const initializeFormValues = () => {
+    const allVars = new Set();
+    contractTemplate.global_variables.forEach(v => allVars.add(v));
+    Object.values(contractTemplate.modules).forEach((module: any) => {
+      if (module.variables) {
+        module.variables.forEach(v => allVars.add(v));
+      }
+    });
+
+    const initialValues: Record<string, any> = {};
+    Array.from(allVars).forEach((variable: any) => {
+      initialValues[variable.id] = variable.value !== undefined ? variable.value : '';
+    });
+    setFormValues(initialValues);
+  };
 
   useEffect(() => {
-    if (contract) {
-      setFormData(contract);
-    } else {
-      // Reset for new contract
-      const newContract: Contract = {
-        id: Date.now().toString(),
-        title: '',
-        client: '',
-        status: 'draft',
-        value: 0,
-        startDate: '',
-        endDate: '',
-        assignedTo: '',
-        description: '',
-        tags: [],
-        lastModified: new Date().toISOString(),
-        progress: 0,
-        contractType: 'ep_standard',
-        globalVariables: {},
-        templateVariables: {}
-      };
-      
-      // Initialize with default values from template
-      const defaultGlobalVars: Record<string, any> = {};
-      contractTemplate.globalVariables.forEach(variable => {
-        defaultGlobalVars[variable.id] = variable.value;
-      });
-      
-      const defaultTemplateVars: Record<string, any> = {};
-      const moduleKey = `conditions_${newContract.contractType}`;
-      if (contractTemplate.modules[moduleKey]) {
-        contractTemplate.modules[moduleKey].variables.forEach((variable: any) => {
-          defaultTemplateVars[variable.id] = variable.value;
-        });
+    if (isOpen) {
+      if (contract) {
+        setSelectedContractType(contract.contractType || 'ep_standard');
+        setFormValues(contract.globalVariables || {});
+      } else {
+        setSelectedContractType('ep_standard');
+        initializeFormValues();
       }
-      
-      newContract.globalVariables = defaultGlobalVars;
-      newContract.templateVariables = defaultTemplateVars;
-      setFormData(newContract);
     }
   }, [contract, isOpen]);
 
+  const activeAssembly = contractTemplate.assembly[selectedContractType] || { modules: [] };
+  const activeModuleKeys = activeAssembly.modules || [];
+  const activeModules = activeModuleKeys.map(key => ({ id: key, ...contractTemplate.modules[key] }));
+  const activeConfiguratorVariables = activeModules.filter(m => m.variables && m.variables.length > 0);
+
+  // Variable interpolation
+  const interpolateContent = (content: string, lang: string = 'de') => {
+    if (!content) return '';
+    let processedContent = content;
+    
+    for (const key in formValues) {
+      let displayValue = formValues[key];
+      const varDefinition = findVariableDefinition(key);
+
+      if (varDefinition) {
+        if (varDefinition.type === 'currency' && displayValue) {
+          displayValue = formatCurrency(displayValue, lang);
+        } else if (varDefinition.type === 'date' && displayValue) {
+          displayValue = formatDate(displayValue);
+        }
+      }
+      
+      processedContent = processedContent.replace(new RegExp(`{{${key}}}`, 'g'), displayValue || '');
+    }
+    
+    return processedContent;
+  };
+
+  const findVariableDefinition = (id: string) => {
+    let variable = contractTemplate.global_variables.find(v => v.id === id);
+    if (variable) return variable;
+    for (const moduleKey in contractTemplate.modules) {
+      const module = contractTemplate.modules[moduleKey];
+      variable = (module.variables || []).find(v => v.id === id);
+      if (variable) return variable;
+    }
+    return null;
+  };
+
+  const formatCurrency = (value: number, lang: string = 'de'): string => {
+    const locale = lang === 'de' ? 'de-DE' : 'en-US';
+    const num = Number(value);
+    if (isNaN(num)) return value?.toString() || '';
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' }).format(num);
+  };
+
+  const formatDate = (dateString: string): string => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}.${month}.${year}`;
+  };
+
   const handleSave = () => {
-    const updatedContract = {
-      ...formData,
-      lastModified: new Date().toISOString()
+    const contractToSave: Contract = {
+      id: contract?.id || `contract_${Date.now()}`,
+      title: formValues.firma ? `${contractTemplate.contractTypes[selectedContractType]} - ${formValues.firma}` : contractTemplate.contractTypes[selectedContractType],
+      client: formValues.firma || '',
+      status: 'draft',
+      value: formValues.std_basispreis || formValues.poc_pauschale || 0,
+      startDate: formValues.std_vertragsbeginn || formValues.poc_beginn || new Date().toISOString().split('T')[0],
+      endDate: '',
+      assignedTo: 'Max Mustermann',
+      description: `${contractTemplate.contractTypes[selectedContractType]} Vertrag`,
+      tags: [],
+      lastModified: new Date().toISOString(),
+      progress: 10,
+      contractType: selectedContractType as "ep_standard" | "ep_rollout",
+      templateVariables: formValues,
+      globalVariables: formValues
     };
-    onSave(updatedContract);
+    onSave(contractToSave);
     onClose();
   };
 
-  const updateGlobalVariable = (key: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      globalVariables: {
-        ...prev.globalVariables,
-        [key]: value
-      }
-    }));
-  };
-
-  const updateTemplateVariable = (key: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      templateVariables: {
-        ...prev.templateVariables,
-        [key]: value
-      }
-    }));
-  };
-
-  const renderVariableInput = (variable: any, value: any, onChange: (value: any) => void) => {
-    switch (variable.type) {
-      case 'date':
-        return (
-          <Input
-            type="date"
-            value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
-          />
-        );
-      case 'number':
-        return (
-          <Input
-            type="number"
-            value={value || ''}
-            onChange={(e) => onChange(Number(e.target.value))}
-          />
-        );
-      case 'currency':
-        return (
-          <Input
-            type="number"
-            value={value || ''}
-            onChange={(e) => onChange(Number(e.target.value))}
-            placeholder="Betrag in EUR"
-          />
-        );
-      case 'email':
-        return (
-          <Input
-            type="email"
-            value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="name@example.com"
-          />
-        );
-      default:
-        return (
-          <Input
-            type="text"
-            value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
-          />
-        );
-    }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('de-DE');
-  };
-
   const generatePreviewContent = () => {
-    const contractTypeName = contractTemplate.contractTypes[formData.contractType || 'ep_standard'];
-    
-    return `
-VERTRAGSANGEBOT
+    return (
+      <div className="space-y-6 text-sm">
+        {/* Header */}
+        <div className="flex justify-end mb-8">
+          <div className="text-2xl font-bold text-primary">shyftplan</div>
+        </div>
 
-${contractTypeName}
+        {/* Meta Info */}
+        <div className="grid grid-cols-3 gap-6 pb-4 border-b text-xs">
+          <div>
+            <p><strong>Angebot Nr.:</strong> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.angebot_nr}</span></p>
+            <p className="mt-1"><strong>Datum:</strong> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formatDate(formValues.datum)}</span></p>
+          </div>
+          <div className="text-xs">
+            <p><strong>Ansprechpartner:in shyftplan</strong></p>
+            <p className="text-muted-foreground">Max Mustermann, xxx@shyftplan.com, +49 xxx</p>
+          </div>
+          <div className="text-xs">
+            <p><strong>Bankverbindung</strong></p>
+            <p className="text-muted-foreground">Berliner Sparkasse<br/>IBAN: DE41 1005 0000 0190 5628 97<br/>BIC: BELADEBEXXX</p>
+          </div>
+        </div>
 
-Angebot Nr.: ${formData.globalVariables?.angebot_nr || ''}
-Datum: ${formatDate(formData.globalVariables?.datum || '')}
+        {/* Title */}
+        <h1 className="text-xl font-bold text-center mb-6 text-foreground">
+          Dienstleistungsvertrag / Service Contract
+        </h1>
 
-Kunde:
-${formData.globalVariables?.firma || ''}
-${formData.globalVariables?.ansprechpartner || ''}
-${formData.globalVariables?.strasse_nr || ''}
-${formData.globalVariables?.plz_stadt || ''}
+        {/* Parties */}
+        <div className="space-y-4">
+          <div className="border border-border rounded-lg p-4 bg-card">
+            <p className="text-xs text-muted-foreground mb-2">zwischen / between</p>
+            <div className="font-semibold text-foreground">
+              <p>shyftplan GmbH</p>
+              <p>Ritterstr. 26</p>
+              <p>10969 Berlin</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3 italic">
+              - nachfolgend "shyftplan" bezeichnet / hereinafter referred to as "shyftplan" -
+            </p>
+          </div>
+          
+          <div className="border border-border rounded-lg p-4 bg-card">
+            <p className="text-xs text-muted-foreground mb-2">und / and</p>
+            <div className="space-y-1 text-sm">
+              <p><span className="text-muted-foreground w-28 inline-block text-xs">Firma:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.firma}</span></p>
+              <p><span className="text-muted-foreground w-28 inline-block text-xs">Ansprechpartner:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.ansprechpartner}</span></p>
+              <p><span className="text-muted-foreground w-28 inline-block text-xs">Straße, Nr.:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.strasse_nr}</span></p>
+              <p><span className="text-muted-foreground w-28 inline-block text-xs">PLZ, Stadt:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.plz_stadt}</span></p>
+              <p><span className="text-muted-foreground w-28 inline-block text-xs">Rechnungs-E-Mail:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.rechnungs_email}</span></p>
+              <p><span className="text-muted-foreground w-28 inline-block text-xs">USt-ID:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.ust_id}</span></p>
+              
+              {(formValues.invoice_strasse_nr || formValues.invoice_plz_stadt) && (
+                <div className="pt-3 border-t border-border mt-3">
+                  <h4 className="text-xs font-semibold mb-2 text-foreground">Rechnungsadresse / Invoice address (falls abweichend / if different)</h4>
+                  <p><span className="text-muted-foreground w-28 inline-block text-xs">Straße, Nr.:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.invoice_strasse_nr}</span></p>
+                  <p><span className="text-muted-foreground w-28 inline-block text-xs">PLZ, Stadt:</span> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30">{formValues.invoice_plz_stadt}</span></p>
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-3 italic">
+              - nachfolgend „Kunde" bezeichnet / hereinafter referred to as "customer" -
+            </p>
+          </div>
+        </div>
 
-${formData.contractType === 'ep_standard' ? `
-(3) Vertragskonditionen
+        {/* Convenience Translation */}
+        <div className="text-center text-xs border border-dashed border-muted-foreground/30 p-3 rounded bg-muted/20">
+          <p><strong className="text-foreground">Convenience Translation</strong></p>
+          <p className="text-muted-foreground">Only the German version of the contract (left bracket) is legally binding. The English version (right bracket) is solely provided for the convenience of shyftplan's English speaking customers.</p>
+        </div>
 
-Vertragsbeginn: ${formatDate(formData.templateVariables?.std_vertragsbeginn || '')}
-Vertragslaufzeit: ${formData.templateVariables?.std_vertragslaufzeit || ''} Jahre
-Anzahl User-Lizenzen: ${formData.templateVariables?.std_lizenzen || ''}
-Jährlicher Basispreis: ${formatCurrency(formData.templateVariables?.std_basispreis || 0)}
-Preis pro zusätzlicher Lizenz p.a.: ${formatCurrency(formData.templateVariables?.std_zusatzlizenz || 0)}
-` : ''}
+        {/* Dynamic Modules */}
+        <div className="relative pb-4 border-b-2 border-foreground">
+          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border transform -translate-x-1/2"></div>
+          {activeModules.map((mod) => (
+            <div key={mod.id} className="mb-6">
+              <div className="grid grid-cols-2 gap-6 mb-2">
+                <div className="pr-3">
+                  {mod.title_de && <h3 className="text-sm font-bold text-foreground mb-2">{mod.title_de}</h3>}
+                </div>
+                <div className="pl-3">
+                  {mod.title_en && <h3 className="text-sm font-bold text-foreground mb-2">{mod.title_en}</h3>}
+                </div>
+              </div>
+              
+              {(mod.content_de || mod.content_en) && (
+                <div className="grid grid-cols-2 gap-6 mb-4 text-sm">
+                  <div className="pr-3">
+                    {mod.content_de && <div className="text-muted-foreground">{interpolateContent(mod.content_de, 'de')}</div>}
+                  </div>
+                  <div className="pl-3">
+                    {mod.content_en && <div className="text-muted-foreground">{interpolateContent(mod.content_en, 'en')}</div>}
+                  </div>
+                </div>
+              )}
 
-Gesamtwert: ${formatCurrency(formData.value || 0)}
-
-§4 Sonstige Vereinbarungen
-Angebot gültig bis: ${formatDate(formData.templateVariables?.gueltig_bis || '')}
-    `;
+              {/* Variables Display */}
+              {mod.variables && mod.variables.length > 0 && (
+                <div className="grid grid-cols-2 gap-6 text-sm">
+                  <div className="pr-3 space-y-1">
+                    {mod.variables.map((variable: any) => {
+                      const value = formValues[variable.id] || variable.value;
+                      let displayValue = value;
+                      if (variable.type === 'currency') displayValue = formatCurrency(value);
+                      if (variable.type === 'date') displayValue = formatDate(value);
+                      return (
+                        <p key={variable.id} className="text-foreground">
+                          <strong>{variable.label}:</strong> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30 ml-1">{displayValue}</span>
+                        </p>
+                      );
+                    })}
+                  </div>
+                  <div className="pl-3 space-y-1">
+                    {mod.variables.map((variable: any) => {
+                      const value = formValues[variable.id] || variable.value;
+                      let displayValue = value;
+                      if (variable.type === 'currency') displayValue = formatCurrency(value, 'en');
+                      if (variable.type === 'date') displayValue = formatDate(value);
+                      return (
+                        <p key={variable.id} className="text-foreground">
+                          <strong>{variable.label}:</strong> <span className="bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm border border-warning/30 ml-1">{displayValue}</span>
+                        </p>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
-      <div className="fixed inset-4 bg-background border rounded-lg shadow-lg flex flex-col">
+      <div className="fixed inset-4 bg-card border border-border rounded-lg shadow-lg flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-semibold">
-            {contract ? 'Vertrag bearbeiten' : 'Neuer Vertrag'}
-          </h2>
-          <div className="flex gap-2">
-            <Button onClick={handleSave} size="sm">
+        <div className="flex items-center justify-between p-6 border-b border-border bg-gradient-to-r from-card to-muted/30">
+          <div className="flex items-center gap-3">
+            <FileText className="w-6 h-6 text-primary" />
+            <h2 className="text-xl font-semibold text-foreground">
+              {contract ? 'Vertrag bearbeiten' : 'Vertrags-Konfigurator'}
+            </h2>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onClose} className="border-border hover:bg-muted">
+              <X className="mr-2 h-4 w-4" />
+              Abbrechen
+            </Button>
+            <Button onClick={handleSave} className="bg-primary hover:bg-primary-hover text-primary-foreground">
               <Save className="mr-2 h-4 w-4" />
               Speichern
-            </Button>
-            <Button variant="outline" onClick={onClose} size="sm">
-              <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
         {/* Split Layout */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left Panel - Form */}
-          <div className="w-1/2 border-r">
+        <div className="flex-1 flex overflow-hidden bg-background">
+          {/* Left Panel - Configurator */}
+          <div className="w-[480px] flex-shrink-0 border-r border-border bg-gradient-to-b from-card to-muted/20">
             <ScrollArea className="h-full">
-              <div className="p-4 space-y-6">
-                {/* Basic Info */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Grunddaten</CardTitle>
+              <div className="p-6 space-y-6">
+                {/* Contract Type Selection */}
+                <Card className="border border-border shadow-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-2 text-base text-foreground">
+                      <Building2 className="w-5 h-5 text-primary" />
+                      Vertragstyp wählen
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="pt-0">
                     <div>
-                      <Label htmlFor="title">Titel</Label>
-                      <Input
-                        id="title"
-                        value={formData.title}
-                        onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                        placeholder="Vertragsbezeichnung"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="contractType">Vertragstyp</Label>
-                      <Select 
-                        value={formData.contractType} 
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, contractType: value as any }))}
+                      <Label className="text-muted-foreground text-sm font-medium">Typ des Vertrags</Label>
+                      <select 
+                        value={selectedContractType}
+                        onChange={(e) => setSelectedContractType(e.target.value)}
+                        className="w-full h-10 px-3 mt-2 rounded-md border border-input bg-muted/50 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:bg-card transition-all"
                       >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(contractTemplate.contractTypes).map(([key, label]) => (
-                            <SelectItem key={key} value={key}>{label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="value">Gesamtwert</Label>
-                      <Input
-                        id="value"
-                        type="number"
-                        value={formData.value}
-                        onChange={(e) => setFormData(prev => ({ ...prev, value: Number(e.target.value) }))}
-                        placeholder="0"
-                      />
+                        {Object.entries(contractTemplate.contractTypes).map(([key, name]) => (
+                          <option key={key} value={key}>{name}</option>
+                        ))}
+                      </select>
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Global Variables */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Kundendaten</CardTitle>
+                <Card className="border border-border shadow-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-2 text-base text-foreground">
+                      <Info className="w-5 h-5 text-primary" />
+                      Allgemeine Informationen
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    {contractTemplate.globalVariables.map((variable) => (
-                      <div key={variable.id}>
-                        <Label htmlFor={variable.id}>{variable.label}</Label>
-                        {renderVariableInput(
-                          variable,
-                          formData.globalVariables?.[variable.id],
-                          (value) => updateGlobalVariable(variable.id, value)
-                        )}
-                      </div>
-                    ))}
+                  <CardContent className="pt-0">
+                    <div className="grid grid-cols-2 gap-4">
+                      {contractTemplate.global_variables.map((variable) => (
+                        <div key={variable.id}>
+                          <Label className="text-muted-foreground text-sm font-medium">{variable.label}</Label>
+                          <Input
+                            type={variable.type}
+                            value={formValues[variable.id] || ''}
+                            onChange={(e) => setFormValues(prev => ({ ...prev, [variable.id]: e.target.value }))}
+                            className="mt-1 bg-muted/50 border-input focus:border-primary focus:bg-card transition-all"
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
 
-                {/* Template Variables */}
-                {formData.contractType && contractTemplate.modules[`conditions_${formData.contractType}`] && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">
-                        {contractTemplate.modules[`conditions_${formData.contractType}`].title_de}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {contractTemplate.modules[`conditions_${formData.contractType}`].variables.map((variable: any) => (
-                        <div key={variable.id}>
-                          <Label htmlFor={variable.id}>{variable.label}</Label>
-                          {renderVariableInput(
-                            variable,
-                            formData.templateVariables?.[variable.id],
-                            (value) => updateTemplateVariable(variable.id, value)
-                          )}
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                )}
+                {/* Contract Conditions */}
+                <Card className="border border-border shadow-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-2 text-base text-foreground">
+                      <Clock className="w-5 h-5 text-primary" />
+                      Vertragskonditionen
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    {activeConfiguratorVariables.length > 0 ? (
+                      <div className="space-y-6">
+                        {activeConfiguratorVariables.map((module) => (
+                          <div key={module.id}>
+                            <h3 className="text-sm font-semibold text-primary mb-4">{module.title_de}</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                              {module.variables.map((variable: any) => (
+                                <div key={variable.id}>
+                                  <Label className="text-muted-foreground text-sm font-medium">{variable.label}</Label>
+                                  <Input
+                                    type={variable.type}
+                                    step={variable.type === 'currency' ? '0.01' : undefined}
+                                    value={formValues[variable.id] || variable.value || ''}
+                                    onChange={(e) => setFormValues(prev => ({ 
+                                      ...prev, 
+                                      [variable.id]: variable.type === 'number' || variable.type === 'currency' 
+                                        ? Number(e.target.value) || 0 
+                                        : e.target.value 
+                                    }))}
+                                    className="mt-1 bg-muted/50 border-input focus:border-primary focus:bg-card transition-all"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-sm italic">
+                        Für diesen Vertragstyp sind keine spezifischen Konditionen zu konfigurieren.
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             </ScrollArea>
           </div>
-
+          
           {/* Right Panel - Preview */}
-          <div className="w-1/2">
+          <div className="flex-1 bg-muted/20">
             <ScrollArea className="h-full">
-              <div className="p-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Vorschau</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-muted p-4 rounded-md">
-                      <pre className="whitespace-pre-wrap text-sm font-mono">
-                        {generatePreviewContent()}
-                      </pre>
-                    </div>
+              <div className="p-8">
+                <Card className="shadow-lg border-border max-w-4xl mx-auto bg-card">
+                  <CardContent className="p-8">
+                    {generatePreviewContent()}
                   </CardContent>
                 </Card>
               </div>
