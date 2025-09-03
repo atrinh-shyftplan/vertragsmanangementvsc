@@ -1,0 +1,27 @@
+{
+  "contractTypes": {
+    "ep_standard": "Standard Enterprise Plan"
+  },
+  "global_variables": [
+    {
+      "id": "angebot_nr",
+      "label": "Angebot Nr.",
+      "type": "text",
+      "value": ""
+    },
+    {
+      "id": "datum",
+      "label": "Datum",
+      "type": "date",
+      "value": ""
+    }
+  ],
+  "assembly": {
+    "ep_standard": {
+      "modules": [],
+      "appendices": []
+    }
+  },
+  "modules": {},
+  "appendices": {}
+}
