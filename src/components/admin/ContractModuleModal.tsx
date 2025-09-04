@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import type { Database } from '@/integrations/supabase/types';
 
 type ContractModule = Database['public']['Tables']['contract_modules']['Row'];
@@ -117,26 +118,28 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
             <Label htmlFor="content_de" className="text-right pt-2">
               Inhalt (DE)
             </Label>
-            <Textarea
-              id="content_de"
-              value={formData.content_de}
-              onChange={(e) => setFormData({ ...formData, content_de: e.target.value })}
-              className="col-span-3 min-h-[100px]"
-              placeholder="Deutscher Modulinhalt..."
-            />
+            <div className="col-span-3">
+              <RichTextEditor
+                content={formData.content_de}
+                onChange={(content) => setFormData({ ...formData, content_de: content })}
+                placeholder="Deutscher Modulinhalt..."
+                className="min-h-[150px]"
+              />
+            </div>
           </div>
           
           <div className="grid grid-cols-4 items-start gap-4">
             <Label htmlFor="content_en" className="text-right pt-2">
               Inhalt (EN)
             </Label>
-            <Textarea
-              id="content_en"
-              value={formData.content_en}
-              onChange={(e) => setFormData({ ...formData, content_en: e.target.value })}
-              className="col-span-3 min-h-[100px]"
-              placeholder="English module content..."
-            />
+            <div className="col-span-3">
+              <RichTextEditor
+                content={formData.content_en}
+                onChange={(content) => setFormData({ ...formData, content_en: content })}
+                placeholder="English module content..."
+                className="min-h-[150px]"
+              />
+            </div>
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">

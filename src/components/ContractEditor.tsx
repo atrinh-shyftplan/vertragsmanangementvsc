@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -192,7 +191,7 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>
             {contract ? 'Vertrag bearbeiten' : 'Neuer Vertrag'}
@@ -206,10 +205,10 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="flex-1 overflow-hidden">
           {/* Step 1: Contract Type Selection */}
           {step === 'type' && !contract && (
-            <div className="space-y-4">
+            <div className="space-y-4 p-4">
               <h3 className="text-lg font-semibold">Vertragstyp auswählen</h3>
               <div className="grid gap-3">
                 {contractTypes
@@ -237,7 +236,7 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
 
           {/* Step 2: Module Selection */}
           {step === 'modules' && !contract && (
-            <div className="space-y-4">
+            <div className="space-y-4 p-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Bausteine auswählen und Formatierung festlegen</h3>
                 <Button variant="outline" onClick={() => setStep('details')}>
@@ -354,129 +353,84 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
             </div>
           )}
 
-          {/* Step 3: Contract Details */}
+          {/* Step 3: Contract Details - Left/Right Layout */}
           {step === 'details' && (
-            <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="basic">Grunddaten</TabsTrigger>
-                <TabsTrigger value="variables">Variablen</TabsTrigger>
-                <TabsTrigger value="preview">Vorschau</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="basic" className="space-y-6 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Titel</Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="client">Kunde</Label>
-                    <Input
-                      id="client"
-                      value={formData.client}
-                      onChange={(e) => setFormData({ ...formData, client: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
-                    <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active">Aktiv</SelectItem>
-                        <SelectItem value="pending">Ausstehend</SelectItem>
-                        <SelectItem value="draft">Entwurf</SelectItem>
-                        <SelectItem value="expired">Abgelaufen</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="value">Vertragswert (€)</Label>
-                    <Input
-                      id="value"
-                      type="number"
-                      value={formData.value}
-                      onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="progress">Fortschritt (%)</Label>
-                    <Input
-                      id="progress"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.progress}
-                      onChange={(e) => setFormData({ ...formData, progress: Number(e.target.value) })}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="startDate">Startdatum</Label>
-                    <Input
-                      id="startDate"
-                      type="date"
-                      value={formData.startDate}
-                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="endDate">Enddatum</Label>
-                    <Input
-                      id="endDate"
-                      type="date"
-                      value={formData.endDate}
-                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="assignedTo">Zugewiesen an</Label>
-                  <Input
-                    id="assignedTo"
-                    value={formData.assignedTo}
-                    onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Beschreibung</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="variables" className="space-y-6 py-4">
+            <div className="grid grid-cols-2 gap-6 h-[65vh]">
+              {/* Left Side - Input Fields */}
+              <div className="space-y-4 overflow-y-auto pr-2">
+                <h3 className="text-lg font-semibold">Vertragsdaten eingeben</h3>
+                
+                {/* Basic Contract Info */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Globale Variablen</CardTitle>
-                    <CardDescription>
-                      Definieren Sie Werte für die Variablen, die in den Bausteinen verwendet werden
-                    </CardDescription>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Grunddaten</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    {globalVariables
-                      .filter(variable => variable.key && variable.key.trim() !== '')
-                      .map((variable) => (
+                  <CardContent className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="title" className="text-xs">Titel</Label>
+                      <Input
+                        id="title"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        className="h-8"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="client" className="text-xs">Kunde</Label>
+                      <Input
+                        id="client"
+                        value={formData.client}
+                        onChange={(e) => setFormData({ ...formData, client: e.target.value })}
+                        className="h-8"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="startDate" className="text-xs">Startdatum</Label>
+                        <Input
+                          id="startDate"
+                          type="date"
+                          value={formData.startDate}
+                          onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                          className="h-8"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="endDate" className="text-xs">Enddatum</Label>
+                        <Input
+                          id="endDate"
+                          type="date"
+                          value={formData.endDate}
+                          onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                          className="h-8"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="value" className="text-xs">Vertragswert (€)</Label>
+                      <Input
+                        id="value"
+                        type="number"
+                        value={formData.value}
+                        onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })}
+                        className="h-8"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Global Variables */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Globale Variablen</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {globalVariables.slice(0, 8).map((variable) => (
                       <div key={variable.key} className="space-y-2">
-                        <Label htmlFor={variable.key}>{variable.name_de}</Label>
+                        <Label htmlFor={variable.key} className="text-xs">{variable.name_de}</Label>
                         <Input
                           id={variable.key}
+                          type={variable.key.includes('date') ? 'date' : variable.key.includes('email') ? 'email' : 'text'}
                           value={formData.globalVariables?.[variable.key] || variable.default_value || ''}
                           onChange={(e) => setFormData({
                             ...formData,
@@ -486,86 +440,167 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
                             }
                           })}
                           placeholder={variable.description || ''}
+                          className="h-8"
                         />
                       </div>
                     ))}
                   </CardContent>
                 </Card>
-              </TabsContent>
 
-              <TabsContent value="preview" className="space-y-6 py-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      Vertragsvorschau (Zweisprachig)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-3 gap-4 p-4 bg-muted rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">{formData.client || 'Kunde'}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">
-                            {formData.startDate ? new Date(formData.startDate).toLocaleDateString('de-DE') : 'Startdatum'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Euro className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">{formData.value || 0}€</span>
-                        </div>
+                {/* Module-specific variables */}
+                {selectedModules.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm">Baustein-spezifische Variablen</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {selectedModules.map((selectedModule) => {
+                        const module = contractModules.find(m => m.key === selectedModule.moduleKey);
+                        const moduleVariables = module?.variables as any[] || [];
+                        
+                        if (moduleVariables.length === 0) return null;
+                        
+                        return (
+                          <div key={selectedModule.moduleKey} className="space-y-3 p-3 border rounded bg-muted/20">
+                            <h5 className="font-medium text-xs text-muted-foreground">{module?.title_de}</h5>
+                            {moduleVariables.map((variable: any) => (
+                              <div key={variable.id} className="space-y-2">
+                                <Label htmlFor={variable.id} className="text-xs">{variable.label}</Label>
+                                <Input
+                                  id={variable.id}
+                                  type={variable.type === 'date' ? 'date' : variable.type === 'number' ? 'number' : variable.type === 'currency' ? 'number' : 'text'}
+                                  value={formData.templateVariables?.[variable.id] || variable.value || ''}
+                                  onChange={(e) => setFormData({
+                                    ...formData,
+                                    templateVariables: {
+                                      ...formData.templateVariables,
+                                      [variable.id]: e.target.value
+                                    }
+                                  })}
+                                  className="h-8"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Right Side - Live Preview */}
+              <div className="border rounded-lg overflow-hidden">
+                <div className="bg-muted/50 p-3 border-b">
+                  <h3 className="font-semibold text-sm">Live-Vorschau</h3>
+                </div>
+                <div className="p-4 overflow-y-auto h-full bg-background">
+                  {/* Contract Header */}
+                  <div className="mb-6 p-4 bg-muted/30 rounded">
+                    <h4 className="font-semibold text-lg">{formData.title || 'Vertragstitel'}</h4>
+                    <div className="grid grid-cols-2 gap-4 mt-2 text-sm text-muted-foreground">
+                      <div>
+                        <p><strong>Kunde:</strong> {formData.client || formData.globalVariables?.firma || 'Kundenname'}</p>
+                        <p><strong>Angebots-Nr.:</strong> {formData.globalVariables?.angebot_nr || 'Q-2025-xxxx'}</p>
+                        <p><strong>Datum:</strong> {formData.globalVariables?.datum || new Date().toISOString().split('T')[0]}</p>
                       </div>
-                      
-                      <Separator />
-                      
-                      {selectedModules.length > 0 ? (
-                        <div className="space-y-4">
-                          {selectedModules
-                            .sort((a, b) => a.sortOrder - b.sortOrder)
-                            .map((selectedModule) => {
-                              const module = contractModules.find(m => m.key === selectedModule.moduleKey);
-                              return renderModulePreview(selectedModule.moduleKey, module);
-                            })
-                          }
-                        </div>
-                      ) : (
-                        <div className="text-center text-muted-foreground">
-                          <p>Keine Module ausgewählt</p>
-                          <p className="text-sm">Gehen Sie zurück zum Baustein-Schritt</p>
-                        </div>
-                      )}
+                      <div>
+                        <p><strong>Laufzeit:</strong> {formData.startDate || 'TT.MM.JJJJ'} - {formData.endDate || 'TT.MM.JJJJ'}</p>
+                        <p><strong>Wert:</strong> {formData.value ? `€${formData.value.toLocaleString()}` : 'Vertragswert'}</p>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+                  </div>
+
+                  {/* Two-column German-English layout */}
+                  <div className="space-y-6">
+                    {selectedModules
+                      .sort((a, b) => a.sortOrder - b.sortOrder)
+                      .map((selectedModule) => {
+                        const module = contractModules.find(m => m.key === selectedModule.moduleKey);
+                        if (!module) return null;
+                        
+                        const processContent = (content: string) => {
+                          let processed = content;
+                          // Replace global variables
+                          Object.entries(formData.globalVariables || {}).forEach(([key, value]) => {
+                            processed = processed.replace(new RegExp(`{{${key}}}`, 'g'), value as string);
+                          });
+                          // Replace template variables
+                          Object.entries(formData.templateVariables || {}).forEach(([key, value]) => {
+                            processed = processed.replace(new RegExp(`{{${key}}}`, 'g'), value as string);
+                          });
+                          return processed;
+                        };
+
+                        const getNumberPrefix = () => {
+                          switch (selectedModule.numberingStyle) {
+                            case 'numbered': return `${selectedModule.sortOrder}.`;
+                            case 'parentheses': return `(${selectedModule.sortOrder})`;
+                            case 'decimal': return `${selectedModule.sortOrder}.1`;
+                            case 'bullets': return '•';
+                            default: return '';
+                          }
+                        };
+                        
+                        return (
+                          <div key={selectedModule.moduleKey} className="border rounded-lg overflow-hidden">
+                            <div className="grid grid-cols-2 gap-0 relative">
+                              {/* German column */}
+                              <div className="p-4 pr-2">
+                                <h4 className="font-semibold mb-3 flex items-center gap-2 text-foreground">
+                                  {getNumberPrefix() && <span className="text-primary">{getNumberPrefix()}</span>}
+                                  {module.title_de}
+                                </h4>
+                                <div 
+                                  className="text-sm leading-relaxed prose prose-sm max-w-none"
+                                  dangerouslySetInnerHTML={{ __html: processContent(module.content_de || '') }}
+                                />
+                              </div>
+                              
+                              {/* Separator line */}
+                              <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border transform -translate-x-1/2"></div>
+                              
+                              {/* English column */}
+                              <div className="p-4 pl-2">
+                                <h4 className="font-semibold mb-3 flex items-center gap-2 text-foreground">
+                                  {getNumberPrefix() && <span className="text-primary">{getNumberPrefix()}</span>}
+                                  {module.title_en}
+                                </h4>
+                                <div 
+                                  className="text-sm leading-relaxed prose prose-sm max-w-none"
+                                  dangerouslySetInnerHTML={{ __html: processContent(module.content_en || '') }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
 
-        <DialogFooter>
-          <div className="flex justify-between w-full">
-            <div>
-              {!contract && step !== 'type' && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => setStep(step === 'details' ? 'modules' : 'type')}
-                >
-                  Zurück
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={onClose}>
-                Abbrechen
-              </Button>
-              <Button onClick={handleSave} disabled={!contract && step !== 'details'}>
-                Speichern
-              </Button>
-            </div>
-          </div>
+        <DialogFooter className="border-t pt-4">
+          {step !== 'type' && !contract && (
+            <Button variant="outline" onClick={() => {
+              if (step === 'details') setStep('modules');
+              else if (step === 'modules') setStep('type');
+            }}>
+              Zurück
+            </Button>
+          )}
+          <Button variant="outline" onClick={onClose}>
+            Abbrechen
+          </Button>
+          <Button 
+            onClick={handleSave}
+            disabled={step !== 'details' || !formData.title || !formData.client}
+          >
+            Speichern
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
