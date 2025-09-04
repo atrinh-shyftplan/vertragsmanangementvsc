@@ -36,6 +36,7 @@ export default function Layout({ children }: LayoutProps) {
     { name: 'Verträge', href: '/contracts', icon: FileText },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
     ...(currentUser.role === 'admin' ? [
+      { name: 'Admin Panel', href: '/admin', icon: Settings },
       { name: 'Benutzer', href: '/users', icon: Users },
       { name: 'Einstellungen', href: '/settings', icon: Settings }
     ] : [])
