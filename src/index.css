@@ -148,6 +148,14 @@
     @apply list-disc pl-6 mb-4 space-y-1;
   }
 
+  .prose-bullet-list li {
+    @apply text-foreground;
+  }
+
+  .prose-bullet-list li::marker {
+    @apply text-foreground;
+  }
+
   .prose-ordered-list {
     @apply pl-6 mb-4 space-y-1;
     list-style: none;
@@ -173,16 +181,50 @@
 
   /* Decimal dot numbering: 1.1. 1.2. etc */
   .prose-ordered-list.list-style-decimal-dot {
-    counter-reset: section;
+    counter-reset: main-counter;
+    padding-left: 1.5em;
   }
 
   .prose-ordered-list.list-style-decimal-dot > li {
-    counter-increment: section;
+    counter-increment: main-counter;
+    position: relative;
   }
 
   .prose-ordered-list.list-style-decimal-dot > li::before {
-    content: counter(section) ".";
-    @apply font-medium mr-2;
+    content: counter(main-counter) ".";
+    @apply font-medium mr-2 absolute;
+    left: -1.5em;
+  }
+
+  /* First level nested lists in decimal-dot style */
+  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list {
+    counter-reset: sub-counter;
+    padding-left: 2em;
+    margin-left: 0;
+  }
+
+  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list > li {
+    counter-increment: sub-counter;
+  }
+
+  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list > li::before {
+    content: counter(main-counter, decimal) "." counter(sub-counter, decimal) ".";
+    left: -2em;
+  }
+
+  /* Second level nested lists in decimal-dot style */
+  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list .prose-ordered-list {
+    counter-reset: subsub-counter;
+    padding-left: 2.5em;
+  }
+
+  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list .prose-ordered-list > li {
+    counter-increment: subsub-counter;
+  }
+
+  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list .prose-ordered-list > li::before {
+    content: counter(main-counter, decimal) "." counter(sub-counter, decimal) "." counter(subsub-counter, decimal) ".";
+    left: -2.5em;
   }
 
   /* Nested lists - Default style */
@@ -220,30 +262,6 @@
     counter-increment: subsubitem;
   }
 
-  /* Nested lists - Decimal dot style */
-  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list {
-    counter-reset: subsection;
-  }
-
-  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list > li {
-    counter-increment: subsection;
-  }
-
-  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list > li::before {
-    content: counter(section) "." counter(subsection) ".";
-  }
-
-  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list .prose-ordered-list {
-    counter-reset: subsubsection;
-  }
-
-  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list .prose-ordered-list > li {
-    counter-increment: subsubsection;
-  }
-
-  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list .prose-ordered-list > li::before {
-    content: counter(section) "." counter(subsection) "." counter(subsubsection) ".";
-  }
 
   .prose-task-list {
     @apply list-none pl-0 mb-4 space-y-2;

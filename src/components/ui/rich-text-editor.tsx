@@ -187,13 +187,18 @@ export function RichTextEditor({ content, onChange, placeholder, className }: Ri
             value={listStyle} 
             onValueChange={(value: 'decimal' | 'decimal-paren' | 'decimal-dot') => {
               setListStyle(value);
-              // Apply style to existing lists
+              // Apply style to existing lists immediately
               setTimeout(() => {
-                const lists = editor.view.dom.querySelectorAll('ol.prose-ordered-list');
-                lists.forEach(list => {
-                  list.className = `prose-ordered-list list-style-${value}`;
+                const allLists = editor.view.dom.querySelectorAll('ol');
+                allLists.forEach(list => {
+                  // Remove existing style classes
+                  list.classList.remove('list-style-decimal', 'list-style-decimal-paren', 'list-style-decimal-dot');
+                  // Add new style class
+                  list.classList.add('prose-ordered-list', `list-style-${value}`);
                 });
-              }, 0);
+                // Force editor to update
+                editor.commands.focus();
+              }, 10);
             }}
           >
             <SelectTrigger className="h-8 w-16 text-xs">
