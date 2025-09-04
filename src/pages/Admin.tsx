@@ -92,7 +92,7 @@ export default function Admin() {
           <div className="flex gap-2">
             <Button onClick={importAGBModule} variant="outline">
               <Download className="h-4 w-4 mr-2" />
-              AGB importieren
+              AGB zusammenführen (1 Modul)
             </Button>
             <Button onClick={importTemplateData} variant="outline">
               <Download className="h-4 w-4 mr-2" />
