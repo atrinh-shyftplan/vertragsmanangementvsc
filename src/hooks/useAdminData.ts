@@ -289,7 +289,7 @@ export function useAdminData() {
     fetchData();
   }, []);
 
-  // Template Import
+  // Template Import - structured import of modules from template.json
   const importTemplateData = async () => {
     try {
       const { default: templateData } = await import('@/lib/template.json');
@@ -320,20 +320,48 @@ export function useAdminData() {
         }
       }
       
-      // Import modules
+      // Import modules with proper structure
       for (const [moduleKey, moduleData] of Object.entries(templateData.modules)) {
         const existingModule = contractModules.find(m => m.key === moduleKey);
         const data = moduleData as any;
         
         if (!existingModule) {
+          // Determine category based on module key
+          let category = 'general';
+          if (moduleKey.includes('condition') || moduleKey.includes('price')) category = 'conditions';
+          if (moduleKey.includes('training') || moduleKey.includes('support')) category = 'support';
+          if (moduleKey.includes('legal') || moduleKey.includes('termination')) category = 'legal';
+          if (moduleKey.includes('data') || moduleKey.includes('privacy')) category = 'privacy';
+          
+          // Extract content - handle different structures
+          let content_de = '';
+          let content_en = '';
+          
+          if (data.content_de) {
+            content_de = data.content_de;
+          } else if (data.paragraphs_de) {
+            content_de = data.paragraphs_de.map((p: any) => 
+              `${p.number ? `(${p.number}) ` : ''}${p.text}`
+            ).join('\n\n');
+          }
+          
+          if (data.content_en) {
+            content_en = data.content_en;
+          } else if (data.paragraphs_en) {
+            content_en = data.paragraphs_en.map((p: any) => 
+              `${p.number ? `(${p.number}) ` : ''}${p.text}`
+            ).join('\n\n');
+          }
+          
           await supabase.from('contract_modules').insert({
             key: moduleKey,
             title_de: data.title_de || moduleKey,
             title_en: data.title_en || data.title_de || moduleKey,
-            content_de: data.content_de || data.paragraphs_de?.map((p: any) => p.text).join('\n\n') || '',
-            content_en: data.content_en || data.paragraphs_en?.map((p: any) => p.text).join('\n\n') || '',
-            category: 'general',
-            variables: JSON.stringify(data.variables || [])
+            content_de: content_de,
+            content_en: content_en,
+            category: category,
+            variables: JSON.stringify(data.variables || []),
+            sort_order: 0
           });
         }
       }
@@ -341,7 +369,7 @@ export function useAdminData() {
       await fetchData();
       toast({
         title: 'Erfolg',
-        description: 'Template-Daten wurden importiert.'
+        description: 'Template-Daten wurden strukturiert importiert.'
       });
     } catch (error) {
       console.error('Error importing template data:', error);

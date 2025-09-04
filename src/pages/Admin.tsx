@@ -9,6 +9,7 @@ import { ContractModuleModal } from '@/components/admin/ContractModuleModal';
 import { GlobalVariableModal } from '@/components/admin/GlobalVariableModal';
 import { ContractCompositionManager } from '@/components/admin/ContractCompositionManager';
 import { TemplateBuilder } from '@/components/admin/TemplateBuilder';
+import { ContractBuilder } from '@/components/admin/ContractBuilder';
 import { Plus, Edit2, Trash2, Settings, Database, FileText, Blocks, Variable, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -97,7 +98,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="types" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="types" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Vertragstypen
@@ -110,13 +111,17 @@ export default function Admin() {
               <Variable className="h-4 w-4" />
               Variablen
             </TabsTrigger>
-            <TabsTrigger value="composition" className="flex items-center gap-2">
+            <TabsTrigger value="builder" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
+              Vertrags-Builder
+            </TabsTrigger>
+            <TabsTrigger value="composition" className="flex items-center gap-2">
+              <Database className="h-4 w-4" />
               Zusammensetzung
             </TabsTrigger>
-            <TabsTrigger value="builder" className="flex items-center gap-2">
-              <Database className="h-4 w-4" />
-              Template Builder
+            <TabsTrigger value="template" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Templates
             </TabsTrigger>
           </TabsList>
 
@@ -329,6 +334,17 @@ export default function Admin() {
             </Card>
           </TabsContent>
 
+          {/* Vertrags-Builder */}
+          <TabsContent value="builder" className="space-y-6">
+            <ContractBuilder
+              contractTypes={contractTypes}
+              contractModules={contractModules}
+              contractCompositions={contractCompositions}
+              globalVariables={globalVariables}
+              onUpdate={fetchData}
+            />
+          </TabsContent>
+
           {/* Vertragszusammensetzung */}
           <TabsContent value="composition" className="space-y-6">
             <ContractCompositionManager
@@ -340,7 +356,7 @@ export default function Admin() {
           </TabsContent>
 
           {/* Template Builder */}
-          <TabsContent value="builder" className="space-y-6">
+          <TabsContent value="template" className="space-y-6">
             <TemplateBuilder
               contractTypes={contractTypes}
               contractModules={contractModules}
