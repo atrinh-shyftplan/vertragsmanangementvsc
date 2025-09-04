@@ -146,14 +146,16 @@
 
   .prose-bullet-list {
     @apply list-disc pl-6 mb-4 space-y-1;
+    color: hsl(var(--foreground));
   }
 
   .prose-bullet-list li {
     @apply text-foreground;
+    color: hsl(var(--foreground));
   }
 
   .prose-bullet-list li::marker {
-    @apply text-foreground;
+    color: hsl(var(--foreground)) !important;
   }
 
   .prose-ordered-list {
@@ -181,50 +183,55 @@
 
   /* Decimal dot numbering: 1.1. 1.2. etc */
   .prose-ordered-list.list-style-decimal-dot {
-    counter-reset: main-counter;
-    padding-left: 1.5em;
+    counter-reset: level1;
+    list-style: none;
+    padding-left: 0;
   }
 
   .prose-ordered-list.list-style-decimal-dot > li {
-    counter-increment: main-counter;
+    counter-increment: level1;
     position: relative;
+    padding-left: 2em;
   }
 
   .prose-ordered-list.list-style-decimal-dot > li::before {
-    content: counter(main-counter) ".";
+    content: counter(level1) ".";
     @apply font-medium mr-2 absolute;
-    left: -1.5em;
+    left: 0;
+    top: 0;
   }
 
   /* First level nested lists in decimal-dot style */
-  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list {
-    counter-reset: sub-counter;
-    padding-left: 2em;
-    margin-left: 0;
+  .prose-ordered-list.list-style-decimal-dot ol {
+    counter-reset: level2;
+    list-style: none;
+    padding-left: 0;
+    margin-left: 2em;
   }
 
-  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list > li {
-    counter-increment: sub-counter;
-  }
-
-  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list > li::before {
-    content: counter(main-counter, decimal) "." counter(sub-counter, decimal) ".";
-    left: -2em;
-  }
-
-  /* Second level nested lists in decimal-dot style */
-  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list .prose-ordered-list {
-    counter-reset: subsub-counter;
+  .prose-ordered-list.list-style-decimal-dot ol > li {
+    counter-increment: level2;
     padding-left: 2.5em;
   }
 
-  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list .prose-ordered-list > li {
-    counter-increment: subsub-counter;
+  .prose-ordered-list.list-style-decimal-dot ol > li::before {
+    content: counter(level1) "." counter(level2) ".";
+    left: 0;
   }
 
-  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list .prose-ordered-list > li::before {
-    content: counter(main-counter, decimal) "." counter(sub-counter, decimal) "." counter(subsub-counter, decimal) ".";
-    left: -2.5em;
+  /* Second level nested lists in decimal-dot style */
+  .prose-ordered-list.list-style-decimal-dot ol ol {
+    counter-reset: level3;
+  }
+
+  .prose-ordered-list.list-style-decimal-dot ol ol > li {
+    counter-increment: level3;
+    padding-left: 3em;
+  }
+
+  .prose-ordered-list.list-style-decimal-dot ol ol > li::before {
+    content: counter(level1) "." counter(level2) "." counter(level3) ".";
+    left: 0;
   }
 
   /* Nested lists - Default style */
