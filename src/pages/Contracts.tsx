@@ -22,6 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ContractEditModal } from '@/components/ContractEditModal';
 import ContractViewer from '@/components/ContractViewer';
 import NewContractEditor from '@/components/NewContractEditor';
@@ -34,8 +35,7 @@ export default function Contracts() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [viewingContract, setViewingContract] = useState<Contract | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [editorContract, setEditorContract] = useState<Contract | null>(null);
+  const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
   const [contracts, setContracts] = useState<Contract[]>(mockContracts);
   const { toast } = useToast();
 
@@ -51,13 +51,12 @@ export default function Contracts() {
   });
 
   const handleEditContract = (contract: Contract) => {
-    setEditorContract(contract);
-    setIsEditorOpen(true);
+    setEditingContract(contract);
+    setIsEditModalOpen(true);
   };
 
   const handleNewContract = () => {
-    setEditorContract(null);
-    setIsEditorOpen(true);
+    setIsNewContractModalOpen(true);
   };
 
   const handleViewContract = (contract: Contract) => {
@@ -269,7 +268,25 @@ export default function Contracts() {
         </Card>
       )}
       
-      <NewContractEditor />
+      {/* New Contract Modal */}
+      <Dialog open={isNewContractModalOpen} onOpenChange={setIsNewContractModalOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0">
+          <NewContractEditor onClose={() => setIsNewContractModalOpen(false)} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Contract Edit Modal */}
+      {editingContract && isEditModalOpen && (
+        <ContractEditModal
+          contract={editingContract}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingContract(null);
+          }}
+          onSave={handleSaveContract}
+        />
+      )}
 
       {/* Contract Viewer Modal */}
       {viewingContract && isViewerOpen && (

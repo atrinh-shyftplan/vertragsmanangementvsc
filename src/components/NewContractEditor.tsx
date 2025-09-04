@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText, ArrowLeft, Save } from 'lucide-react';
+import { FileText, ArrowLeft, Save, X } from 'lucide-react';
 import { useAdminData } from '@/hooks/useAdminData';
 import { toast } from 'sonner';
 
@@ -14,7 +14,11 @@ interface SelectedModule {
   order: number;
 }
 
-export default function NewContractEditor() {
+interface NewContractEditorProps {
+  onClose?: () => void;
+}
+
+export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const { contractTypes, contractModules, contractCompositions, globalVariables } = useAdminData();
   const [selectedType, setSelectedType] = useState<string>('');
   const [selectedModules, setSelectedModules] = useState<SelectedModule[]>([]);
@@ -105,6 +109,9 @@ export default function NewContractEditor() {
       setSelectedModules([]);
       setVariableValues({});
       
+      // Close modal if callback provided
+      onClose?.();
+      
     } catch (error) {
       console.error('Error saving contract:', error);
       toast.error('Fehler beim Speichern des Vertrags');
@@ -113,10 +120,17 @@ export default function NewContractEditor() {
 
   if (!selectedType || !showDetails) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold mb-4">Neuer Vertrag erstellen</h2>
-          <p className="text-muted-foreground mb-6">Wählen Sie einen Vertragstyp aus</p>
+      <div className="space-y-6 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Neuer Vertrag erstellen</h2>
+            <p className="text-muted-foreground mb-6">Wählen Sie einen Vertragstyp aus</p>
+          </div>
+          {onClose && (
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -141,7 +155,7 @@ export default function NewContractEditor() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 h-full overflow-auto">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Vertrag bearbeiten</h2>
@@ -166,6 +180,12 @@ export default function NewContractEditor() {
             <Save className="mr-2 h-4 w-4" />
             Speichern
           </Button>
+          {onClose && (
+            <Button variant="ghost" onClick={onClose}>
+              <X className="mr-2 h-4 w-4" />
+              Schließen
+            </Button>
+          )}
         </div>
       </div>
 
@@ -363,7 +383,7 @@ export default function NewContractEditor() {
 
         {/* Preview Panel - larger width */}
         <div className="lg:col-span-3">
-          <Card className="sticky top-4">
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>Live-Vorschau</CardTitle>
               <CardDescription>
@@ -372,8 +392,8 @@ export default function NewContractEditor() {
             </CardHeader>
             <CardContent>
               <div 
-                className="prose max-w-none whitespace-pre-wrap text-sm bg-white p-6 rounded-lg min-h-[800px] max-h-[800px] overflow-y-auto border border-gray-200 shadow-inner"
-                style={{ fontSize: '11px', lineHeight: '1.4' }}
+                className="prose max-w-none whitespace-pre-wrap bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner"
+                style={{ fontSize: '12px', lineHeight: '1.5' }}
                 dangerouslySetInnerHTML={{ __html: renderPreview() }}
               />
             </CardContent>
