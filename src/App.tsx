@@ -8,6 +8,9 @@ import Index from "./pages/Index";
 import Contracts from "./pages/Contracts";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import { AuthProvider } from "@/contexts/AuthContext";
+import RequireAuth from "@/components/auth/RequireAuth";
+import AuthPage from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -16,20 +19,23 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/contracts" element={<Contracts />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/analytics" element={<div className="p-6 text-center text-muted-foreground">Analytics-Seite wird entwickelt...</div>} />
-            <Route path="/users" element={<div className="p-6 text-center text-muted-foreground">Benutzer-Verwaltung wird entwickelt...</div>} />
-            <Route path="/settings" element={<div className="p-6 text-center text-muted-foreground">Einstellungen werden entwickelt...</div>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Layout>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Layout>
+            <Routes>
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/" element={<RequireAuth><Index /></RequireAuth>} />
+              <Route path="/contracts" element={<RequireAuth><Contracts /></RequireAuth>} />
+              <Route path="/admin" element={<RequireAuth><Admin /></RequireAuth>} />
+              <Route path="/analytics" element={<RequireAuth><div className="p-6 text-center text-muted-foreground">Analytics-Seite wird entwickelt...</div></RequireAuth>} />
+              <Route path="/users" element={<RequireAuth><div className="p-6 text-center text-muted-foreground">Benutzer-Verwaltung wird entwickelt...</div></RequireAuth>} />
+              <Route path="/settings" element={<RequireAuth><div className="p-6 text-center text-muted-foreground">Einstellungen werden entwickelt...</div></RequireAuth>} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Layout>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

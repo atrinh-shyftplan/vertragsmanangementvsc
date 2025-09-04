@@ -13,6 +13,7 @@ import {
   X
 } from 'lucide-react';
 import { mockUsers, type User } from '@/lib/mockData';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,7 +23,7 @@ export default function Layout({ children }: LayoutProps) {
   const [currentUser, setCurrentUser] = useState<User>(mockUsers[0]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-
+  const { session, signOut } = useAuth();
   const isActive = (path: string) => location.pathname === path;
 
   const roleSwitch = () => {
@@ -81,6 +82,15 @@ export default function Layout({ children }: LayoutProps) {
                 {currentUser.role === 'admin' ? 'Admin' : 'AE'}
               </Badge>
             </Button>
+            {session ? (
+              <Button variant="ghost" size="sm" onClick={async () => { await signOut(); }}>
+                Logout
+              </Button>
+            ) : (
+              <Link to="/auth">
+                <Button size="sm">Login</Button>
+              </Link>
+            )}
           </div>
         </div>
       </header>
