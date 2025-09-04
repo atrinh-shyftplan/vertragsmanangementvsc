@@ -23,7 +23,6 @@ export default function Admin() {
     loading,
     fetchData,
     importTemplateData,
-    importAGBModule,
     createContractType,
     updateContractType,
     deleteContractType,
@@ -90,10 +89,6 @@ export default function Admin() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={importAGBModule} variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              AGB zusammenführen (1 Modul)
-            </Button>
             <Button onClick={importTemplateData} variant="outline">
               <Download className="h-4 w-4 mr-2" />
               Template-Daten importieren
