@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { TextStyle } from '@tiptap/extension-text-style';
@@ -6,7 +6,8 @@ import { ListKeymap } from '@tiptap/extension-list-keymap';
 import { TaskList } from '@tiptap/extension-task-list';
 import { TaskItem } from '@tiptap/extension-task-item';
 import { Button } from '@/components/ui/button';
-import { Bold, Italic, Underline, List, ListOrdered, Quote, CheckSquare, Indent, Outdent, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Bold, Italic, Underline, List, ListOrdered, Quote, CheckSquare, Indent, Outdent, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RichTextEditorProps {
@@ -17,6 +18,8 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ content, onChange, placeholder, className }: RichTextEditorProps) {
+  const [listStyle, setListStyle] = useState<'decimal' | 'decimal-paren' | 'decimal-dot'>('decimal');
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -31,7 +34,7 @@ export function RichTextEditor({ content, onChange, placeholder, className }: Ri
           keepMarks: true,
           keepAttributes: false,
           HTMLAttributes: {
-            class: 'prose-ordered-list',
+            class: `prose-ordered-list list-style-${listStyle}`,
           },
         },
         paragraph: {
@@ -164,15 +167,39 @@ export function RichTextEditor({ content, onChange, placeholder, className }: Ri
           >
             <List className="h-4 w-4" />
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={cn("h-8 w-8 p-0", editor.isActive('orderedList') && "bg-primary/20")}
-          >
-            <ListOrdered className="h-4 w-4" />
-          </Button>
+          
+          <div className="flex items-center">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const currentClass = `list-style-${listStyle}`;
+                editor.chain().focus().toggleOrderedList().run();
+                // Update the class after creating the list
+                setTimeout(() => {
+                  const lists = editor.view.dom.querySelectorAll('ol');
+                  lists.forEach(list => {
+                    list.className = `prose-ordered-list ${currentClass}`;
+                  });
+                }, 0);
+              }}
+              className={cn("h-8 w-8 p-0", editor.isActive('orderedList') && "bg-primary/20")}
+            >
+              <ListOrdered className="h-4 w-4" />
+            </Button>
+            <Select value={listStyle} onValueChange={(value: 'decimal' | 'decimal-paren' | 'decimal-dot') => setListStyle(value)}>
+              <SelectTrigger className="h-8 w-8 p-0 border-0 bg-transparent hover:bg-muted">
+                <ChevronDown className="h-3 w-3" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="decimal">1. a. i.</SelectItem>
+                <SelectItem value="decimal-paren">1) a) i)</SelectItem>
+                <SelectItem value="decimal-dot">1.1. 1.1.1.</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
           <Button
             type="button"
             variant="ghost"

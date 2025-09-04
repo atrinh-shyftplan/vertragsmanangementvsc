@@ -149,7 +149,8 @@
   }
 
   .prose-ordered-list {
-    @apply list-decimal pl-6 mb-4 space-y-1;
+    @apply pl-6 mb-4 space-y-1;
+    list-style: none;
     counter-reset: item;
   }
 
@@ -158,29 +159,90 @@
     counter-increment: item;
   }
 
-  .prose-ordered-list > li::before {
+  /* Default numbering: 1. 2. 3. */
+  .prose-ordered-list:not(.list-style-decimal-paren):not(.list-style-decimal-dot) > li::before {
     content: counter(item) ".";
     @apply font-medium mr-2;
   }
 
-  /* Nested list styling */
-  .prose-ordered-list .prose-ordered-list {
+  /* Parentheses numbering: 1) 2) 3) */
+  .prose-ordered-list.list-style-decimal-paren > li::before {
+    content: counter(item) ")";
+    @apply font-medium mr-2;
+  }
+
+  /* Decimal dot numbering: 1.1. 1.2. etc */
+  .prose-ordered-list.list-style-decimal-dot {
+    counter-reset: section;
+  }
+
+  .prose-ordered-list.list-style-decimal-dot > li {
+    counter-increment: section;
+  }
+
+  .prose-ordered-list.list-style-decimal-dot > li::before {
+    content: counter(section) ".";
+    @apply font-medium mr-2;
+  }
+
+  /* Nested lists - Default style */
+  .prose-ordered-list:not(.list-style-decimal-paren):not(.list-style-decimal-dot) .prose-ordered-list {
     @apply list-none;
     counter-reset: subitem;
   }
 
-  .prose-ordered-list .prose-ordered-list > li::before {
-    content: counter(item) "." counter(subitem, lower-alpha) ".";
+  .prose-ordered-list:not(.list-style-decimal-paren):not(.list-style-decimal-dot) .prose-ordered-list > li::before {
+    content: counter(subitem, lower-alpha) ".";
     counter-increment: subitem;
   }
 
-  .prose-ordered-list .prose-ordered-list .prose-ordered-list {
+  .prose-ordered-list:not(.list-style-decimal-paren):not(.list-style-decimal-dot) .prose-ordered-list .prose-ordered-list {
     counter-reset: subsubitem;
   }
 
-  .prose-ordered-list .prose-ordered-list .prose-ordered-list > li::before {
-    content: counter(item) "." counter(subitem, lower-alpha) "." counter(subsubitem, lower-roman) ".";
+  .prose-ordered-list:not(.list-style-decimal-paren):not(.list-style-decimal-dot) .prose-ordered-list .prose-ordered-list > li::before {
+    content: counter(subsubitem, lower-roman) ".";
     counter-increment: subsubitem;
+  }
+
+  /* Nested lists - Parentheses style */
+  .prose-ordered-list.list-style-decimal-paren .prose-ordered-list {
+    counter-reset: subitem;
+  }
+
+  .prose-ordered-list.list-style-decimal-paren .prose-ordered-list > li::before {
+    content: counter(subitem, lower-alpha) ")";
+    counter-increment: subitem;
+  }
+
+  .prose-ordered-list.list-style-decimal-paren .prose-ordered-list .prose-ordered-list > li::before {
+    content: counter(subsubitem, lower-roman) ")";
+    counter-increment: subsubitem;
+  }
+
+  /* Nested lists - Decimal dot style */
+  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list {
+    counter-reset: subsection;
+  }
+
+  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list > li {
+    counter-increment: subsection;
+  }
+
+  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list > li::before {
+    content: counter(section) "." counter(subsection) ".";
+  }
+
+  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list .prose-ordered-list {
+    counter-reset: subsubsection;
+  }
+
+  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list .prose-ordered-list > li {
+    counter-increment: subsubsection;
+  }
+
+  .prose-ordered-list.list-style-decimal-dot .prose-ordered-list .prose-ordered-list > li::before {
+    content: counter(section) "." counter(subsection) "." counter(subsubsection) ".";
   }
 
   .prose-task-list {
@@ -221,5 +283,14 @@
 
   .prose del {
     @apply line-through;
+  }
+
+  /* Prevent paragraph breaks in list items */
+  .ProseMirror li p {
+    @apply m-0 inline;
+  }
+
+  .ProseMirror li + li {
+    @apply mt-1;
   }
 }
