@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      contract_compositions: {
+        Row: {
+          contract_type_key: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          module_key: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          contract_type_key: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          module_key: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          contract_type_key?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          module_key?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contract_modules: {
         Row: {
           category: string | null
@@ -28,6 +58,7 @@ export type Database = {
           title_de: string
           title_en: string | null
           updated_at: string
+          variables: Json | null
         }
         Insert: {
           category?: string | null
@@ -42,6 +73,7 @@ export type Database = {
           title_de: string
           title_en?: string | null
           updated_at?: string
+          variables?: Json | null
         }
         Update: {
           category?: string | null
@@ -55,6 +87,43 @@ export type Database = {
           sort_order?: number | null
           title_de?: string
           title_en?: string | null
+          updated_at?: string
+          variables?: Json | null
+        }
+        Relationships: []
+      }
+      contract_templates: {
+        Row: {
+          contract_type_key: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          name: string
+          template_data: Json
+          updated_at: string
+        }
+        Insert: {
+          contract_type_key: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name: string
+          template_data: Json
+          updated_at?: string
+        }
+        Update: {
+          contract_type_key?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name?: string
+          template_data?: Json
           updated_at?: string
         }
         Relationships: []
