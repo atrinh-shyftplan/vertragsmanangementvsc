@@ -49,15 +49,28 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
     }).format(amount);
   };
 
-  const renderModule = (moduleKey: string, moduleData: any) => {
+  const renderModule = (moduleKey: string, moduleData: any, numberingStyle?: string, sortOrder?: number) => {
     if (!moduleData) return null;
 
     const title = language === 'de' ? moduleData.title_de : moduleData.title_en;
     
+    const getNumberPrefix = () => {
+      if (!numberingStyle || numberingStyle === 'none' || !sortOrder) return '';
+      
+      switch (numberingStyle) {
+        case 'numbered': return `${sortOrder}.`;
+        case 'parentheses': return `(${sortOrder})`;
+        case 'decimal': return `${sortOrder}.1`;
+        case 'bullets': return '•';
+        default: return '';
+      }
+    };
+    
     return (
       <div key={moduleKey} className="mb-8">
         {title && (
-          <h2 className="text-xl font-semibold text-foreground mb-4 border-b border-border pb-2">
+          <h2 className="text-xl font-semibold text-foreground mb-4 border-b border-border pb-2 flex items-center gap-2">
+            {getNumberPrefix() && <span className="text-primary">{getNumberPrefix()}</span>}
             {title}
           </h2>
         )}
