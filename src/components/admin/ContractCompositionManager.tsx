@@ -143,7 +143,7 @@ export function ContractCompositionManager({
                   <SelectValue placeholder="Vertragstyp wählen" />
                 </SelectTrigger>
                 <SelectContent>
-                  {contractTypes.map(type => (
+                  {contractTypes.filter(type => type.key && type.key.trim() !== '').map(type => (
                     <SelectItem key={type.key} value={type.key}>
                       {type.name_de}
                     </SelectItem>
@@ -159,7 +159,7 @@ export function ContractCompositionManager({
                   <SelectValue placeholder="Modul wählen" />
                 </SelectTrigger>
                 <SelectContent>
-                  {contractModules.map(module => (
+                  {contractModules.filter(module => module.key && module.key.trim() !== '').map(module => (
                     <SelectItem key={module.key} value={module.key}>
                       {module.title_de}
                     </SelectItem>

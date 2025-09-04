@@ -243,7 +243,7 @@ export function TemplateBuilder({
                   <SelectValue placeholder="Vertragstyp wählen" />
                 </SelectTrigger>
                 <SelectContent>
-                  {contractTypes.map(type => (
+                  {contractTypes.filter(type => type.key && type.key.trim() !== '').map(type => (
                     <SelectItem key={type.key} value={type.key}>
                       {type.name_de}
                     </SelectItem>

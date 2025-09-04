@@ -249,7 +249,9 @@ export function ContractEditModal({ contract, isOpen, onClose, onSave }: Contrac
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Kein Template</SelectItem>
-                  {Object.entries(contractTemplate.contractTypes).map(([key, label]) => (
+                  {Object.entries(contractTemplate.contractTypes)
+                    .filter(([key]) => key && key.trim() !== '')
+                    .map(([key, label]) => (
                     <SelectItem key={key} value={key}>{label}</SelectItem>
                   ))}
                 </SelectContent>
