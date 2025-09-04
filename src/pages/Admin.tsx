@@ -89,10 +89,16 @@ export default function Admin() {
               Verwalten Sie Vertragstypen, Module, Variablen und Templates.
             </p>
           </div>
-          <Button onClick={importTemplateData} variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Template-Daten importieren
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={importAGBModule} variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              AGB importieren
+            </Button>
+            <Button onClick={importTemplateData} variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Template-Daten importieren
+            </Button>
+          </div>
         </div>
       </div>
 
