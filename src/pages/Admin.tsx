@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { 
   Settings, 
   Plus, 
@@ -16,15 +17,116 @@ import {
   Save, 
   Eye,
   FileText,
-  Database,
+  HardDrive,
   Blocks,
-  Palette
+  Palette,
+  Loader2
 } from 'lucide-react';
-import templateData from '@/lib/template.json';
+import { useAdminData } from '@/hooks/useAdminData';
+import { ContractTypeModal } from '@/components/admin/ContractTypeModal';
+import { ContractModuleModal } from '@/components/admin/ContractModuleModal';
+import { GlobalVariableModal } from '@/components/admin/GlobalVariableModal';
+import type { Database } from '@/integrations/supabase/types';
+
+type ContractType = Database['public']['Tables']['contract_types']['Row'];
+type ContractModule = Database['public']['Tables']['contract_modules']['Row'];  
+type GlobalVariable = Database['public']['Tables']['global_variables']['Row'];
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState('overview');
-  const [editingModule, setEditingModule] = useState<string | null>(null);
+  const [editingModule, setEditingModule] = useState<ContractModule | null>(null);
+  
+  // Modal states
+  const [contractTypeModalOpen, setContractTypeModalOpen] = useState(false);
+  const [contractModuleModalOpen, setContractModuleModalOpen] = useState(false);
+  const [globalVariableModalOpen, setGlobalVariableModalOpen] = useState(false);
+  
+  // Edit states
+  const [editingContractType, setEditingContractType] = useState<ContractType | null>(null);
+  const [editingContractModule, setEditingContractModule] = useState<ContractModule | null>(null);
+  const [editingGlobalVariable, setEditingGlobalVariable] = useState<GlobalVariable | null>(null);
+
+  const {
+    contractTypes,
+    contractModules,
+    globalVariables,
+    loading,
+    createContractType,
+    updateContractType,
+    deleteContractType,
+    createContractModule,
+    updateContractModule,
+    deleteContractModule,
+    createGlobalVariable,
+    updateGlobalVariable,
+    deleteGlobalVariable
+  } = useAdminData();
+
+  // Handlers for contract types
+  const handleCreateContractType = () => {
+    setEditingContractType(null);
+    setContractTypeModalOpen(true);
+  };
+
+  const handleEditContractType = (contractType: ContractType) => {
+    setEditingContractType(contractType);
+    setContractTypeModalOpen(true);
+  };
+
+  const handleSaveContractType = (data: any) => {
+    if (editingContractType) {
+      updateContractType(editingContractType.id, data);
+    } else {
+      createContractType(data);
+    }
+  };
+
+  // Handlers for contract modules
+  const handleCreateContractModule = () => {
+    setEditingContractModule(null);
+    setContractModuleModalOpen(true);
+  };
+
+  const handleEditContractModule = (contractModule: ContractModule) => {
+    setEditingContractModule(contractModule);
+    setContractModuleModalOpen(true);
+  };
+
+  const handleSaveContractModule = (data: any) => {
+    if (editingContractModule) {
+      updateContractModule(editingContractModule.id, data);
+    } else {
+      createContractModule(data);
+    }
+  };
+
+  // Handlers for global variables
+  const handleCreateGlobalVariable = () => {
+    setEditingGlobalVariable(null);
+    setGlobalVariableModalOpen(true);
+  };
+
+  const handleEditGlobalVariable = (globalVariable: GlobalVariable) => {
+    setEditingGlobalVariable(globalVariable);
+    setGlobalVariableModalOpen(true);
+  };
+
+  const handleSaveGlobalVariable = (data: any) => {
+    if (editingGlobalVariable) {
+      updateGlobalVariable(editingGlobalVariable.id, data);
+    } else {
+      createGlobalVariable(data);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Lade Admin-Daten...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -36,10 +138,6 @@ export default function Admin() {
             Verwaltung der Vertragsbausteine und Template-Konfiguration
           </p>
         </div>
-        <Button>
-          <Save className="mr-2 h-4 w-4" />
-          Änderungen speichern
-        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -56,9 +154,9 @@ export default function Admin() {
             <Blocks className="h-4 w-4" />
             Bausteine
           </TabsTrigger>
-          <TabsTrigger value="formatting" className="flex items-center gap-2">
-            <Palette className="h-4 w-4" />
-            Formatierung
+          <TabsTrigger value="variables" className="flex items-center gap-2">
+            <HardDrive className="h-4 w-4" />
+            Variablen
           </TabsTrigger>
         </TabsList>
 
@@ -77,14 +175,22 @@ export default function Admin() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {Object.entries(templateData.contractTypes).map(([key, value]) => (
-                    <div key={key} className="flex items-center justify-between">
-                      <Badge variant="secondary">{key}</Badge>
-                      <span className="text-sm text-muted-foreground">{value}</span>
+                  {contractTypes.slice(0, 3).map((type) => (
+                    <div key={type.id} className="flex items-center justify-between">
+                      <Badge variant="secondary">{type.key}</Badge>
+                      <span className="text-sm text-muted-foreground">{type.name_de}</span>
                     </div>
                   ))}
                 </div>
-                <Button variant="outline" size="sm" className="w-full mt-4">
+                <div className="text-sm text-muted-foreground mt-4">
+                  {contractTypes.length} Typen verfügbar
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full mt-4"
+                  onClick={handleCreateContractType}
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   Neuen Typ hinzufügen
                 </Button>
@@ -94,7 +200,7 @@ export default function Admin() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5" />
+                  <HardDrive className="h-5 w-5" />
                   Globale Variablen
                 </CardTitle>
                 <CardDescription>
@@ -103,9 +209,14 @@ export default function Admin() {
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-muted-foreground mb-4">
-                  {templateData.global_variables.length} Variablen definiert
+                  {globalVariables.length} Variablen definiert
                 </div>
-                <Button variant="outline" size="sm" className="w-full">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={handleCreateGlobalVariable}
+                >
                   <Edit className="mr-2 h-4 w-4" />
                   Variablen bearbeiten
                 </Button>
@@ -124,42 +235,20 @@ export default function Admin() {
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-muted-foreground mb-4">
-                  {Object.keys(templateData.modules).length} Module verfügbar
+                  {contractModules.length} Module verfügbar
                 </div>
-                <Button variant="outline" size="sm" className="w-full">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={handleCreateContractModule}
+                >
                   <Edit className="mr-2 h-4 w-4" />
                   Module bearbeiten
                 </Button>
               </CardContent>
             </Card>
           </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Letzte Änderungen</CardTitle>
-              <CardDescription>
-                Übersicht der kürzlich vorgenommenen Änderungen
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Formatierung: Paragraph-Struktur verbessert</p>
-                    <p className="text-sm text-muted-foreground">Heute, 14:30</p>
-                  </div>
-                  <Badge>Ausstehend</Badge>
-                </div>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Neues Modul: "Datenschutz" hinzugefügt</p>
-                    <p className="text-sm text-muted-foreground">Gestern, 16:45</p>
-                  </div>
-                  <Badge variant="secondary">Gespeichert</Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         {/* Vertragstypen */}
@@ -172,24 +261,49 @@ export default function Admin() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {Object.entries(templateData.contractTypes).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between p-4 border rounded-lg">
+              {contractTypes.map((type) => (
+                <div key={type.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="space-y-1">
-                    <p className="font-medium">{value}</p>
-                    <p className="text-sm text-muted-foreground">Key: {key}</p>
+                    <p className="font-medium">{type.name_de}</p>
+                    <p className="text-sm text-muted-foreground">Key: {type.key}</p>
+                    {type.description && (
+                      <p className="text-xs text-muted-foreground">{type.description}</p>
+                    )}
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditContractType(type)}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Vertragstyp löschen</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Sind Sie sicher, dass Sie den Vertragstyp "{type.name_de}" löschen möchten?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteContractType(type.id)}>
+                            Löschen
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               ))}
               
-              <Button className="w-full">
+              <Button className="w-full" onClick={handleCreateContractType}>
                 <Plus className="mr-2 h-4 w-4" />
                 Neuen Vertragstyp hinzufügen
               </Button>
@@ -211,20 +325,30 @@ export default function Admin() {
               <CardContent>
                 <ScrollArea className="h-[600px]">
                   <div className="space-y-2">
-                    {Object.entries(templateData.modules).map(([key, module]) => (
+                    {contractModules.map((module) => (
                       <div 
-                        key={key}
+                        key={module.id}
                         className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                          editingModule === key ? 'bg-primary/10 border-primary' : 'hover:bg-muted'
+                          editingModule?.id === module.id ? 'bg-primary/10 border-primary' : 'hover:bg-muted'
                         }`}
-                        onClick={() => setEditingModule(key)}
+                        onClick={() => setEditingModule(module)}
                       >
-                        <p className="font-medium text-sm">{(module as any).title_de || key}</p>
-                        <p className="text-xs text-muted-foreground">{key}</p>
+                        <p className="font-medium text-sm">{module.title_de}</p>
+                        <p className="text-xs text-muted-foreground">{module.key}</p>
+                        <Badge variant="outline" className="text-xs mt-1">
+                          {module.category}
+                        </Badge>
                       </div>
                     ))}
                   </div>
                 </ScrollArea>
+                <Button 
+                  className="w-full mt-4" 
+                  onClick={handleCreateContractModule}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Neues Modul
+                </Button>
               </CardContent>
             </Card>
 
@@ -232,7 +356,7 @@ export default function Admin() {
             <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle>
-                  {editingModule ? `Modul bearbeiten: ${editingModule}` : 'Modul auswählen'}
+                  {editingModule ? `Modul: ${editingModule.title_de}` : 'Modul auswählen'}
                 </CardTitle>
                 <CardDescription>
                   {editingModule ? 'Bearbeiten Sie den Inhalt und die Struktur des Moduls' : 'Wählen Sie ein Modul aus der Liste aus'}
@@ -247,14 +371,16 @@ export default function Admin() {
                           <Label htmlFor="title_de">Titel (Deutsch)</Label>
                           <Input 
                             id="title_de" 
-                            value={(templateData.modules as any)[editingModule]?.title_de || ''} 
+                            value={editingModule.title_de || ''} 
+                            readOnly
                           />
                         </div>
                         <div>
                           <Label htmlFor="title_en">Titel (Englisch)</Label>
                           <Input 
                             id="title_en" 
-                            value={(templateData.modules as any)[editingModule]?.title_en || ''} 
+                            value={editingModule.title_en || ''} 
+                            readOnly
                           />
                         </div>
                       </div>
@@ -265,7 +391,8 @@ export default function Admin() {
                         <Label>Inhalt (Deutsch)</Label>
                         <Textarea 
                           className="min-h-[200px]"
-                          value={(templateData.modules as any)[editingModule]?.content_de || ''}
+                          value={editingModule.content_de || ''}
+                          readOnly
                         />
                       </div>
 
@@ -273,19 +400,41 @@ export default function Admin() {
                         <Label>Inhalt (Englisch)</Label>
                         <Textarea 
                           className="min-h-[200px]"
-                          value={(templateData.modules as any)[editingModule]?.content_en || ''}
+                          value={editingModule.content_en || ''}
+                          readOnly
                         />
                       </div>
 
                       <div className="flex gap-2">
-                        <Button>
-                          <Save className="mr-2 h-4 w-4" />
-                          Speichern
+                        <Button onClick={() => handleEditContractModule(editingModule)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Bearbeiten
                         </Button>
-                        <Button variant="outline">
-                          <Eye className="mr-2 h-4 w-4" />
-                          Vorschau
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Löschen
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Modul löschen</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Sind Sie sicher, dass Sie das Modul "{editingModule.title_de}" löschen möchten?
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => {
+                                deleteContractModule(editingModule.id);
+                                setEditingModule(null);
+                              }}>
+                                Löschen
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   </ScrollArea>
@@ -302,81 +451,96 @@ export default function Admin() {
           </div>
         </TabsContent>
 
-        {/* Formatierung */}
-        <TabsContent value="formatting" className="space-y-6">
+        {/* Globale Variablen */}
+        <TabsContent value="variables" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Formatierungsregeln</CardTitle>
+              <CardTitle>Globale Variablen verwalten</CardTitle>
               <CardDescription>
-                Verbessern Sie die Struktur und Formatierung der Templates
+                Erstelle und bearbeite globale Variablen für alle Verträge
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Paragraph-Struktur</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between p-3 border rounded">
-                      <span className="text-sm">§ Nummerierung konsistent</span>
-                      <Badge variant="destructive">Fehlerhaft</Badge>
+            <CardContent className="space-y-4">
+              {globalVariables.map((variable) => (
+                <div key={variable.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{variable.name_de}</p>
+                      {variable.is_required && (
+                        <Badge variant="destructive" className="text-xs">Erforderlich</Badge>
+                      )}
                     </div>
-                    <div className="flex items-center justify-between p-3 border rounded">
-                      <span className="text-sm">Absätze (1), (2), (3) einheitlich</span>
-                      <Badge variant="destructive">Fehlerhaft</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded">
-                      <span className="text-sm">Unterabsätze (a), (b), (c)</span>
-                      <Badge variant="secondary">Teilweise</Badge>
-                    </div>
+                    <p className="text-sm text-muted-foreground">Key: {variable.key}</p>
+                    {variable.description && (
+                      <p className="text-xs text-muted-foreground">{variable.description}</p>
+                    )}
+                    {variable.default_value && (
+                      <p className="text-xs text-muted-foreground">Standard: {variable.default_value}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditGlobalVariable(variable)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Variable löschen</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Sind Sie sicher, dass Sie die Variable "{variable.name_de}" löschen möchten?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteGlobalVariable(variable.id)}>
+                            Löschen
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Sprach-Konsistenz</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between p-3 border rounded">
-                      <span className="text-sm">Deutsche Inhalte vollständig</span>
-                      <Badge variant="secondary">Gut</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded">
-                      <span className="text-sm">Englische Übersetzungen</span>
-                      <Badge variant="destructive">Unvollständig</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded">
-                      <span className="text-sm">Variable Platzhalter</span>
-                      <Badge variant="secondary">Konsistent</Badge>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Automatische Korrekturen</h3>
-                <div className="space-y-4">
-                  <Button className="w-full justify-start">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Paragraph-Nummerierung standardisieren
-                  </Button>
-                  <Button className="w-full justify-start">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Einheitliche Absatz-Struktur anwenden
-                  </Button>
-                  <Button className="w-full justify-start">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Fehlende Übersetzungen kennzeichnen
-                  </Button>
-                  <Button className="w-full justify-start">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Variable Konsistenz prüfen
-                  </Button>
-                </div>
-              </div>
+              ))}
+              
+              <Button className="w-full" onClick={handleCreateGlobalVariable}>
+                <Plus className="mr-2 h-4 w-4" />
+                Neue Variable hinzufügen
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Modals */}
+      <ContractTypeModal
+        open={contractTypeModalOpen}
+        onOpenChange={setContractTypeModalOpen}
+        onSave={handleSaveContractType}
+        contractType={editingContractType}
+      />
+
+      <ContractModuleModal
+        open={contractModuleModalOpen}
+        onOpenChange={setContractModuleModalOpen}
+        onSave={handleSaveContractModule}
+        contractModule={editingContractModule}
+      />
+
+      <GlobalVariableModal
+        open={globalVariableModalOpen}
+        onOpenChange={setGlobalVariableModalOpen}
+        onSave={handleSaveGlobalVariable}
+        globalVariable={editingGlobalVariable}
+      />
     </div>
   );
 }

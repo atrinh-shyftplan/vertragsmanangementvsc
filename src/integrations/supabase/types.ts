@@ -14,6 +14,129 @@ export type Database = {
   }
   public: {
     Tables: {
+      contract_modules: {
+        Row: {
+          category: string | null
+          content_de: string
+          content_en: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          key: string
+          sort_order: number | null
+          title_de: string
+          title_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          content_de: string
+          content_en?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          key: string
+          sort_order?: number | null
+          title_de: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          content_de?: string
+          content_en?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          key?: string
+          sort_order?: number | null
+          title_de?: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      contract_types: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          key: string
+          name_de: string
+          name_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          key: string
+          name_de: string
+          name_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          key?: string
+          name_de?: string
+          name_en?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      global_variables: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          default_value: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_required: boolean | null
+          key: string
+          name_de: string
+          name_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          default_value?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_required?: boolean | null
+          key: string
+          name_de: string
+          name_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          default_value?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_required?: boolean | null
+          key?: string
+          name_de?: string
+          name_en?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -41,6 +164,36 @@ export type Database = {
           role?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      template_configurations: {
+        Row: {
+          configuration: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          configuration: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          configuration?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string
         }
         Relationships: []
       }

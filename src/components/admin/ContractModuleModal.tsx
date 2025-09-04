@@ -1,0 +1,193 @@
+import { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { Database } from '@/integrations/supabase/types';
+
+type ContractModule = Database['public']['Tables']['contract_modules']['Row'];
+type ContractModuleInsert = Database['public']['Tables']['contract_modules']['Insert'];
+
+interface ContractModuleModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (data: ContractModuleInsert) => void;
+  contractModule?: ContractModule | null;
+}
+
+export function ContractModuleModal({ open, onOpenChange, onSave, contractModule }: ContractModuleModalProps) {
+  const [formData, setFormData] = useState<ContractModuleInsert>({
+    key: '',
+    title_de: '',
+    title_en: '',
+    content_de: '',
+    content_en: '',
+    category: 'general',
+    is_active: true,
+    sort_order: 0
+  });
+
+  useEffect(() => {
+    if (contractModule) {
+      setFormData({
+        key: contractModule.key,
+        title_de: contractModule.title_de,
+        title_en: contractModule.title_en || '',
+        content_de: contractModule.content_de,
+        content_en: contractModule.content_en || '',
+        category: contractModule.category || 'general',
+        is_active: contractModule.is_active,
+        sort_order: contractModule.sort_order || 0
+      });
+    } else {
+      setFormData({
+        key: '',
+        title_de: '',
+        title_en: '',
+        content_de: '',
+        content_en: '',
+        category: 'general',
+        is_active: true,
+        sort_order: 0
+      });
+    }
+  }, [contractModule, open]);
+
+  const handleSave = () => {
+    onSave(formData);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {contractModule ? 'Modul bearbeiten' : 'Neues Modul erstellen'}
+          </DialogTitle>
+          <DialogDescription>
+            Erstellen oder bearbeiten Sie ein Vertragsmodul für das System.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="key" className="text-right">
+              Schlüssel
+            </Label>
+            <Input
+              id="key"
+              value={formData.key}
+              onChange={(e) => setFormData({ ...formData, key: e.target.value })}
+              className="col-span-3"
+              placeholder="z.B. data_protection"
+            />
+          </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="title_de" className="text-right">
+              Titel (DE)
+            </Label>
+            <Input
+              id="title_de"
+              value={formData.title_de}
+              onChange={(e) => setFormData({ ...formData, title_de: e.target.value })}
+              className="col-span-3"
+              placeholder="Datenschutz"
+            />
+          </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="title_en" className="text-right">
+              Titel (EN)
+            </Label>
+            <Input
+              id="title_en"
+              value={formData.title_en}
+              onChange={(e) => setFormData({ ...formData, title_en: e.target.value })}
+              className="col-span-3"
+              placeholder="Data Protection"
+            />
+          </div>
+          
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label htmlFor="content_de" className="text-right pt-2">
+              Inhalt (DE)
+            </Label>
+            <Textarea
+              id="content_de"
+              value={formData.content_de}
+              onChange={(e) => setFormData({ ...formData, content_de: e.target.value })}
+              className="col-span-3 min-h-[100px]"
+              placeholder="Deutscher Modulinhalt..."
+            />
+          </div>
+          
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label htmlFor="content_en" className="text-right pt-2">
+              Inhalt (EN)
+            </Label>
+            <Textarea
+              id="content_en"
+              value={formData.content_en}
+              onChange={(e) => setFormData({ ...formData, content_en: e.target.value })}
+              className="col-span-3 min-h-[100px]"
+              placeholder="English module content..."
+            />
+          </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="category" className="text-right">
+              Kategorie
+            </Label>
+            <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+              <SelectTrigger className="col-span-3">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="general">Allgemein</SelectItem>
+                <SelectItem value="legal">Legal</SelectItem>
+                <SelectItem value="privacy">Datenschutz</SelectItem>
+                <SelectItem value="termination">Kündigung</SelectItem>
+                <SelectItem value="compensation">Vergütung</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="sort_order" className="text-right">
+              Sortierung
+            </Label>
+            <Input
+              id="sort_order"
+              type="number"
+              value={formData.sort_order}
+              onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
+              className="col-span-3"
+            />
+          </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="is_active" className="text-right">
+              Aktiv
+            </Label>
+            <Switch
+              id="is_active"
+              checked={formData.is_active}
+              onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+            />
+          </div>
+        </div>
+        
+        <DialogFooter>
+          <Button type="submit" onClick={handleSave}>
+            Speichern
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
