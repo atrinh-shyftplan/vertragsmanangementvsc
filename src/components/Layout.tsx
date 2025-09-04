@@ -33,8 +33,7 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Verträge', href: '/contracts', icon: FileText },
+    { name: 'Verträge', href: '/', icon: FileText },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
     ...(currentUser.role === 'admin' ? [
       { name: 'Admin Panel', href: '/admin', icon: Settings },

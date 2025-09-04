@@ -24,7 +24,7 @@ const App = () => (
           <Layout>
             <Routes>
               <Route path="/auth" element={<AuthPage />} />
-              <Route path="/" element={<RequireAuth><Index /></RequireAuth>} />
+              <Route path="/" element={<RequireAuth><Contracts /></RequireAuth>} />
               <Route path="/contracts" element={<RequireAuth><Contracts /></RequireAuth>} />
               <Route path="/admin" element={<RequireAuth><Admin /></RequireAuth>} />
               <Route path="/analytics" element={<RequireAuth><div className="p-6 text-center text-muted-foreground">Analytics-Seite wird entwickelt...</div></RequireAuth>} />

@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ContractEditModal } from '@/components/ContractEditModal';
 import ContractViewer from '@/components/ContractViewer';
-import { ContractEditor } from '@/components/ContractEditor';
+import NewContractEditor from '@/components/NewContractEditor';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Contracts() {
@@ -269,12 +269,7 @@ export default function Contracts() {
         </Card>
       )}
       
-      <ContractEditor
-        contract={editorContract}
-        isOpen={isEditorOpen}
-        onClose={() => setIsEditorOpen(false)}
-        onSave={handleSaveContract}
-      />
+      <NewContractEditor />
 
       {/* Contract Viewer Modal */}
       {viewingContract && isViewerOpen && (
