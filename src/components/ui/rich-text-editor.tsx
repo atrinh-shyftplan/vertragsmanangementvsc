@@ -37,6 +37,11 @@ export function RichTextEditor({ content, onChange, placeholder, className }: Ri
             class: `prose-ordered-list list-style-${listStyle}`,
           },
         },
+        listItem: {
+          HTMLAttributes: {
+            class: 'prose-list-item',
+          },
+        },
         paragraph: {
           HTMLAttributes: {
             class: 'prose-paragraph',
@@ -168,37 +173,38 @@ export function RichTextEditor({ content, onChange, placeholder, className }: Ri
             <List className="h-4 w-4" />
           </Button>
           
-          <div className="flex items-center">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                const currentClass = `list-style-${listStyle}`;
-                editor.chain().focus().toggleOrderedList().run();
-                // Update the class after creating the list
-                setTimeout(() => {
-                  const lists = editor.view.dom.querySelectorAll('ol');
-                  lists.forEach(list => {
-                    list.className = `prose-ordered-list ${currentClass}`;
-                  });
-                }, 0);
-              }}
-              className={cn("h-8 w-8 p-0", editor.isActive('orderedList') && "bg-primary/20")}
-            >
-              <ListOrdered className="h-4 w-4" />
-            </Button>
-            <Select value={listStyle} onValueChange={(value: 'decimal' | 'decimal-paren' | 'decimal-dot') => setListStyle(value)}>
-              <SelectTrigger className="h-8 w-8 p-0 border-0 bg-transparent hover:bg-muted">
-                <ChevronDown className="h-3 w-3" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="decimal">1. a. i.</SelectItem>
-                <SelectItem value="decimal-paren">1) a) i)</SelectItem>
-                <SelectItem value="decimal-dot">1.1. 1.1.1.</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={cn("h-8 w-8 p-0", editor.isActive('orderedList') && "bg-primary/20")}
+          >
+            <ListOrdered className="h-4 w-4" />
+          </Button>
+          
+          <Select 
+            value={listStyle} 
+            onValueChange={(value: 'decimal' | 'decimal-paren' | 'decimal-dot') => {
+              setListStyle(value);
+              // Apply style to existing lists
+              setTimeout(() => {
+                const lists = editor.view.dom.querySelectorAll('ol.prose-ordered-list');
+                lists.forEach(list => {
+                  list.className = `prose-ordered-list list-style-${value}`;
+                });
+              }, 0);
+            }}
+          >
+            <SelectTrigger className="h-8 w-16 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border shadow-md z-50">
+              <SelectItem value="decimal">1. a. i.</SelectItem>
+              <SelectItem value="decimal-paren">1) a) i)</SelectItem>
+              <SelectItem value="decimal-dot">1.1. 1.2.</SelectItem>
+            </SelectContent>
+          </Select>
           
           <Button
             type="button"

@@ -285,12 +285,25 @@
     @apply line-through;
   }
 
-  /* Prevent paragraph breaks in list items */
+  /* Prevent paragraph breaks in list items and keep content inline */
   .ProseMirror li p {
     @apply m-0 inline;
   }
 
+  .ProseMirror li {
+    @apply my-0;
+  }
+
   .ProseMirror li + li {
     @apply mt-1;
+  }
+
+  /* Force list items to not create new paragraphs */
+  .prose-list-item {
+    @apply block;
+  }
+
+  .prose-list-item p {
+    @apply inline m-0;
   }
 }
