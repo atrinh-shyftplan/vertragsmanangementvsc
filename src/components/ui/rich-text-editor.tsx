@@ -2,8 +2,11 @@ import React from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { TextStyle } from '@tiptap/extension-text-style';
+import { ListKeymap } from '@tiptap/extension-list-keymap';
+import { TaskList } from '@tiptap/extension-task-list';
+import { TaskItem } from '@tiptap/extension-task-item';
 import { Button } from '@/components/ui/button';
-import { Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
+import { Bold, Italic, Underline, List, ListOrdered, Quote, CheckSquare, Indent, Outdent, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RichTextEditorProps {
@@ -20,17 +23,50 @@ export function RichTextEditor({ content, onChange, placeholder, className }: Ri
         bulletList: {
           keepMarks: true,
           keepAttributes: false,
+          HTMLAttributes: {
+            class: 'prose-bullet-list',
+          },
         },
         orderedList: {
           keepMarks: true,
           keepAttributes: false,
+          HTMLAttributes: {
+            class: 'prose-ordered-list',
+          },
+        },
+        paragraph: {
+          HTMLAttributes: {
+            class: 'prose-paragraph',
+          },
+        },
+        heading: {
+          HTMLAttributes: {
+            class: 'prose-heading',
+          },
         },
       }),
       TextStyle,
+      ListKeymap,
+      TaskList.configure({
+        HTMLAttributes: {
+          class: 'prose-task-list',
+        },
+      }),
+      TaskItem.configure({
+        nested: true,
+        HTMLAttributes: {
+          class: 'prose-task-item',
+        },
+      }),
     ],
     content,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
+    },
+    editorProps: {
+      attributes: {
+        class: 'prose prose-sm sm:prose-base max-w-none focus:outline-none min-h-[300px] p-4',
+      },
     },
   });
 
@@ -39,55 +75,144 @@ export function RichTextEditor({ content, onChange, placeholder, className }: Ri
   }
 
   return (
-    <div className={cn("border rounded-md", className)}>
-      {/* Toolbar */}
-      <div className="flex items-center gap-1 p-2 border-b bg-muted/50">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={cn("h-8 w-8 p-0", editor.isActive('bold') && "bg-primary/20")}
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={cn("h-8 w-8 p-0", editor.isActive('italic') && "bg-primary/20")}
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          className={cn("h-8 w-8 p-0", editor.isActive('strike') && "bg-primary/20")}
-        >
-          <Underline className="h-4 w-4" />
-        </Button>
+    <div className={cn("border rounded-md bg-background", className)}>
+      {/* Enhanced Toolbar */}
+      <div className="flex flex-wrap items-center gap-1 p-3 border-b bg-muted/30">
+        {/* Basic formatting */}
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={cn("h-8 w-8 p-0", editor.isActive('bold') && "bg-primary/20")}
+          >
+            <Bold className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            className={cn("h-8 w-8 p-0", editor.isActive('italic') && "bg-primary/20")}
+          >
+            <Italic className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            className={cn("h-8 w-8 p-0", editor.isActive('strike') && "bg-primary/20")}
+          >
+            <Underline className="h-4 w-4" />
+          </Button>
+        </div>
+
         <div className="w-px h-6 bg-border mx-1" />
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={cn("h-8 w-8 p-0", editor.isActive('bulletList') && "bg-primary/20")}
-        >
-          <List className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={cn("h-8 w-8 p-0", editor.isActive('orderedList') && "bg-primary/20")}
-        >
-          <ListOrdered className="h-4 w-4" />
-        </Button>
+
+        {/* Headings */}
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().setHeading({ level: 1 }).run()}
+            className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 1 }) && "bg-primary/20")}
+          >
+            H1
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().setHeading({ level: 2 }).run()}
+            className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 2 }) && "bg-primary/20")}
+          >
+            H2
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().setHeading({ level: 3 }).run()}
+            className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 3 }) && "bg-primary/20")}
+          >
+            H3
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().setParagraph().run()}
+            className={cn("h-8 px-2 text-xs", !editor.isActive('heading') && !editor.isActive('blockquote') && "bg-primary/20")}
+          >
+            P
+          </Button>
+        </div>
+
+        <div className="w-px h-6 bg-border mx-1" />
+
+        {/* Lists */}
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={cn("h-8 w-8 p-0", editor.isActive('bulletList') && "bg-primary/20")}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={cn("h-8 w-8 p-0", editor.isActive('orderedList') && "bg-primary/20")}
+          >
+            <ListOrdered className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleTaskList().run()}
+            className={cn("h-8 w-8 p-0", editor.isActive('taskList') && "bg-primary/20")}
+          >
+            <CheckSquare className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="w-px h-6 bg-border mx-1" />
+
+        {/* Indentation */}
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().liftListItem('listItem').run()}
+            disabled={!editor.can().liftListItem('listItem')}
+            className="h-8 w-8 p-0"
+          >
+            <Outdent className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().sinkListItem('listItem').run()}
+            disabled={!editor.can().sinkListItem('listItem')}
+            className="h-8 w-8 p-0"
+          >
+            <Indent className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="w-px h-6 bg-border mx-1" />
+
+        {/* Quote */}
         <Button
           type="button"
           variant="ghost"
@@ -97,41 +222,15 @@ export function RichTextEditor({ content, onChange, placeholder, className }: Ri
         >
           <Quote className="h-4 w-4" />
         </Button>
-        <div className="w-px h-6 bg-border mx-1" />
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().setHeading({ level: 1 }).run()}
-          className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 1 }) && "bg-primary/20")}
-        >
-          H1
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().setHeading({ level: 2 }).run()}
-          className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 2 }) && "bg-primary/20")}
-        >
-          H2
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().setHeading({ level: 3 }).run()}
-          className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 3 }) && "bg-primary/20")}
-        >
-          H3
-        </Button>
       </div>
 
-      {/* Editor */}
-      <EditorContent 
-        editor={editor} 
-        className="prose prose-sm max-w-none p-4 min-h-[120px] focus-within:outline-none"
-      />
+      {/* Editor Content */}
+      <div className="relative">
+        <EditorContent 
+          editor={editor} 
+          className="min-h-[400px] max-h-[600px] overflow-y-auto"
+        />
+      </div>
     </div>
   );
 }

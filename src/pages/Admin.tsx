@@ -9,7 +9,7 @@ import { GlobalVariableModal } from '@/components/admin/GlobalVariableModal';
 import { ContractCompositionManager } from '@/components/admin/ContractCompositionManager';
 import { TemplateBuilder } from '@/components/admin/TemplateBuilder';
 import { ContractBuilder } from '@/components/admin/ContractBuilder';
-import { Plus, Edit2, Trash2, Settings, Database, FileText, Blocks, Variable, Download } from 'lucide-react';
+import { Plus, Edit2, Trash2, Copy, Settings, Database, FileText, Blocks, Variable, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
@@ -28,6 +28,7 @@ export default function Admin() {
     deleteContractType,
     createContractModule,
     updateContractModule,
+    cloneContractModule,
     deleteContractModule,
     createGlobalVariable,
     updateGlobalVariable,
@@ -40,6 +41,7 @@ export default function Admin() {
   const [selectedContractType, setSelectedContractType] = useState(null);
   const [selectedContractModule, setSelectedContractModule] = useState(null);
   const [selectedGlobalVariable, setSelectedGlobalVariable] = useState(null);
+  const [activeTab, setActiveTab] = useState("types");
 
   const handleEditContractType = (contractType: any) => {
     setSelectedContractType(contractType);
@@ -93,7 +95,7 @@ export default function Admin() {
         </div>
       </div>
 
-      <Tabs defaultValue="types" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="types" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -228,6 +230,13 @@ export default function Admin() {
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
+                      <Button
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => cloneContractModule(module.id)}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="outline" size="sm">
@@ -243,7 +252,11 @@ export default function Admin() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteContractModule(module.id)}>
+                            <AlertDialogAction onClick={() => {
+                              deleteContractModule(module.id);
+                              // Keep staying on modules tab
+                              setActiveTab("modules");
+                            }}>
                               Löschen
                             </AlertDialogAction>
                           </AlertDialogFooter>

@@ -185,6 +185,47 @@ export function useAdminData() {
     }
   };
 
+  const cloneContractModule = async (moduleId: string) => {
+    try {
+      // Get the original module
+      const originalModule = contractModules.find(m => m.id === moduleId);
+      if (!originalModule) throw new Error('Modul nicht gefunden');
+
+      // Create clone data
+      const cloneData: ContractModuleInsert = {
+        key: `${originalModule.key}_copy`,
+        title_de: `${originalModule.title_de} (Kopie)`,
+        title_en: originalModule.title_en ? `${originalModule.title_en} (Copy)` : '',
+        content_de: originalModule.content_de,
+        content_en: originalModule.content_en || '',
+        category: originalModule.category || 'general',
+        is_active: originalModule.is_active,
+        sort_order: originalModule.sort_order || 0,
+        variables: originalModule.variables
+      };
+
+      const { error } = await supabase
+        .from('contract_modules')
+        .insert([cloneData]);
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Erfolg',
+        description: 'Modul wurde kopiert.'
+      });
+      
+      fetchData();
+    } catch (error) {
+      console.error('Error cloning contract module:', error);
+      toast({
+        title: 'Fehler',
+        description: 'Modul konnte nicht kopiert werden.',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const deleteContractModule = async (id: string) => {
     try {
       const { error } = await supabase
@@ -402,6 +443,7 @@ export function useAdminData() {
     // Contract Modules
     createContractModule,
     updateContractModule,
+    cloneContractModule,
     deleteContractModule,
     
     // Global Variables

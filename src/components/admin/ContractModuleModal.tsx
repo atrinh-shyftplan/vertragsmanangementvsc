@@ -64,7 +64,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[90vw] lg:max-w-[80vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {contractModule ? 'Modul bearbeiten' : 'Neues Modul erstellen'}
@@ -123,7 +123,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
                 content={formData.content_de}
                 onChange={(content) => setFormData({ ...formData, content_de: content })}
                 placeholder="Deutscher Modulinhalt..."
-                className="min-h-[150px]"
+                className="min-h-[400px]"
               />
             </div>
           </div>
@@ -137,7 +137,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
                 content={formData.content_en}
                 onChange={(content) => setFormData({ ...formData, content_en: content })}
                 placeholder="English module content..."
-                className="min-h-[150px]"
+                className="min-h-[400px]"
               />
             </div>
           </div>

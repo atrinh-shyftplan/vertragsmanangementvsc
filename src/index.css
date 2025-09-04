@@ -121,3 +121,105 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Rich Text Editor Prose Styles */
+@layer components {
+  .prose-paragraph {
+    @apply mb-3;
+  }
+
+  .prose-heading {
+    @apply font-semibold mb-4 mt-6 first:mt-0;
+  }
+
+  .prose h1 {
+    @apply text-2xl;
+  }
+
+  .prose h2 {
+    @apply text-xl;
+  }
+
+  .prose h3 {
+    @apply text-lg;
+  }
+
+  .prose-bullet-list {
+    @apply list-disc pl-6 mb-4 space-y-1;
+  }
+
+  .prose-ordered-list {
+    @apply list-decimal pl-6 mb-4 space-y-1;
+    counter-reset: item;
+  }
+
+  .prose-ordered-list > li {
+    @apply block;
+    counter-increment: item;
+  }
+
+  .prose-ordered-list > li::before {
+    content: counter(item) ".";
+    @apply font-medium mr-2;
+  }
+
+  /* Nested list styling */
+  .prose-ordered-list .prose-ordered-list {
+    @apply list-none;
+    counter-reset: subitem;
+  }
+
+  .prose-ordered-list .prose-ordered-list > li::before {
+    content: counter(item) "." counter(subitem, lower-alpha) ".";
+    counter-increment: subitem;
+  }
+
+  .prose-ordered-list .prose-ordered-list .prose-ordered-list {
+    counter-reset: subsubitem;
+  }
+
+  .prose-ordered-list .prose-ordered-list .prose-ordered-list > li::before {
+    content: counter(item) "." counter(subitem, lower-alpha) "." counter(subsubitem, lower-roman) ".";
+    counter-increment: subsubitem;
+  }
+
+  .prose-task-list {
+    @apply list-none pl-0 mb-4 space-y-2;
+  }
+
+  .prose-task-item {
+    @apply flex items-start gap-2;
+  }
+
+  .prose-task-item input[type="checkbox"] {
+    @apply mt-1;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-muted-foreground/20 pl-4 italic my-4;
+  }
+
+  .prose ul, .prose ol {
+    @apply my-4;
+  }
+
+  .prose li {
+    @apply my-1;
+  }
+
+  .prose ul ul, .prose ol ol, .prose ul ol, .prose ol ul {
+    @apply my-1;
+  }
+
+  .prose strong {
+    @apply font-semibold;
+  }
+
+  .prose em {
+    @apply italic;
+  }
+
+  .prose del {
+    @apply line-through;
+  }
+}
