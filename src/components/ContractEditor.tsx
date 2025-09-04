@@ -456,7 +456,9 @@ export function ContractEditor({ contract, isOpen, onClose, onSave }: ContractEd
                     <CardContent className="space-y-4">
                       {selectedModules.map((selectedModule) => {
                         const module = contractModules.find(m => m.key === selectedModule.moduleKey);
-                        const moduleVariables = module?.variables as any[] || [];
+                        const moduleVariables = Array.isArray(module?.variables) 
+                          ? module.variables 
+                          : (module?.variables ? JSON.parse(module.variables as string) : []) || [];
                         
                         if (moduleVariables.length === 0) return null;
                         
