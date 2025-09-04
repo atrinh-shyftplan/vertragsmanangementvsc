@@ -23,6 +23,7 @@ export default function Admin() {
     loading,
     fetchData,
     importTemplateData,
+    importAGBModule,
     createContractType,
     updateContractType,
     deleteContractType,
