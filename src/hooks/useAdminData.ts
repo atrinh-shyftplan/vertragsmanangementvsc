@@ -628,7 +628,6 @@ export function useAdminData() {
     // Actions
     fetchData,
     importTemplateData,
-    importAGBModule,
     
     // Contract Types
     createContractType,
