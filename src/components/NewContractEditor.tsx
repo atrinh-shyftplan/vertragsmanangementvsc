@@ -97,28 +97,95 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           const processedDe = processContent(module.content_de || '', moduleVariables);
           const processedEn = processContent(module.content_en || module.content_de || '', moduleVariables);
           
-          // Helper function to create synchronized sections
+          // Helper function to create synchronized sections with proper horizontal alignment
           const createSyncedSections = (deContent: string, enContent: string) => {
-            // Split content by numbered sections (1., 1.1, 2., etc.)
-            const numberPattern = /(?=(?:^|\n)\s*\d+\.(?:\d+\.)*\s)/;
-            const deSections = deContent.split(numberPattern).filter(s => s.trim());
-            const enSections = enContent.split(numberPattern).filter(s => s.trim());
+            // Split content by numbered sections and extract number patterns
+            const numberPattern = /(?:^|\n)\s*(\d+\.(?:\d+\.)*)\s*/;
             
-            const maxSections = Math.max(deSections.length, enSections.length);
+            // Function to parse content into sections with their numbers
+            const parseIntoSections = (content: string) => {
+              const sections = [];
+              const parts = content.split(numberPattern);
+              
+              for (let i = 1; i < parts.length; i += 2) {
+                const number = parts[i];
+                const text = parts[i + 1] || '';
+                sections.push({ number, text: text.trim() });
+              }
+              
+              // Add any content before the first numbered section
+              if (parts[0] && parts[0].trim()) {
+                sections.unshift({ number: '', text: parts[0].trim() });
+              }
+              
+              return sections;
+            };
+            
+            const deSections = parseIntoSections(deContent);
+            const enSections = parseIntoSections(enContent);
+            
+            // Create a map of numbered sections for matching
+            const deMap = new Map();
+            const enMap = new Map();
+            
+            deSections.forEach(section => {
+              if (section.number) {
+                deMap.set(section.number, section.text);
+              }
+            });
+            
+            enSections.forEach(section => {
+              if (section.number) {
+                enMap.set(section.number, section.text);
+              }
+            });
+            
+            // Get all unique numbers and sort them
+            const allNumbers = Array.from(new Set([...deMap.keys(), ...enMap.keys()])).sort((a, b) => {
+              const aParts = a.split('.').map(n => parseInt(n));
+              const bParts = b.split('.').map(n => parseInt(n));
+              
+              for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+                const aNum = aParts[i] || 0;
+                const bNum = bParts[i] || 0;
+                if (aNum !== bNum) return aNum - bNum;
+              }
+              return 0;
+            });
+            
             let syncedHtml = '';
             
-            for (let i = 0; i < maxSections; i++) {
-              const deSection = deSections[i] || '';
-              const enSection = enSections[i] || '';
-              
+            // Render non-numbered content first if exists
+            const deIntro = deSections.find(s => !s.number)?.text || '';
+            const enIntro = enSections.find(s => !s.number)?.text || '';
+            
+            if (deIntro || enIntro) {
               syncedHtml += `
                 <div class="grid grid-cols-2 gap-0 mb-4 relative">
-                  <div class="pr-6 text-sm leading-relaxed text-left">${deSection}</div>
+                  <div class="pr-6 text-sm leading-relaxed text-left">${deIntro}</div>
                   <div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>
-                  <div class="pl-6 text-sm leading-relaxed text-left">${enSection}</div>
+                  <div class="pl-6 text-sm leading-relaxed text-left">${enIntro}</div>
                 </div>
               `;
             }
+            
+            // Render numbered sections in synchronized pairs
+            allNumbers.forEach(number => {
+              const deText = deMap.get(number) || '';
+              const enText = enMap.get(number) || '';
+              
+              syncedHtml += `
+                <div class="grid grid-cols-2 gap-0 mb-4 relative">
+                  <div class="pr-6 text-sm leading-relaxed text-left">
+                    <strong>${number}</strong> ${deText}
+                  </div>
+                  <div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>
+                  <div class="pl-6 text-sm leading-relaxed text-left">
+                    <strong>${number}</strong> ${enText}
+                  </div>
+                </div>
+              `;
+            });
             
             return syncedHtml;
           };
