@@ -93,48 +93,47 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           // 2-column layout with gray divider line
           preview += `<div class="grid grid-cols-2 gap-0 relative">`;
           
-          // Helper function to sync paragraph structures
-          const syncParagraphs = (deContent: string, enContent: string) => {
-            const deLines = deContent.split(/(<p>|<\/p>|\n)/);
-            const enLines = enContent.split(/(<p>|<\/p>|\n)/);
-            
-            // Find numbered sections (1., 1.1, etc.) and align them
-            const deParagraphs = deContent.split(/(?=\d+\.(?:\d+\.)*\s)/).filter(p => p.trim());
-            const enParagraphs = enContent.split(/(?=\d+\.(?:\d+\.)*\s)/).filter(p => p.trim());
-            
-            let syncedDe = '';
-            let syncedEn = '';
-            const maxLength = Math.max(deParagraphs.length, enParagraphs.length);
-            
-            for (let i = 0; i < maxLength; i++) {
-              const dePara = deParagraphs[i] || '';
-              const enPara = enParagraphs[i] || '';
-              
-              syncedDe += `<div class="paragraph-sync">${dePara}</div>`;
-              syncedEn += `<div class="paragraph-sync">${enPara}</div>`;
-            }
-            
-            return { de: syncedDe, en: syncedEn };
-          };
-          
+          // Process content with variables
           const processedDe = processContent(module.content_de || '', moduleVariables);
           const processedEn = processContent(module.content_en || module.content_de || '', moduleVariables);
-          const synced = syncParagraphs(processedDe, processedEn);
           
-          // German column
-          preview += `<div class="pr-6">`;
-          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
-          preview += `<div class="text-sm leading-relaxed text-left">${synced.de}</div>`;
-          preview += `</div>`;
+          // Helper function to create synchronized sections
+          const createSyncedSections = (deContent: string, enContent: string) => {
+            // Split content by numbered sections (1., 1.1, 2., etc.)
+            const numberPattern = /(?=(?:^|\n)\s*\d+\.(?:\d+\.)*\s)/;
+            const deSections = deContent.split(numberPattern).filter(s => s.trim());
+            const enSections = enContent.split(numberPattern).filter(s => s.trim());
+            
+            const maxSections = Math.max(deSections.length, enSections.length);
+            let syncedHtml = '';
+            
+            for (let i = 0; i < maxSections; i++) {
+              const deSection = deSections[i] || '';
+              const enSection = enSections[i] || '';
+              
+              syncedHtml += `
+                <div class="grid grid-cols-2 gap-0 mb-4 relative">
+                  <div class="pr-6 text-sm leading-relaxed text-left">${deSection}</div>
+                  <div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>
+                  <div class="pl-6 text-sm leading-relaxed text-left">${enSection}</div>
+                </div>
+              `;
+            }
+            
+            return syncedHtml;
+          };
           
-          // Gray vertical divider line
+          
+          // Display headers and synchronized content
+          preview += `<div class="mb-6">`;
+          preview += `<div class="grid grid-cols-2 gap-0 relative mb-4">`;
+          preview += `<h3 class="text-lg font-bold text-gray-800 pr-6">${module.title_de}</h3>`;
           preview += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
-          
-          // English column
-          preview += `<div class="pl-6">`;
-          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
-          preview += `<div class="text-sm leading-relaxed text-left">${synced.en}</div>`;
+          preview += `<h3 class="text-lg font-bold text-gray-800 pl-6">${module.title_en || module.title_de}</h3>`;
           preview += `</div>`;
+          
+          // Add synchronized sections
+          preview += createSyncedSections(processedDe, processedEn);
           
           preview += `</div>`;
           preview += `</div>`;
