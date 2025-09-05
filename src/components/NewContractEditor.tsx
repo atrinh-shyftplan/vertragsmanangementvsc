@@ -90,19 +90,22 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           
           preview += `<div class="mb-8">`;
           
-          // 2-column layout for German and English
-          preview += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">`;
+          // 2-column layout with gray divider line
+          preview += `<div class="grid grid-cols-2 gap-0 relative">`;
           
           // German column
-          preview += `<div class="space-y-4">`;
-          preview += `<h3 class="text-lg font-bold text-blue-600">🇩🇪 ${module.title_de}</h3>`;
-          preview += `<div class="text-sm leading-relaxed border-l-4 border-blue-200 pl-4">${processContent(module.content_de || '', moduleVariables)}</div>`;
+          preview += `<div class="pr-6 space-y-4">`;
+          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
+          preview += `<div class="text-sm leading-relaxed text-justify">${processContent(module.content_de || '', moduleVariables)}</div>`;
           preview += `</div>`;
           
+          // Gray vertical divider line
+          preview += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
+          
           // English column
-          preview += `<div class="space-y-4">`;
-          preview += `<h3 class="text-lg font-bold text-green-600">🇬🇧 ${module.title_en || module.title_de}</h3>`;
-          preview += `<div class="text-sm leading-relaxed border-l-4 border-green-200 pl-4">${processContent(module.content_en || module.content_de || '', moduleVariables)}</div>`;
+          preview += `<div class="pl-6 space-y-4">`;
+          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
+          preview += `<div class="text-sm leading-relaxed text-justify">${processContent(module.content_en || module.content_de || '', moduleVariables)}</div>`;
           preview += `</div>`;
           
           preview += `</div>`;
@@ -408,7 +411,11 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             <CardContent>
               <div 
                 className="prose max-w-none whitespace-pre-wrap bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner"
-                style={{ fontSize: '12px', lineHeight: '1.5' }}
+                style={{ 
+                  fontSize: '12px', 
+                  lineHeight: '1.6',
+                  fontFamily: 'Arial, sans-serif'
+                }}
                 dangerouslySetInnerHTML={{ __html: renderPreview() }}
               />
             </CardContent>
