@@ -99,49 +99,55 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           
           // Helper function to create synchronized sections with proper horizontal alignment
           const createSyncedSections = (deContent: string, enContent: string) => {
-            // Split content by numbered sections and extract number patterns
-            const numberPattern = /(?:^|\n)\s*(\d+\.(?:\d+\.)*)\s*/;
+            // Simple approach: split by paragraphs and match numbered ones
+            const deParagraphs = deContent.split(/\n\n|\n(?=\d)/).filter(p => p.trim());
+            const enParagraphs = enContent.split(/\n\n|\n(?=\d)/).filter(p => p.trim());
             
-            // Function to parse content into sections with their numbers
-            const parseIntoSections = (content: string) => {
-              const sections = [];
-              const parts = content.split(numberPattern);
+            // Extract numbered sections and their content
+            const extractNumberedSections = (paragraphs) => {
+              const sections = new Map();
+              let currentNumber = '';
+              let nonNumbered = [];
               
-              for (let i = 1; i < parts.length; i += 2) {
-                const number = parts[i];
-                const text = parts[i + 1] || '';
-                sections.push({ number, text: text.trim() });
-              }
+              paragraphs.forEach(paragraph => {
+                const numberMatch = paragraph.match(/^(\d+\.(?:\d+\.)*)\s*/);
+                if (numberMatch) {
+                  const number = numberMatch[1];
+                  const content = paragraph.replace(/^(\d+\.(?:\d+\.)*)\s*/, '');
+                  sections.set(number, content);
+                  currentNumber = number;
+                } else if (!currentNumber) {
+                  nonNumbered.push(paragraph);
+                }
+              });
               
-              // Add any content before the first numbered section
-              if (parts[0] && parts[0].trim()) {
-                sections.unshift({ number: '', text: parts[0].trim() });
-              }
-              
-              return sections;
+              return { sections, nonNumbered };
             };
             
-            const deSections = parseIntoSections(deContent);
-            const enSections = parseIntoSections(enContent);
+            const deData = extractNumberedSections(deParagraphs);
+            const enData = extractNumberedSections(enParagraphs);
             
-            // Create a map of numbered sections for matching
-            const deMap = new Map();
-            const enMap = new Map();
+            let syncedHtml = '';
             
-            deSections.forEach(section => {
-              if (section.number) {
-                deMap.set(section.number, section.text);
+            // Render non-numbered content first
+            const maxNonNumbered = Math.max(deData.nonNumbered.length, enData.nonNumbered.length);
+            for (let i = 0; i < maxNonNumbered; i++) {
+              const dePara = deData.nonNumbered[i] || '';
+              const enPara = enData.nonNumbered[i] || '';
+              
+              if (dePara || enPara) {
+                syncedHtml += `
+                  <div class="grid grid-cols-2 gap-0 mb-4 relative">
+                    <div class="pr-6 text-sm leading-relaxed text-left">${dePara}</div>
+                    <div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>
+                    <div class="pl-6 text-sm leading-relaxed text-left">${enPara}</div>
+                  </div>
+                `;
               }
-            });
+            }
             
-            enSections.forEach(section => {
-              if (section.number) {
-                enMap.set(section.number, section.text);
-              }
-            });
-            
-            // Get all unique numbers and sort them
-            const allNumbers = Array.from(new Set([...deMap.keys(), ...enMap.keys()])).sort((a, b) => {
+            // Get all unique numbers and sort them properly
+            const allNumbers = Array.from(new Set([...deData.sections.keys(), ...enData.sections.keys()])).sort((a, b) => {
               const aParts = a.split('.').map(n => parseInt(n));
               const bParts = b.split('.').map(n => parseInt(n));
               
@@ -153,35 +159,19 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
               return 0;
             });
             
-            let syncedHtml = '';
-            
-            // Render non-numbered content first if exists
-            const deIntro = deSections.find(s => !s.number)?.text || '';
-            const enIntro = enSections.find(s => !s.number)?.text || '';
-            
-            if (deIntro || enIntro) {
-              syncedHtml += `
-                <div class="grid grid-cols-2 gap-0 mb-4 relative">
-                  <div class="pr-6 text-sm leading-relaxed text-left">${deIntro}</div>
-                  <div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>
-                  <div class="pl-6 text-sm leading-relaxed text-left">${enIntro}</div>
-                </div>
-              `;
-            }
-            
-            // Render numbered sections in synchronized pairs
+            // Render numbered sections in perfect alignment
             allNumbers.forEach(number => {
-              const deText = deMap.get(number) || '';
-              const enText = enMap.get(number) || '';
+              const deText = deData.sections.get(number) || '';
+              const enText = enData.sections.get(number) || '';
               
               syncedHtml += `
                 <div class="grid grid-cols-2 gap-0 mb-4 relative">
                   <div class="pr-6 text-sm leading-relaxed text-left">
-                    <strong>${number}</strong> ${deText}
+                    <span class="font-semibold">${number}</span> ${deText}
                   </div>
                   <div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>
                   <div class="pl-6 text-sm leading-relaxed text-left">
-                    <strong>${number}</strong> ${enText}
+                    <span class="font-semibold">${number}</span> ${enText}
                   </div>
                 </div>
               `;
