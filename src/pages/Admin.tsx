@@ -22,7 +22,6 @@ export default function Admin() {
     contractTemplates,
     loading,
     fetchData,
-    importTemplateData,
     createContractType,
     updateContractType,
     deleteContractType,
@@ -87,12 +86,6 @@ export default function Admin() {
             <p className="text-muted-foreground">
               Verwalten Sie Vertragstypen, Module, Variablen und Templates.
             </p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={importTemplateData} variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Template-Daten importieren
-            </Button>
           </div>
         </div>
       </div>
