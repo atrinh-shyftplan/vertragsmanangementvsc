@@ -93,114 +93,48 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           // 2-column layout with gray divider line
           preview += `<div class="grid grid-cols-2 gap-0 relative">`;
           
-          // Process content with variables
-          const processedDe = processContent(module.content_de || '', moduleVariables);
-          const processedEn = processContent(module.content_en || module.content_de || '', moduleVariables);
-          
-          // Helper function to create synchronized sections with proper horizontal alignment
-          const createSyncedSections = (deContent: string, enContent: string) => {
-            // Split content by numbered sections and extract number patterns
-            const numberPattern = /(?:^|\n)\s*(\d+\.(?:\d+\.)*)\s*/;
+          // Helper function to sync paragraph structures
+          const syncParagraphs = (deContent: string, enContent: string) => {
+            const deLines = deContent.split(/(<p>|<\/p>|\n)/);
+            const enLines = enContent.split(/(<p>|<\/p>|\n)/);
             
-            // Function to parse content into sections with their numbers
-            const parseIntoSections = (content: string) => {
-              const sections = [];
-              const parts = content.split(numberPattern);
+            // Find numbered sections (1., 1.1, etc.) and align them
+            const deParagraphs = deContent.split(/(?=\d+\.(?:\d+\.)*\s)/).filter(p => p.trim());
+            const enParagraphs = enContent.split(/(?=\d+\.(?:\d+\.)*\s)/).filter(p => p.trim());
+            
+            let syncedDe = '';
+            let syncedEn = '';
+            const maxLength = Math.max(deParagraphs.length, enParagraphs.length);
+            
+            for (let i = 0; i < maxLength; i++) {
+              const dePara = deParagraphs[i] || '';
+              const enPara = enParagraphs[i] || '';
               
-              for (let i = 1; i < parts.length; i += 2) {
-                const number = parts[i];
-                const text = parts[i + 1] || '';
-                sections.push({ number, text: text.trim() });
-              }
-              
-              // Add any content before the first numbered section
-              if (parts[0] && parts[0].trim()) {
-                sections.unshift({ number: '', text: parts[0].trim() });
-              }
-              
-              return sections;
-            };
-            
-            const deSections = parseIntoSections(deContent);
-            const enSections = parseIntoSections(enContent);
-            
-            // Create a map of numbered sections for matching
-            const deMap = new Map();
-            const enMap = new Map();
-            
-            deSections.forEach(section => {
-              if (section.number) {
-                deMap.set(section.number, section.text);
-              }
-            });
-            
-            enSections.forEach(section => {
-              if (section.number) {
-                enMap.set(section.number, section.text);
-              }
-            });
-            
-            // Get all unique numbers and sort them
-            const allNumbers = Array.from(new Set([...deMap.keys(), ...enMap.keys()])).sort((a, b) => {
-              const aParts = a.split('.').map(n => parseInt(n));
-              const bParts = b.split('.').map(n => parseInt(n));
-              
-              for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
-                const aNum = aParts[i] || 0;
-                const bNum = bParts[i] || 0;
-                if (aNum !== bNum) return aNum - bNum;
-              }
-              return 0;
-            });
-            
-            let syncedHtml = '';
-            
-            // Render non-numbered content first if exists
-            const deIntro = deSections.find(s => !s.number)?.text || '';
-            const enIntro = enSections.find(s => !s.number)?.text || '';
-            
-            if (deIntro || enIntro) {
-              syncedHtml += `
-                <div class="grid grid-cols-2 gap-0 mb-4 relative">
-                  <div class="pr-6 text-sm leading-relaxed text-left">${deIntro}</div>
-                  <div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>
-                  <div class="pl-6 text-sm leading-relaxed text-left">${enIntro}</div>
-                </div>
-              `;
+              syncedDe += `<div class="paragraph-sync">${dePara}</div>`;
+              syncedEn += `<div class="paragraph-sync">${enPara}</div>`;
             }
             
-            // Render numbered sections in synchronized pairs
-            allNumbers.forEach(number => {
-              const deText = deMap.get(number) || '';
-              const enText = enMap.get(number) || '';
-              
-              syncedHtml += `
-                <div class="grid grid-cols-2 gap-0 mb-4 relative">
-                  <div class="pr-6 text-sm leading-relaxed text-left">
-                    <strong>${number}</strong> ${deText}
-                  </div>
-                  <div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>
-                  <div class="pl-6 text-sm leading-relaxed text-left">
-                    <strong>${number}</strong> ${enText}
-                  </div>
-                </div>
-              `;
-            });
-            
-            return syncedHtml;
+            return { de: syncedDe, en: syncedEn };
           };
           
+          const processedDe = processContent(module.content_de || '', moduleVariables);
+          const processedEn = processContent(module.content_en || module.content_de || '', moduleVariables);
+          const synced = syncParagraphs(processedDe, processedEn);
           
-          // Display headers and synchronized content
-          preview += `<div class="mb-6">`;
-          preview += `<div class="grid grid-cols-2 gap-0 relative mb-4">`;
-          preview += `<h3 class="text-lg font-bold text-gray-800 pr-6">${module.title_de}</h3>`;
-          preview += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
-          preview += `<h3 class="text-lg font-bold text-gray-800 pl-6">${module.title_en || module.title_de}</h3>`;
+          // German column
+          preview += `<div class="pr-6">`;
+          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
+          preview += `<div class="text-sm leading-relaxed text-left">${synced.de}</div>`;
           preview += `</div>`;
           
-          // Add synchronized sections
-          preview += createSyncedSections(processedDe, processedEn);
+          // Gray vertical divider line
+          preview += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
+          
+          // English column
+          preview += `<div class="pl-6">`;
+          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
+          preview += `<div class="text-sm leading-relaxed text-left">${synced.en}</div>`;
+          preview += `</div>`;
           
           preview += `</div>`;
           preview += `</div>`;
