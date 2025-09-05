@@ -93,19 +93,47 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           // 2-column layout with gray divider line
           preview += `<div class="grid grid-cols-2 gap-0 relative">`;
           
+          // Helper function to sync paragraph structures
+          const syncParagraphs = (deContent: string, enContent: string) => {
+            const deLines = deContent.split(/(<p>|<\/p>|\n)/);
+            const enLines = enContent.split(/(<p>|<\/p>|\n)/);
+            
+            // Find numbered sections (1., 1.1, etc.) and align them
+            const deParagraphs = deContent.split(/(?=\d+\.(?:\d+\.)*\s)/).filter(p => p.trim());
+            const enParagraphs = enContent.split(/(?=\d+\.(?:\d+\.)*\s)/).filter(p => p.trim());
+            
+            let syncedDe = '';
+            let syncedEn = '';
+            const maxLength = Math.max(deParagraphs.length, enParagraphs.length);
+            
+            for (let i = 0; i < maxLength; i++) {
+              const dePara = deParagraphs[i] || '';
+              const enPara = enParagraphs[i] || '';
+              
+              syncedDe += `<div class="paragraph-sync">${dePara}</div>`;
+              syncedEn += `<div class="paragraph-sync">${enPara}</div>`;
+            }
+            
+            return { de: syncedDe, en: syncedEn };
+          };
+          
+          const processedDe = processContent(module.content_de || '', moduleVariables);
+          const processedEn = processContent(module.content_en || module.content_de || '', moduleVariables);
+          const synced = syncParagraphs(processedDe, processedEn);
+          
           // German column
-          preview += `<div class="pr-6 space-y-4">`;
+          preview += `<div class="pr-6">`;
           preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
-          preview += `<div class="text-sm leading-relaxed text-justify">${processContent(module.content_de || '', moduleVariables)}</div>`;
+          preview += `<div class="text-sm leading-relaxed text-left">${synced.de}</div>`;
           preview += `</div>`;
           
           // Gray vertical divider line
           preview += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
           
           // English column
-          preview += `<div class="pl-6 space-y-4">`;
+          preview += `<div class="pl-6">`;
           preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
-          preview += `<div class="text-sm leading-relaxed text-justify">${processContent(module.content_en || module.content_de || '', moduleVariables)}</div>`;
+          preview += `<div class="text-sm leading-relaxed text-left">${synced.en}</div>`;
           preview += `</div>`;
           
           preview += `</div>`;
