@@ -89,8 +89,23 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             : (module.variables ? JSON.parse(module.variables as string) : []) || [];
           
           preview += `<div class="mb-8">`;
-          preview += `<h3 class="text-lg font-bold mb-4">${module.title_de}</h3>`;
-          preview += `<div class="text-sm leading-relaxed">${processContent(module.content_de || '', moduleVariables)}</div>`;
+          
+          // 2-column layout for German and English
+          preview += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">`;
+          
+          // German column
+          preview += `<div class="space-y-4">`;
+          preview += `<h3 class="text-lg font-bold text-blue-600">🇩🇪 ${module.title_de}</h3>`;
+          preview += `<div class="text-sm leading-relaxed border-l-4 border-blue-200 pl-4">${processContent(module.content_de || '', moduleVariables)}</div>`;
+          preview += `</div>`;
+          
+          // English column
+          preview += `<div class="space-y-4">`;
+          preview += `<h3 class="text-lg font-bold text-green-600">🇬🇧 ${module.title_en || module.title_de}</h3>`;
+          preview += `<div class="text-sm leading-relaxed border-l-4 border-green-200 pl-4">${processContent(module.content_en || module.content_de || '', moduleVariables)}</div>`;
+          preview += `</div>`;
+          
+          preview += `</div>`;
           preview += `</div>`;
         }
       });
