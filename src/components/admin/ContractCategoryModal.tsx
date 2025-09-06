@@ -53,7 +53,21 @@ export function ContractCategoryModal({ open, onOpenChange, onSave, contractCate
   }, [contractCategory, open]);
 
   const handleSave = () => {
-    onSave(formData);
+    if (!formData.name_de.trim()) {
+      return; // Basic validation
+    }
+    
+    // Auto-generate key from name if not provided or if creating new category
+    const finalKey = formData.key.trim() || 
+      formData.name_de.toLowerCase()
+        .replace(/[^a-z0-9äöüß\s]/gi, '')
+        .replace(/[äöüß]/g, (char) => {
+          const map: { [key: string]: string } = { 'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'ß': 'ss' };
+          return map[char] || char;
+        })
+        .replace(/\s+/g, '_');
+    
+    onSave({ ...formData, key: finalKey });
     onOpenChange(false);
   };
 
@@ -72,16 +86,22 @@ export function ContractCategoryModal({ open, onOpenChange, onSave, contractCate
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="key" className="text-right">
-              Schlüssel
+              Schlüssel (optional)
             </Label>
-            <Input
-              id="key"
-              value={formData.key}
-              onChange={(e) => setFormData({ ...formData, key: e.target.value })}
-              className="col-span-3"
-              placeholder="z.B. data_protection"
-              disabled={!!contractCategory} // Prevent editing key for existing categories
-            />
+            <div className="col-span-3 space-y-1">
+              <Input
+                id="key"
+                value={formData.key}
+                onChange={(e) => setFormData({ ...formData, key: e.target.value })}
+                placeholder="Wird automatisch generiert"
+                disabled={!!contractCategory} // Prevent editing key for existing categories
+              />
+              {!contractCategory && (
+                <p className="text-xs text-muted-foreground">
+                  Leer lassen für automatische Generierung aus dem Namen
+                </p>
+              )}
+            </div>
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">

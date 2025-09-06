@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Download, Globe } from 'lucide-react';
+import { ContractHeader } from './ContractHeader';
 import type { Contract, ContractTemplate } from '@/lib/mockData';
 
 interface ContractViewerProps {
@@ -53,6 +54,12 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
     if (!moduleData) return null;
 
     const title = language === 'de' ? moduleData.title_de : moduleData.title_en;
+    const content = language === 'de' ? moduleData.content_de : (moduleData.content_en || moduleData.content_de);
+    
+    // Special handling for "Anhang 5" - no language separation if no English content
+    const isAnhang5 = moduleKey.includes('anhang_5') || moduleKey.includes('attachment_5');
+    const hasEnglishContent = moduleData.content_en && moduleData.content_en.trim() !== '';
+    const shouldShowFullWidth = isAnhang5 && !hasEnglishContent;
     
     const getNumberPrefix = () => {
       if (!numberingStyle || numberingStyle === 'none' || !sortOrder) return '';
@@ -76,10 +83,13 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
         )}
         
         {/* Handle different module types */}
-        {moduleData.content_de && (
-          <div className="whitespace-pre-line text-muted-foreground leading-relaxed mb-4">
-            {replaceVariables(language === 'de' ? moduleData.content_de : moduleData.content_en)}
-          </div>
+        {content && (
+          <div 
+            className={`text-muted-foreground leading-relaxed mb-4 prose prose-sm ${shouldShowFullWidth ? 'max-w-full' : 'max-w-none'}`}
+            dangerouslySetInnerHTML={{ 
+              __html: replaceVariables(content)
+            }}
+          />
         )}
         
         {moduleData.paragraphs_de && (
@@ -121,8 +131,25 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
     return null;
   };
 
+  // Extract variable values for header
+  const headerVariables: Record<string, any> = {};
+  contract.globalVariables?.forEach(variable => {
+    headerVariables[variable.id] = variable.value || '';
+  });
+  contract.templateVariables?.forEach(variable => {
+    headerVariables[variable.id] = variable.value || '';
+  });
+
   return (
     <div className="max-w-4xl mx-auto p-6 bg-background">
+      {/* Contract Header with Standard Info */}
+      <ContractHeader 
+        variableValues={headerVariables}
+        contractType={contract.contractType || 'service_contract'}
+        offerNumber={headerVariables.angebots_nr}
+        date={headerVariables.datum}
+      />
+
       {/* Header */}
       <Card className="mb-6">
         <CardHeader className="pb-4">

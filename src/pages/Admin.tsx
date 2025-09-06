@@ -107,7 +107,7 @@ export default function Admin() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="types" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Vertragstypen
@@ -126,15 +126,11 @@ export default function Admin() {
           </TabsTrigger>
           <TabsTrigger value="builder" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Builder
+            Vertragserstellung
           </TabsTrigger>
           <TabsTrigger value="composition" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
-            Zusammensetzung
-          </TabsTrigger>
-          <TabsTrigger value="template" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Templates
+            Template-Editor
           </TabsTrigger>
         </TabsList>
 
@@ -472,17 +468,6 @@ export default function Admin() {
             contractTypes={contractTypes}
             contractModules={contractModules}
             contractCompositions={contractCompositions}
-            onUpdate={fetchData}
-          />
-        </TabsContent>
-
-        {/* Template Builder */}
-        <TabsContent value="template" className="space-y-6">
-          <TemplateBuilder
-            contractTypes={contractTypes}
-            contractModules={contractModules}
-            contractCompositions={contractCompositions}
-            globalVariables={globalVariables}
             onUpdate={fetchData}
           />
         </TabsContent>

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { VariableInputRenderer } from './VariableInputRenderer';
 import type { Database } from '@/integrations/supabase/types';
 
 type ContractType = Database['public']['Tables']['contract_types']['Row'];
@@ -285,6 +286,18 @@ export function ContractBuilder({
         </CardContent>
       </Card>
 
+      {/* Variable Input Fields */}
+      {selectedContractType && getSelectedModulesInOrder().length > 0 && (
+        <VariableInputRenderer
+          selectedModules={getSelectedModulesInOrder()}
+          globalVariables={globalVariables}
+          variableValues={variableValues}
+          onVariableChange={(key, value) => 
+            setVariableValues(prev => ({ ...prev, [key]: value }))
+          }
+        />
+      )}
+
       {selectedContractType && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Module Selection */}
@@ -436,9 +449,10 @@ export function ContractBuilder({
                       <Badge variant="outline">{index + 1}</Badge>
                       <h3 className="text-lg font-semibold">{module.title_de}</h3>
                     </div>
-                    <div className="prose prose-sm max-w-none whitespace-pre-wrap bg-muted/50 p-4 rounded-lg">
-                      {processedContent}
-                    </div>
+                    <div 
+                      className="prose prose-sm max-w-none bg-muted/50 p-4 rounded-lg"
+                      dangerouslySetInnerHTML={{ __html: processedContent }}
+                    />
                   </div>
                 );
               })}
