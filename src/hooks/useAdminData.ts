@@ -5,12 +5,14 @@ import type { Database } from '@/integrations/supabase/types';
 
 type ContractType = Database['public']['Tables']['contract_types']['Row'];
 type ContractModule = Database['public']['Tables']['contract_modules']['Row'];
+type ContractCategory = Database['public']['Tables']['contract_categories']['Row'];
 type GlobalVariable = Database['public']['Tables']['global_variables']['Row'];
 type ContractComposition = Database['public']['Tables']['contract_compositions']['Row'];
 type ContractTemplate = Database['public']['Tables']['contract_templates']['Row'];
 
 type ContractTypeInsert = Database['public']['Tables']['contract_types']['Insert'];
 type ContractModuleInsert = Database['public']['Tables']['contract_modules']['Insert'];
+type ContractCategoryInsert = Database['public']['Tables']['contract_categories']['Insert'];
 type GlobalVariableInsert = Database['public']['Tables']['global_variables']['Insert'];
 type ContractCompositionInsert = Database['public']['Tables']['contract_compositions']['Insert'];
 type ContractTemplateInsert = Database['public']['Tables']['contract_templates']['Insert'];
@@ -18,6 +20,7 @@ type ContractTemplateInsert = Database['public']['Tables']['contract_templates']
 export function useAdminData() {
   const [contractTypes, setContractTypes] = useState<ContractType[]>([]);
   const [contractModules, setContractModules] = useState<ContractModule[]>([]);
+  const [contractCategories, setContractCategories] = useState<ContractCategory[]>([]);
   const [globalVariables, setGlobalVariables] = useState<GlobalVariable[]>([]);
   const [contractCompositions, setContractCompositions] = useState<ContractComposition[]>([]);
   const [contractTemplates, setContractTemplates] = useState<ContractTemplate[]>([]);
@@ -29,9 +32,10 @@ export function useAdminData() {
     try {
       setLoading(true);
       
-      const [typesResult, modulesResult, variablesResult, compositionsResult, templatesResult] = await Promise.all([
+      const [typesResult, modulesResult, categoriesResult, variablesResult, compositionsResult, templatesResult] = await Promise.all([
         supabase.from('contract_types').select('*').order('name_de'),
         supabase.from('contract_modules').select('*').order('title_de'),
+        supabase.from('contract_categories').select('*').order('sort_order, name_de'),
         supabase.from('global_variables').select('*').order('name_de'),
         supabase.from('contract_compositions').select('*').order('contract_type_key, sort_order'),
         supabase.from('contract_templates').select('*').order('name')
@@ -39,12 +43,14 @@ export function useAdminData() {
 
       if (typesResult.error) throw typesResult.error;
       if (modulesResult.error) throw modulesResult.error;
+      if (categoriesResult.error) throw categoriesResult.error;
       if (variablesResult.error) throw variablesResult.error;
       if (compositionsResult.error) throw compositionsResult.error;
       if (templatesResult.error) throw templatesResult.error;
 
       setContractTypes(typesResult.data || []);
       setContractModules(modulesResult.data || []);
+      setContractCategories(categoriesResult.data || []);
       setGlobalVariables(variablesResult.data || []);
       setContractCompositions(compositionsResult.data || []);
       setContractTemplates(templatesResult.data || []);
@@ -326,6 +332,81 @@ export function useAdminData() {
     }
   };
 
+  // Contract Categories CRUD
+  const createContractCategory = async (data: ContractCategoryInsert) => {
+    try {
+      const { error } = await supabase
+        .from('contract_categories')
+        .insert([data]);
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Erfolg',
+        description: 'Kategorie wurde erstellt.'
+      });
+      
+      fetchData();
+    } catch (error) {
+      console.error('Error creating contract category:', error);
+      toast({
+        title: 'Fehler',
+        description: 'Kategorie konnte nicht erstellt werden.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const updateContractCategory = async (id: string, data: Partial<ContractCategory>) => {
+    try {
+      const { error } = await supabase
+        .from('contract_categories')
+        .update(data)
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Erfolg',
+        description: 'Kategorie wurde aktualisiert.'
+      });
+      
+      fetchData();
+    } catch (error) {
+      console.error('Error updating contract category:', error);
+      toast({
+        title: 'Fehler',
+        description: 'Kategorie konnte nicht aktualisiert werden.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const deleteContractCategory = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('contract_categories')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Erfolg',
+        description: 'Kategorie wurde gelöscht.'
+      });
+      
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting contract category:', error);
+      toast({
+        title: 'Fehler',
+        description: 'Kategorie konnte nicht gelöscht werden.',
+        variant: 'destructive'
+      });
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -529,6 +610,7 @@ export function useAdminData() {
     // Data
     contractTypes,
     contractModules,
+    contractCategories,
     globalVariables,
     contractCompositions,
     contractTemplates,
@@ -547,6 +629,11 @@ export function useAdminData() {
     updateContractModule,
     cloneContractModule,
     deleteContractModule,
+    
+    // Contract Categories
+    createContractCategory,
+    updateContractCategory,
+    deleteContractCategory,
     
     // Global Variables
     createGlobalVariable,

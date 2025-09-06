@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { useAdminData } from '@/hooks/useAdminData';
 import { ContractTypeModal } from '@/components/admin/ContractTypeModal';
 import { ContractModuleModal } from '@/components/admin/ContractModuleModal';
+import { ContractCategoryModal } from '@/components/admin/ContractCategoryModal';
 import { GlobalVariableModal } from '@/components/admin/GlobalVariableModal';
 import { ContractCompositionManager } from '@/components/admin/ContractCompositionManager';
 import { TemplateBuilder } from '@/components/admin/TemplateBuilder';
 import { ContractBuilder } from '@/components/admin/ContractBuilder';
-import { Plus, Edit2, Trash2, Copy, Settings, Database, FileText, Blocks, Variable, Download } from 'lucide-react';
+import { Plus, Edit2, Trash2, Copy, Settings, Database, FileText, Blocks, Variable, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
@@ -17,6 +18,7 @@ export default function Admin() {
   const {
     contractTypes,
     contractModules, 
+    contractCategories,
     globalVariables,
     contractCompositions,
     contractTemplates,
@@ -29,6 +31,9 @@ export default function Admin() {
     updateContractModule,
     cloneContractModule,
     deleteContractModule,
+    createContractCategory,
+    updateContractCategory,
+    deleteContractCategory,
     createGlobalVariable,
     updateGlobalVariable,
     deleteGlobalVariable
@@ -36,10 +41,14 @@ export default function Admin() {
 
   const [contractTypeModalOpen, setContractTypeModalOpen] = useState(false);
   const [contractModuleModalOpen, setContractModuleModalOpen] = useState(false);
+  const [contractCategoryModalOpen, setContractCategoryModalOpen] = useState(false);
   const [globalVariableModalOpen, setGlobalVariableModalOpen] = useState(false);
-  const [selectedContractType, setSelectedContractType] = useState(null);
-  const [selectedContractModule, setSelectedContractModule] = useState(null);
-  const [selectedGlobalVariable, setSelectedGlobalVariable] = useState(null);
+  
+  const [selectedContractType, setSelectedContractType] = useState<any>(null);
+  const [selectedContractModule, setSelectedContractModule] = useState<any>(null);
+  const [selectedContractCategory, setSelectedContractCategory] = useState<any>(null);
+  const [selectedGlobalVariable, setSelectedGlobalVariable] = useState<any>(null);
+  
   const [activeTab, setActiveTab] = useState("types");
 
   const handleEditContractType = (contractType: any) => {
@@ -52,6 +61,11 @@ export default function Admin() {
     setContractModuleModalOpen(true);
   };
 
+  const handleEditContractCategory = (contractCategory: any) => {
+    setSelectedContractCategory(contractCategory);
+    setContractCategoryModalOpen(true);
+  };
+
   const handleEditGlobalVariable = (globalVariable: any) => {
     setSelectedGlobalVariable(globalVariable);
     setGlobalVariableModalOpen(true);
@@ -60,9 +74,11 @@ export default function Admin() {
   const closeModals = () => {
     setContractTypeModalOpen(false);
     setContractModuleModalOpen(false);
+    setContractCategoryModalOpen(false);
     setGlobalVariableModalOpen(false);
     setSelectedContractType(null);
     setSelectedContractModule(null);
+    setSelectedContractCategory(null);
     setSelectedGlobalVariable(null);
   };
 
@@ -84,14 +100,14 @@ export default function Admin() {
           <div>
             <h1 className="text-3xl font-bold mb-2">Admin Panel</h1>
             <p className="text-muted-foreground">
-              Verwalten Sie Vertragstypen, Module, Variablen und Templates.
+              Verwalten Sie Vertragstypen, Module, Kategorien, Variablen und Templates.
             </p>
           </div>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="types" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Vertragstypen
@@ -100,13 +116,17 @@ export default function Admin() {
             <Blocks className="h-4 w-4" />
             Module
           </TabsTrigger>
+          <TabsTrigger value="categories" className="flex items-center gap-2">
+            <Tag className="h-4 w-4" />
+            Kategorien
+          </TabsTrigger>
           <TabsTrigger value="variables" className="flex items-center gap-2">
             <Variable className="h-4 w-4" />
             Variablen
           </TabsTrigger>
           <TabsTrigger value="builder" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Vertrags-Builder
+            Builder
           </TabsTrigger>
           <TabsTrigger value="composition" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
@@ -204,62 +224,159 @@ export default function Admin() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
-                {contractModules.map((module) => (
-                  <div key={module.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium">{module.title_de}</h3>
-                        <Badge variant="outline">{module.category}</Badge>
-                        {!module.is_active && <Badge variant="secondary">Inaktiv</Badge>}
+                {contractModules.map((module) => {
+                  const category = contractCategories.find(cat => cat.key === module.category);
+                  return (
+                    <div key={module.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium">{module.title_de}</h3>
+                          <Badge 
+                            variant="outline" 
+                            style={{ backgroundColor: category?.color + '20', borderColor: category?.color }}
+                          >
+                            {category?.name_de || module.category}
+                          </Badge>
+                          {!module.is_active && <Badge variant="secondary">Inaktiv</Badge>}
+                        </div>
+                        <p className="text-sm text-muted-foreground">Key: {module.key}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {module.content_de.substring(0, 100)}...
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">Key: {module.key}</p>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {module.content_de.substring(0, 100)}...
-                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditContractModule(module)}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => cloneContractModule(module.id)}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Modul löschen</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Sind Sie sicher, dass Sie "{module.title_de}" löschen möchten?
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteContractModule(module.id)}>
+                                Löschen
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditContractModule(module)}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => cloneContractModule(module.id)}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Trash2 className="h-4 w-4" />
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Kategorien */}
+        <TabsContent value="categories" className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Modul-Kategorien</CardTitle>
+                <CardDescription>
+                  Verwalten Sie die Kategorien für Vertragsmodule. Kategorien helfen bei der Organisation und Strukturierung Ihrer Vertragsbausteine.
+                </CardDescription>
+              </div>
+              <Button onClick={() => {
+                setSelectedContractCategory(null);
+                setContractCategoryModalOpen(true);
+              }}>
+                <Plus className="h-4 w-4 mr-2" />
+                Neue Kategorie
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                {contractCategories
+                  .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+                  .map((category) => {
+                    const moduleCount = contractModules.filter(m => m.category === category.key).length;
+                    return (
+                      <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-4 h-4 rounded-full border-2" 
+                              style={{ backgroundColor: category.color, borderColor: category.color }}
+                            />
+                            <h3 className="font-medium">{category.name_de}</h3>
+                            <Badge variant="outline">{moduleCount} Module</Badge>
+                            {!category.is_active && <Badge variant="secondary">Inaktiv</Badge>}
+                          </div>
+                          <p className="text-sm text-muted-foreground">Key: {category.key}</p>
+                          {category.description && (
+                            <p className="text-sm text-muted-foreground">{category.description}</p>
+                          )}
+                          {category.name_en && (
+                            <p className="text-xs text-muted-foreground">EN: {category.name_en}</p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditContractCategory(category)}
+                          >
+                            <Edit2 className="h-4 w-4" />
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Modul löschen</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Sind Sie sicher, dass Sie "{module.title_de}" löschen möchten?
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => {
-                              deleteContractModule(module.id);
-                              // Keep staying on modules tab
-                              setActiveTab("modules");
-                            }}>
-                              Löschen
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                ))}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                disabled={moduleCount > 0}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Kategorie löschen</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Sind Sie sicher, dass Sie die Kategorie "{category.name_de}" löschen möchten?
+                                  {moduleCount > 0 && (
+                                    <span className="block mt-2 text-destructive">
+                                      Diese Kategorie kann nicht gelöscht werden, da sie noch {moduleCount} Module enthält.
+                                    </span>
+                                  )}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                                {moduleCount === 0 && (
+                                  <AlertDialogAction onClick={() => deleteContractCategory(category.id)}>
+                                    Löschen
+                                  </AlertDialogAction>
+                                )}
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             </CardContent>
           </Card>
@@ -398,6 +515,21 @@ export default function Admin() {
           closeModals();
         }}
         contractModule={selectedContractModule}
+        contractCategories={contractCategories}
+      />
+
+      <ContractCategoryModal
+        open={contractCategoryModalOpen}
+        onOpenChange={setContractCategoryModalOpen}
+        onSave={(data) => {
+          if (selectedContractCategory) {
+            updateContractCategory((selectedContractCategory as any).id, data);
+          } else {
+            createContractCategory(data);
+          }
+          closeModals();
+        }}
+        contractCategory={selectedContractCategory}
       />
 
       <GlobalVariableModal

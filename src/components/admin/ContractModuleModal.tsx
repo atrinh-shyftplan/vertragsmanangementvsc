@@ -17,9 +17,12 @@ interface ContractModuleModalProps {
   onOpenChange: (open: boolean) => void;
   onSave: (data: ContractModuleInsert) => void;
   contractModule?: ContractModule | null;
+  contractCategories: ContractCategory[];
 }
 
-export function ContractModuleModal({ open, onOpenChange, onSave, contractModule }: ContractModuleModalProps) {
+type ContractCategory = Database['public']['Tables']['contract_categories']['Row'];
+
+export function ContractModuleModal({ open, onOpenChange, onSave, contractModule, contractCategories }: ContractModuleModalProps) {
   const [formData, setFormData] = useState<ContractModuleInsert>({
     key: '',
     title_de: '',
@@ -151,11 +154,11 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="general">Allgemein</SelectItem>
-                <SelectItem value="legal">Legal</SelectItem>
-                <SelectItem value="privacy">Datenschutz</SelectItem>
-                <SelectItem value="termination">Kündigung</SelectItem>
-                <SelectItem value="compensation">Vergütung</SelectItem>
+                {contractCategories.filter(cat => cat.is_active).map(category => (
+                  <SelectItem key={category.key} value={category.key}>
+                    {category.name_de}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      contract_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          key: string
+          name_de: string
+          name_en: string | null
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          key: string
+          name_de: string
+          name_en?: string | null
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          key?: string
+          name_de?: string
+          name_en?: string | null
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contract_compositions: {
         Row: {
           contract_type_key: string
@@ -90,7 +132,15 @@ export type Database = {
           updated_at?: string
           variables?: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_contract_modules_category"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "contract_categories"
+            referencedColumns: ["key"]
+          },
+        ]
       }
       contract_templates: {
         Row: {
