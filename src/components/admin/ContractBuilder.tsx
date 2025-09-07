@@ -442,8 +442,8 @@ export function ContractBuilder({
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {/* Contract Header with Professional Layout */}
-              <div className="border-b pb-6 mb-6">
+              {/* Professional Contract Header */}
+              <div className="border-2 border-primary/20 bg-primary/5 p-6 rounded-lg">
                 <div className="space-y-6">
                   {/* Header with Logo and Basic Info */}
                   <div className="flex justify-between items-start">
@@ -563,6 +563,7 @@ export function ContractBuilder({
                 </div>
               </div>
 
+              {/* Contract Modules */}
               {getSelectedModulesInOrder().map((module, index) => {
                 const moduleVariables = module.variables ? JSON.parse(module.variables as string) : [];
                 const processedContent = processContent(module.content_de, moduleVariables);
