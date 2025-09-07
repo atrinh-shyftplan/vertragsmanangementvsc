@@ -336,9 +336,12 @@ export function ContractBuilder({
                             />
                             <div className="flex-1">
                               <div className="font-medium">{module.title_de}</div>
-                              <div className="text-sm text-muted-foreground line-clamp-2">
-                                {module.content_de.substring(0, 100)}...
-                              </div>
+                              <div 
+                                className="text-sm text-muted-foreground line-clamp-2"
+                                dangerouslySetInnerHTML={{ 
+                                  __html: module.content_de.substring(0, 100) + '...' 
+                                }}
+                              />
                             </div>
                           </div>
                         );
