@@ -88,27 +88,48 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             ? module.variables 
             : (module.variables ? JSON.parse(module.variables as string) : []) || [];
           
+          // Check if content exists (not empty or just whitespace)
+          const hasGermanContent = (module.content_de || '').trim().length > 0;
+          const hasEnglishContent = (module.content_en || '').trim().length > 0;
+          
           preview += `<div class="mb-8">`;
           
-          // 2-column layout with gray divider line
-          preview += `<div class="grid grid-cols-2 gap-0 relative">`;
+          // Case 1: Both German and English content - two-column layout
+          if (hasGermanContent && hasEnglishContent) {
+            preview += `<div class="grid grid-cols-2 gap-0 relative">`;
+            
+            // German column
+            preview += `<div class="pr-6 space-y-4">`;
+            preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
+            preview += `<div class="text-sm leading-relaxed text-justify">${processContent(module.content_de, moduleVariables)}</div>`;
+            preview += `</div>`;
+            
+            // Gray vertical divider line
+            preview += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
+            
+            // English column
+            preview += `<div class="pl-6 space-y-4">`;
+            preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
+            preview += `<div class="text-sm leading-relaxed text-justify">${processContent(module.content_en, moduleVariables)}</div>`;
+            preview += `</div>`;
+            
+            preview += `</div>`;
+          }
+          // Case 2: Only German content - single-column layout
+          else if (hasGermanContent && !hasEnglishContent) {
+            preview += `<div class="space-y-4">`;
+            preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
+            preview += `<div class="text-sm leading-relaxed text-justify">${processContent(module.content_de, moduleVariables)}</div>`;
+            preview += `</div>`;
+          }
+          // Case 3: Only English content - single-column layout
+          else if (!hasGermanContent && hasEnglishContent) {
+            preview += `<div class="space-y-4">`;
+            preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
+            preview += `<div class="text-sm leading-relaxed text-justify">${processContent(module.content_en, moduleVariables)}</div>`;
+            preview += `</div>`;
+          }
           
-          // German column
-          preview += `<div class="pr-6 space-y-4">`;
-          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
-          preview += `<div class="text-sm leading-relaxed text-justify">${processContent(module.content_de || '', moduleVariables)}</div>`;
-          preview += `</div>`;
-          
-          // Gray vertical divider line
-          preview += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
-          
-          // English column
-          preview += `<div class="pl-6 space-y-4">`;
-          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
-          preview += `<div class="text-sm leading-relaxed text-justify">${processContent(module.content_en || module.content_de || '', moduleVariables)}</div>`;
-          preview += `</div>`;
-          
-          preview += `</div>`;
           preview += `</div>`;
         }
       });
