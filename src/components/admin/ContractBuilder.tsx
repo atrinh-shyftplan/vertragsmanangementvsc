@@ -158,6 +158,21 @@ export function ContractBuilder({
     return processedContent;
   };
 
+  // Safe JSON parse function to handle empty strings and invalid JSON
+  const safeJsonParse = (jsonString: any): any[] => {
+    if (!jsonString || typeof jsonString !== 'string' || jsonString.trim() === '') {
+      return [];
+    }
+    
+    try {
+      const parsed = JSON.parse(jsonString);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.warn('Failed to parse JSON:', jsonString, error);
+      return [];
+    }
+  };
+
   const saveConfiguration = async () => {
     if (!selectedContractType || !templateName) {
       toast({
@@ -459,8 +474,8 @@ export function ContractBuilder({
                     __html: (() => {
                       let preview = '';
                       
-                      getSelectedModulesInOrder().forEach((module) => {
-                        const moduleVariables = module.variables ? JSON.parse(module.variables as string) : [];
+                       getSelectedModulesInOrder().forEach((module) => {
+                         const moduleVariables = safeJsonParse(module.variables);
                         
                         // Check if content exists for each language
                         const hasGermanContent = module.content_de && module.content_de.trim().length > 0;
