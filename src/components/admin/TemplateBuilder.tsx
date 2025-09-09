@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Eye, Save, Download, FileText } from 'lucide-react';
+import { Eye, Save, Download, FileText, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
@@ -37,12 +37,77 @@ export function TemplateBuilder({
   const [isDefault, setIsDefault] = useState(false);
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
   const [previewMode, setPreviewMode] = useState(false);
+  const [currentCompositions, setCurrentCompositions] = useState<ContractComposition[]>([]);
   const { toast } = useToast();
 
   const getCompositionsForType = (typeKey: string) => {
     return contractCompositions
       .filter(c => c.contract_type_key === typeKey && c.is_active)
       .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  };
+
+  // Load compositions when contract type changes
+  React.useEffect(() => {
+    if (selectedContractType) {
+      const compositions = getCompositionsForType(selectedContractType);
+      setCurrentCompositions(compositions);
+    } else {
+      setCurrentCompositions([]);
+    }
+  }, [selectedContractType, contractCompositions]);
+
+  const updateCompositionOrder = async (compositionId: string, direction: 'up' | 'down') => {
+    const currentIndex = currentCompositions.findIndex(c => c.id === compositionId);
+    if (
+      (direction === 'up' && currentIndex === 0) ||
+      (direction === 'down' && currentIndex === currentCompositions.length - 1)
+    ) {
+      return;
+    }
+
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    const newCompositions = [...currentCompositions];
+    [newCompositions[currentIndex], newCompositions[newIndex]] = 
+    [newCompositions[newIndex], newCompositions[currentIndex]];
+
+    // Update sort_order for both items
+    newCompositions[currentIndex].sort_order = currentIndex;
+    newCompositions[newIndex].sort_order = newIndex;
+
+    setCurrentCompositions(newCompositions);
+
+    try {
+      // Update both compositions in database
+      const { error } = await supabase
+        .from('contract_compositions')
+        .upsert([
+          { 
+            id: newCompositions[currentIndex].id,
+            sort_order: currentIndex,
+            contract_type_key: newCompositions[currentIndex].contract_type_key,
+            module_key: newCompositions[currentIndex].module_key
+          },
+          { 
+            id: newCompositions[newIndex].id,
+            sort_order: newIndex,
+            contract_type_key: newCompositions[newIndex].contract_type_key,
+            module_key: newCompositions[newIndex].module_key
+          }
+        ]);
+
+      if (error) throw error;
+
+      onUpdate(); // Refresh data
+    } catch (error) {
+      console.error('Error updating composition order:', error);
+      toast({
+        title: 'Fehler',
+        description: 'Reihenfolge konnte nicht gespeichert werden.',
+        variant: 'destructive'
+      });
+      // Revert local state
+      setCurrentCompositions(getCompositionsForType(selectedContractType));
+    }
   };
 
   const getModuleByKey = (key: string) => {
@@ -72,7 +137,7 @@ export function TemplateBuilder({
   const renderTemplate = () => {
     if (!selectedContractType) return null;
 
-    const compositions = getCompositionsForType(selectedContractType);
+    const compositions = currentCompositions;
     const contractType = contractTypes.find(t => t.key === selectedContractType);
 
     return (
@@ -108,7 +173,7 @@ export function TemplateBuilder({
   const renderVariableInputs = () => {
     if (!selectedContractType) return null;
 
-    const compositions = getCompositionsForType(selectedContractType);
+    const compositions = currentCompositions;
     const allVariables = [...globalVariables];
     
     // Collect module-specific variables
@@ -159,7 +224,7 @@ export function TemplateBuilder({
     }
 
     try {
-      const compositions = getCompositionsForType(selectedContractType);
+      const compositions = currentCompositions;
       const templateData = {
         contractType: selectedContractType,
         modules: compositions.map(comp => ({
@@ -202,7 +267,7 @@ export function TemplateBuilder({
   const exportTemplate = () => {
     if (!selectedContractType) return;
 
-    const compositions = getCompositionsForType(selectedContractType);
+    const compositions = currentCompositions;
     let exportContent = '';
 
     compositions.forEach(composition => {
@@ -261,37 +326,101 @@ export function TemplateBuilder({
               />
             </div>
           </div>
-
-          {selectedContractType && renderVariableInputs()}
-
-          <div className="flex items-center space-x-2 mt-6">
-            <Switch
-              id="is-default"
-              checked={isDefault}
-              onCheckedChange={setIsDefault}
-            />
-            <Label htmlFor="is-default">Als Standard-Template markieren</Label>
-          </div>
-
-          <div className="flex space-x-2 mt-6">
-            <Button onClick={saveTemplate}>
-              <Save className="h-4 w-4 mr-2" />
-              Template speichern
-            </Button>
-            <Button variant="outline" onClick={() => setPreviewMode(!previewMode)}>
-              <Eye className="h-4 w-4 mr-2" />
-              {previewMode ? 'Bearbeiten' : 'Vorschau'}
-            </Button>
-            <Button variant="outline" onClick={exportTemplate} disabled={!selectedContractType}>
-              <Download className="h-4 w-4 mr-2" />
-              Exportieren
-            </Button>
-          </div>
         </CardContent>
       </Card>
 
-      {previewMode && selectedContractType && (
+      {/* Module Order Management */}
+      {selectedContractType && (
         <Card>
+          <CardHeader>
+            <CardTitle>Modul-Reihenfolge verwalten</CardTitle>
+            <CardDescription>
+              Verwenden Sie die Pfeile, um die Reihenfolge der Module zu ändern.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {currentCompositions.map((composition, index) => {
+                const module = getModuleByKey(composition.module_key);
+                if (!module) return null;
+                
+                return (
+                  <div key={composition.id} className="flex items-center justify-between p-3 border rounded animate-fade-in">
+                    <div className="flex items-center space-x-3">
+                      <Badge variant="outline">{index + 1}</Badge>
+                      <div>
+                        <div className="font-medium">{module.title_de}</div>
+                        <div className="text-sm text-muted-foreground">{module.category}</div>
+                      </div>
+                    </div>
+                    <div className="flex space-x-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => updateCompositionOrder(composition.id, 'up')}
+                        disabled={index === 0}
+                        className="hover-scale"
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => updateCompositionOrder(composition.id, 'down')}
+                        disabled={index === currentCompositions.length - 1}
+                        className="hover-scale"
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {currentCompositions.length === 0 && (
+                <div className="text-center text-muted-foreground py-8">
+                  Keine Module für diesen Vertragstyp konfiguriert
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedContractType && (
+        <Card>
+          <CardContent className="pt-6">
+            {renderVariableInputs()}
+
+            <div className="flex items-center space-x-2 mt-6">
+              <Switch
+                id="is-default"
+                checked={isDefault}
+                onCheckedChange={setIsDefault}
+              />
+              <Label htmlFor="is-default">Als Standard-Template markieren</Label>
+            </div>
+
+            <div className="flex space-x-2 mt-6">
+              <Button onClick={saveTemplate} className="hover-scale">
+                <Save className="h-4 w-4 mr-2" />
+                Template speichern
+              </Button>
+              <Button variant="outline" onClick={() => setPreviewMode(!previewMode)} className="hover-scale">
+                <Eye className="h-4 w-4 mr-2" />
+                {previewMode ? 'Bearbeiten' : 'Vorschau'}
+              </Button>
+              <Button variant="outline" onClick={exportTemplate} disabled={!selectedContractType} className="hover-scale">
+                <Download className="h-4 w-4 mr-2" />
+                Exportieren
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {previewMode && selectedContractType && (
+        <Card className="animate-fade-in">
           <CardHeader>
             <CardTitle className="flex items-center">
               <FileText className="h-5 w-5 mr-2" />
