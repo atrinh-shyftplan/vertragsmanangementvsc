@@ -214,6 +214,66 @@ export type Database = {
         }
         Relationships: []
       }
+      contracts: {
+        Row: {
+          assigned_to: string | null
+          client: string
+          contract_type_key: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string
+          global_variables: Json | null
+          id: string
+          progress: number | null
+          start_date: string
+          status: string
+          tags: string[] | null
+          template_variables: Json | null
+          title: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          assigned_to?: string | null
+          client: string
+          contract_type_key?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date: string
+          global_variables?: Json | null
+          id?: string
+          progress?: number | null
+          start_date: string
+          status?: string
+          tags?: string[] | null
+          template_variables?: Json | null
+          title: string
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          assigned_to?: string | null
+          client?: string
+          contract_type_key?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string
+          global_variables?: Json | null
+          id?: string
+          progress?: number | null
+          start_date?: string
+          status?: string
+          tags?: string[] | null
+          template_variables?: Json | null
+          title?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
       global_variables: {
         Row: {
           category: string | null

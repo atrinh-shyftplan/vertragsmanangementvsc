@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,8 @@ import {
   Edit,
   MoreHorizontal
 } from 'lucide-react';
-import { mockContracts, contractTemplate, type Contract } from '@/lib/mockData';
+import { contractTemplate } from '@/lib/mockData';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,25 @@ import ContractViewer from '@/components/ContractViewer';
 import NewContractEditor from '@/components/NewContractEditor';
 import { useToast } from '@/hooks/use-toast';
 
+// UI contract type (compatible with existing components)
+interface Contract {
+  id: string;
+  title: string;
+  client: string;
+  status: 'active' | 'pending' | 'expired' | 'draft';
+  value: number;
+  startDate: string;
+  endDate: string;
+  assignedTo: string;
+  description: string;
+  tags: string[];
+  lastModified: string;
+  progress: number;
+  contractType?: 'ep_standard' | 'ep_rollout';
+  templateVariables?: Record<string, any>;
+  globalVariables?: Record<string, any>;
+}
+
 export default function Contracts() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -36,8 +56,64 @@ export default function Contracts() {
   const [viewingContract, setViewingContract] = useState<Contract | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
-  const [contracts, setContracts] = useState<Contract[]>(mockContracts);
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  // Convert database contract to UI contract format
+  const convertDbContract = (dbContract: any): Contract => ({
+    id: dbContract.id,
+    title: dbContract.title,
+    client: dbContract.client,
+    status: dbContract.status as 'active' | 'pending' | 'expired' | 'draft',
+    value: dbContract.value,
+    startDate: dbContract.start_date,
+    endDate: dbContract.end_date,
+    assignedTo: dbContract.assigned_to || 'Unassigned',
+    description: dbContract.description || '',
+    tags: dbContract.tags || [],
+    lastModified: dbContract.updated_at,
+    progress: dbContract.progress || 0,
+    contractType: dbContract.contract_type_key as 'ep_standard' | 'ep_rollout' | undefined,
+    templateVariables: dbContract.template_variables || undefined,
+    globalVariables: dbContract.global_variables || undefined,
+  });
+
+  // Load contracts from database
+  const loadContracts = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('contracts')
+        .select('*')
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+
+      const convertedContracts = data.map(convertDbContract);
+      setContracts(convertedContracts);
+    } catch (error) {
+      console.error('Error loading contracts:', error);
+      toast({
+        title: "Fehler beim Laden",
+        description: "Die Verträge konnten nicht geladen werden.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load contracts on component mount
+  useEffect(() => {
+    loadContracts();
+  }, []);
+
+  // Refresh contracts when new contract modal closes
+  const handleNewContractClose = () => {
+    setIsNewContractModalOpen(false);
+    loadContracts(); // Refresh the list
+  };
 
   const filteredContracts = contracts.filter(contract => {
     const matchesSearch = 
@@ -271,7 +347,7 @@ export default function Contracts() {
       {/* New Contract Modal */}
       <Dialog open={isNewContractModalOpen} onOpenChange={setIsNewContractModalOpen}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0">
-          <NewContractEditor onClose={() => setIsNewContractModalOpen(false)} />
+          <NewContractEditor onClose={handleNewContractClose} />
         </DialogContent>
       </Dialog>
 

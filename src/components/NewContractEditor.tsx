@@ -161,7 +161,41 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
   const saveContract = async () => {
     try {
-      // For now, just show success message since we don't have a contracts table yet
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Validate required fields
+      if (!variableValues.title || !variableValues.client || !variableValues.start_date || !variableValues.end_date) {
+        toast.error('Bitte füllen Sie alle Pflichtfelder aus');
+        return;
+      }
+
+      // Prepare contract data
+      const contractData = {
+        title: variableValues.title,
+        client: variableValues.client,
+        status: 'draft' as const,
+        value: parseFloat(variableValues.value) || 0,
+        start_date: variableValues.start_date,
+        end_date: variableValues.end_date,
+        assigned_to: variableValues.assigned_to || 'Unassigned',
+        description: `${contractTypes.find(t => t.key === selectedType)?.name_de || 'Vertrag'} für ${variableValues.client}`,
+        tags: [contractTypes.find(t => t.key === selectedType)?.name_de || 'Vertrag'],
+        progress: 0,
+        contract_type_key: selectedType,
+        template_variables: variableValues,
+        global_variables: Object.fromEntries(
+          globalVariables.map(gv => [gv.key, variableValues[gv.key] || ''])
+        )
+      };
+
+      const { data, error } = await supabase
+        .from('contracts')
+        .insert([contractData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
       toast.success('Vertrag erfolgreich gespeichert');
       
       // Reset form
@@ -263,7 +297,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Titel</Label>
+                <Label htmlFor="title">Titel <span className="text-destructive">*</span></Label>
                 <Input
                   id="title"
                   value={variableValues.title || ''}
@@ -272,10 +306,11 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                     title: e.target.value
                   }))}
                   placeholder="Vertragstitel"
+                  required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="client">Kunde</Label>
+                <Label htmlFor="client">Kunde <span className="text-destructive">*</span></Label>
                 <Input
                   id="client"
                   value={variableValues.client || ''}
@@ -284,11 +319,12 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                     client: e.target.value
                   }))}
                   placeholder="Kundenname"
+                  required
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-2">
-                  <Label htmlFor="start_date">Startdatum</Label>
+                  <Label htmlFor="start_date">Startdatum <span className="text-destructive">*</span></Label>
                   <Input
                     id="start_date"
                     type="date"
@@ -297,10 +333,11 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                       ...prev,
                       start_date: e.target.value
                     }))}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="end_date">Enddatum</Label>
+                  <Label htmlFor="end_date">Enddatum <span className="text-destructive">*</span></Label>
                   <Input
                     id="end_date"
                     type="date"
@@ -309,6 +346,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                       ...prev,
                       end_date: e.target.value
                     }))}
+                    required
                   />
                 </div>
               </div>
@@ -323,6 +361,18 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                     value: e.target.value
                   }))}
                   placeholder="0.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="assigned_to">Zugewiesen an</Label>
+                <Input
+                  id="assigned_to"
+                  value={variableValues.assigned_to || ''}
+                  onChange={(e) => setVariableValues(prev => ({
+                    ...prev,
+                    assigned_to: e.target.value
+                  }))}
+                  placeholder="Name des Bearbeiters"
                 />
               </div>
             </CardContent>
