@@ -596,32 +596,47 @@ export function ContractBuilder({
                       flex: 1;
                       line-height: 1.6;
                     }
-                    /* List styling for contract preview */
+                    /* List styling for contract preview - FORCE BLACK BULLETS */
                     .contract-preview ul {
-                      list-style-type: disc;
-                      padding-left: 1.5rem;
-                      margin: 0.5rem 0;
-                      color: hsl(220 26% 14%) !important;
+                      list-style-type: disc !important;
+                      padding-left: 1.5rem !important;
+                      margin: 0.5rem 0 !important;
+                      color: #000000 !important;
                     }
                     .contract-preview ul li {
-                      color: hsl(220 26% 14%) !important;
-                      margin: 0.25rem 0;
+                      color: #000000 !important;
+                      margin: 0.25rem 0 !important;
                     }
                     .contract-preview ul li::marker {
-                      color: hsl(220 26% 14%) !important;
+                      color: #000000 !important;
+                      content: "●" !important;
                     }
                     .contract-preview ol {
-                      padding-left: 1.5rem;
-                      margin: 0.5rem 0;
-                      color: hsl(220 26% 14%) !important;
+                      padding-left: 1.5rem !important;
+                      margin: 0.5rem 0 !important;
+                      color: #000000 !important;
                     }
                     .contract-preview ol li {
-                      color: hsl(220 26% 14%) !important;
-                      margin: 0.25rem 0;
+                      color: #000000 !important;
+                      margin: 0.25rem 0 !important;
                     }
                     .contract-preview p {
-                      color: hsl(220 26% 14%) !important;
-                      margin: 0.5rem 0;
+                      color: #000000 !important;
+                      margin: 0.5rem 0 !important;
+                    }
+                    /* Force all text content to be black in preview */
+                    .contract-preview * {
+                      color: #000000 !important;
+                    }
+                    /* Override any white or transparent colors */
+                    .contract-preview li::before {
+                      color: #000000 !important;
+                    }
+                    /* Specific override for list markers */
+                    .contract-preview ul > li::marker,
+                    .contract-preview ol > li::marker {
+                      color: #000000 !important;
+                      font-weight: bold !important;
                     }
                   </style>
                   ${(() => {

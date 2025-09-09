@@ -540,6 +540,48 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                       color: #6b7280;
                       font-style: italic;
                     }
+                    /* FORCE BLACK BULLETS AND TEXT IN PREVIEW */
+                    .contract-preview ul {
+                      list-style-type: disc !important;
+                      padding-left: 1.5rem !important;
+                      margin: 0.5rem 0 !important;
+                      color: #000000 !important;
+                    }
+                    .contract-preview ul li {
+                      color: #000000 !important;
+                      margin: 0.25rem 0 !important;
+                    }
+                    .contract-preview ul li::marker {
+                      color: #000000 !important;
+                      content: "●" !important;
+                    }
+                    .contract-preview ol {
+                      padding-left: 1.5rem !important;
+                      margin: 0.5rem 0 !important;
+                      color: #000000 !important;
+                    }
+                    .contract-preview ol li {
+                      color: #000000 !important;
+                      margin: 0.25rem 0 !important;
+                    }
+                    .contract-preview p {
+                      color: #000000 !important;
+                      margin: 0.5rem 0 !important;
+                    }
+                    /* Force all content to be black */
+                    .contract-preview * {
+                      color: #000000 !important;
+                    }
+                    /* Override any white or transparent colors */
+                    .contract-preview li::before {
+                      color: #000000 !important;
+                    }
+                    /* Specific override for list markers */
+                    .contract-preview ul > li::marker,
+                    .contract-preview ol > li::marker {
+                      color: #000000 !important;
+                      font-weight: bold !important;
+                    }
                   </style>
                   ${renderPreview()}
                   ` 
