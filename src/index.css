@@ -163,54 +163,54 @@
   /* Additional bullet list styles for better visibility */
   .prose ul {
     @apply list-disc pl-6 mb-4 space-y-1;
-    color: #000000 !important;
+    color: hsl(var(--foreground)) !important;
   }
 
   .prose ul li {
-    color: #000000 !important;
+    color: hsl(var(--foreground)) !important;
   }
 
   .prose ul li::marker {
-    color: #000000 !important;
+    color: hsl(var(--foreground)) !important;
   }
 
   /* Ensure ordered lists also have proper colors */
   .prose ol {
-    color: #000000 !important;
+    color: hsl(var(--foreground)) !important;
   }
 
   .prose ol li {
-    color: #000000 !important;
+    color: hsl(var(--foreground)) !important;
   }
 
   /* AGGRESSIVE OVERRIDE FOR ALL LISTS */
   ul, ol {
-    color: #000000 !important;
+    color: hsl(var(--foreground)) !important;
   }
   
   ul li, ol li {
-    color: #000000 !important;
+    color: hsl(var(--foreground)) !important;
   }
   
   ul li::marker, ol li::marker {
-    color: #000000 !important;
+    color: hsl(var(--foreground)) !important;
   }
   
   /* Override TipTap and Prose styles */
   .ProseMirror ul li::marker {
-    color: #000000 !important;
+    color: hsl(var(--foreground)) !important;
   }
   
   .ProseMirror ol li::marker {
-    color: #000000 !important;
+    color: hsl(var(--foreground)) !important;
   }
   
-  /* Force all list content to be black */
+  /* Force all list content to use theme colors */
   .prose-bullet-list li::marker,
   .prose-ordered-list li::before,
   ul.prose-bullet-list li::marker,
   ol.prose-ordered-list li::before {
-    color: #000000 !important;
+    color: hsl(var(--foreground)) !important;
   }
 
   .prose-ordered-list {
