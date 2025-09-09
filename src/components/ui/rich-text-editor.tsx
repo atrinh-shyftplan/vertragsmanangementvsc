@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bold, Italic, Underline, List, ListOrdered, Quote, CheckSquare, Indent, Outdent, AlignLeft, AlignCenter, AlignRight, AlignJustify, Variable, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +25,7 @@ interface RichTextEditorProps {
 export function RichTextEditor({ content, onChange, placeholder, className, globalVariables = [] }: RichTextEditorProps) {
   const [listStyle, setListStyle] = useState<'decimal' | 'decimal-paren' | 'decimal-dot'>('decimal');
   const [variablePopoverOpen, setVariablePopoverOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const editor = useEditor({
     extensions: [
@@ -336,20 +338,32 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80 p-0 bg-popover border shadow-lg z-50" align="start">
-              <Command>
-                <CommandInput placeholder="Suche Variablen..." className="h-9" />
-                <CommandEmpty>Keine Variablen gefunden.</CommandEmpty>
-                <CommandList className="max-h-64">
-                  <CommandGroup>
-                    {globalVariables.map(variable => (
-                      <CommandItem
+              <div className="p-2 border-b">
+                <input
+                  type="text"
+                  placeholder="Suche Variablen..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <ScrollArea className="max-h-64">
+                <div className="p-1">
+                  {globalVariables
+                    .filter(variable => 
+                      variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .map(variable => (
+                      <div
                         key={variable.key}
-                        value={`${variable.name_de} ${variable.key} ${variable.description || ''}`}
-                        onSelect={() => {
+                        onClick={() => {
                           editor.chain().focus().insertContent(`{{${variable.key}}}`).run();
                           setVariablePopoverOpen(false);
+                          setSearchTerm('');
                         }}
-                        className="flex flex-col items-start gap-1 p-3 cursor-pointer"
+                        className="flex flex-col gap-1 p-3 cursor-pointer hover:bg-accent rounded-md m-1"
                       >
                         <div className="flex w-full justify-between items-center">
                           <span className="font-medium">{variable.name_de}</span>
@@ -358,11 +372,20 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                         {variable.description && (
                           <span className="text-xs text-muted-foreground w-full">{variable.description}</span>
                         )}
-                      </CommandItem>
+                      </div>
                     ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
+                  {globalVariables
+                    .filter(variable => 
+                      variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+                    ).length === 0 && (
+                    <div className="p-4 text-center text-muted-foreground text-sm">
+                      Keine Variablen gefunden.
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
             </PopoverContent>
           </Popover>
         )}
