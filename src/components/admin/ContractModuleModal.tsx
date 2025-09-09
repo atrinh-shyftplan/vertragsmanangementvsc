@@ -18,11 +18,12 @@ interface ContractModuleModalProps {
   onSave: (data: ContractModuleInsert) => void;
   contractModule?: ContractModule | null;
   contractCategories: ContractCategory[];
+  globalVariables?: Array<{key: string; name_de: string; description?: string}>;
 }
 
 type ContractCategory = Database['public']['Tables']['contract_categories']['Row'];
 
-export function ContractModuleModal({ open, onOpenChange, onSave, contractModule, contractCategories }: ContractModuleModalProps) {
+export function ContractModuleModal({ open, onOpenChange, onSave, contractModule, contractCategories, globalVariables = [] }: ContractModuleModalProps) {
   const [formData, setFormData] = useState<ContractModuleInsert>({
     key: '',
     title_de: '',
@@ -127,6 +128,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
                 onChange={(content) => setFormData({ ...formData, content_de: content })}
                 placeholder="Deutscher Modulinhalt..."
                 className="min-h-[400px]"
+                globalVariables={globalVariables}
               />
             </div>
           </div>
@@ -141,6 +143,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
                 onChange={(content) => setFormData({ ...formData, content_en: content })}
                 placeholder="English module content..."
                 className="min-h-[400px]"
+                globalVariables={globalVariables}
               />
             </div>
           </div>

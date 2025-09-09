@@ -501,6 +501,7 @@ export default function Admin() {
         }}
         contractModule={selectedContractModule}
         contractCategories={contractCategories}
+        globalVariables={globalVariables}
       />
 
       <ContractCategoryModal
