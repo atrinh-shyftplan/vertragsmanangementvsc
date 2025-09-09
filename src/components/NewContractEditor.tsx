@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { FileText, ArrowLeft, Save, X } from 'lucide-react';
 import { useAdminData } from '@/hooks/useAdminData';
 import { toast } from 'sonner';
+import { VariableInputRenderer } from '@/components/admin/VariableInputRenderer';
 
 interface SelectedModule {
   moduleKey: string;
@@ -378,136 +379,19 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             </CardContent>
           </Card>
 
-          {/* Variables Section - Compact Layout */}
-          {(globalVariables.length > 0 || selectedModules.some(sm => {
-            const module = contractModules.find(m => m.key === sm.moduleKey);
-            const moduleVars = Array.isArray(module?.variables) 
-              ? module.variables 
-              : (module?.variables ? JSON.parse(module.variables as string) : []) || [];
-            return moduleVars.length > 0;
-          })) && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Vertragsvariablen</CardTitle>
-                <CardDescription>
-                  Alle benötigten Angaben für den Vertrag
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Global Variables - Compact Grid */}
-                {globalVariables.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Allgemeine Angaben</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      {globalVariables.map((variable) => (
-                        <div key={variable.key} className="space-y-2">
-                          <Label htmlFor={variable.key} className="text-xs">
-                            {variable.name_de || variable.key}
-                            {variable.is_required && <span className="text-destructive ml-1">*</span>}
-                          </Label>
-                          <Input
-                            id={variable.key}
-                            type="text"
-                            value={variableValues[variable.key] || ''}
-                            onChange={(e) => setVariableValues(prev => ({
-                              ...prev,
-                              [variable.key]: e.target.value
-                            }))}
-                            placeholder={variable.default_value}
-                            required={variable.is_required}
-                            className="text-sm"
-                          />
-                          {variable.description && (
-                            <p className="text-xs text-muted-foreground">{variable.description}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Module-specific Variables - Compact Layout */}
-                {selectedModules.map((selectedModule) => {
-                  const module = contractModules.find(m => m.key === selectedModule.moduleKey);
-                  const moduleVariables = Array.isArray(module?.variables) 
-                    ? module.variables 
-                    : (module?.variables ? JSON.parse(module.variables as string) : []) || [];
-                  
-                  if (moduleVariables.length === 0) return null;
-                  
-                  return (
-                    <div key={selectedModule.moduleKey}>
-                      <h4 className="text-sm font-medium text-muted-foreground mb-3">{module?.title_de}</h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        {moduleVariables.map((variable: any) => {
-                          const varName = variable.name || variable.key;
-                          const varLabel = variable.label || variable.name_de || variable.name || variable.key;
-                          const placeholder = variable.placeholder || variable.description || '';
-                          if (!varName) return null;
-                          return (
-                            <div key={varName} className="space-y-2">
-                              <Label htmlFor={`${selectedModule.moduleKey}_${varName}`} className="text-xs">
-                                {varLabel}
-                                {variable.required && <span className="text-destructive ml-1">*</span>}
-                              </Label>
-                              {variable.type === 'textarea' ? (
-                                <Textarea
-                                  id={`${selectedModule.moduleKey}_${varName}`}
-                                  value={variableValues[varName] || ''}
-                                  onChange={(e) => setVariableValues(prev => ({
-                                    ...prev,
-                                    [varName]: e.target.value
-                                  }))}
-                                  placeholder={placeholder}
-                                  required={variable.required}
-                                  className="text-sm"
-                                />
-                              ) : variable.type === 'select' ? (
-                                <Select 
-                                  value={variableValues[varName] || ''} 
-                                  onValueChange={(value) => setVariableValues(prev => ({
-                                    ...prev,
-                                    [varName]: value
-                                  }))}
-                                >
-                                  <SelectTrigger className="text-sm">
-                                    <SelectValue placeholder={placeholder || "Auswählen..."} />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {variable.options?.map((option: string) => (
-                                      <SelectItem key={option} value={option}>
-                                        {option}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                <Input
-                                  id={`${selectedModule.moduleKey}_${varName}`}
-                                  type={variable.type || 'text'}
-                                  value={variableValues[varName] || ''}
-                                  onChange={(e) => setVariableValues(prev => ({
-                                    ...prev,
-                                    [varName]: e.target.value
-                                  }))}
-                                  placeholder={placeholder}
-                                  required={variable.required}
-                                  className="text-sm"
-                                />
-                              )}
-                              {variable.description && (
-                                <p className="text-xs text-muted-foreground">{variable.description}</p>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          )}
+          {/* Module Variables using VariableInputRenderer */}
+          <VariableInputRenderer
+            selectedModules={selectedModules.map(sm => {
+              const module = contractModules.find(m => m.key === sm.moduleKey);
+              return module;
+            }).filter(Boolean)}
+            globalVariables={globalVariables}
+            variableValues={variableValues}
+            onVariableChange={(key, value) => setVariableValues(prev => ({
+              ...prev,
+              [key]: value
+            }))}
+          />
         </div>
 
         {/* Preview Panel - larger width */}
