@@ -19,6 +19,13 @@ interface NewContractEditorProps {
   onClose?: () => void;
 }
 
+// Function to extract variables from module content
+const extractVariablesFromContent = (content: string) => {
+  if (!content) return [];
+  const matches = content.match(/\{\{([^}]+)\}\}/g);
+  return matches ? matches.map(match => match.replace(/\{\{|\}\}/g, '').trim()) : [];
+};
+
 export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const { contractTypes, contractModules, contractCompositions, globalVariables } = useAdminData();
   const [selectedType, setSelectedType] = useState<string>('');
@@ -164,24 +171,53 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       
-      // Validate required fields
-      if (!variableValues.title || !variableValues.client || !variableValues.start_date || !variableValues.end_date) {
+      // Validate required fields - check if all module variables are filled if status is not draft
+      const isDraft = variableValues.status === 'draft';
+      const hasRequiredFields = variableValues.title && variableValues.start_date;
+      
+      if (!hasRequiredFields) {
         toast.error('Bitte füllen Sie alle Pflichtfelder aus');
         return;
+      }
+      
+      // If not draft, check if all required module variables are filled
+      if (!isDraft) {
+        const requiredVariables = [];
+        selectedModules.forEach(sm => {
+          const module = contractModules.find(m => m.key === sm.moduleKey);
+          if (module) {
+            const moduleVariables = Array.isArray(module.variables) 
+              ? module.variables 
+              : (module.variables ? JSON.parse(module.variables as string) : []);
+            
+            // Extract variables from content
+            const contentVariables = extractVariablesFromContent(module.content_de || '');
+            contentVariables.forEach(variable => {
+              if (!variableValues[variable]) {
+                requiredVariables.push(variable);
+              }
+            });
+          }
+        });
+        
+        if (requiredVariables.length > 0) {
+          toast.error(`Folgende Felder müssen ausgefüllt werden: ${requiredVariables.join(', ')}`);
+          return;
+        }
       }
 
       // Prepare contract data
       const contractData = {
         title: variableValues.title,
-        client: variableValues.client,
-        status: 'draft' as const,
+        client: variableValues.client || 'TBD',
+        status: (variableValues.status || 'draft'),
         value: parseFloat(variableValues.value) || 0,
         start_date: variableValues.start_date,
-        end_date: variableValues.end_date,
+        end_date: variableValues.end_date || variableValues.start_date,
         assigned_to: variableValues.assigned_to || 'Unassigned',
-        description: `${contractTypes.find(t => t.key === selectedType)?.name_de || 'Vertrag'} für ${variableValues.client}`,
+        description: `${contractTypes.find(t => t.key === selectedType)?.name_de || 'Vertrag'}`,
         tags: [contractTypes.find(t => t.key === selectedType)?.name_de || 'Vertrag'],
-        progress: 0,
+        progress: variableValues.status === 'draft' ? 0 : 25,
         contract_type_key: selectedType,
         template_variables: variableValues,
         global_variables: Object.fromEntries(
@@ -293,7 +329,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             <CardHeader>
               <CardTitle>Vertragsdaten</CardTitle>
               <CardDescription>
-                Grundlegende Informationen zum Vertrag
+                Grundlegende Vertragsinformationen - kompakt und übersichtlich
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -311,57 +347,16 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="client">Kunde <span className="text-destructive">*</span></Label>
+                <Label htmlFor="start_date">Startdatum <span className="text-destructive">*</span></Label>
                 <Input
-                  id="client"
-                  value={variableValues.client || ''}
+                  id="start_date"
+                  type="date"
+                  value={variableValues.start_date || ''}
                   onChange={(e) => setVariableValues(prev => ({
                     ...prev,
-                    client: e.target.value
+                    start_date: e.target.value
                   }))}
-                  placeholder="Kundenname"
                   required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-2">
-                  <Label htmlFor="start_date">Startdatum <span className="text-destructive">*</span></Label>
-                  <Input
-                    id="start_date"
-                    type="date"
-                    value={variableValues.start_date || ''}
-                    onChange={(e) => setVariableValues(prev => ({
-                      ...prev,
-                      start_date: e.target.value
-                    }))}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="end_date">Enddatum <span className="text-destructive">*</span></Label>
-                  <Input
-                    id="end_date"
-                    type="date"
-                    value={variableValues.end_date || ''}
-                    onChange={(e) => setVariableValues(prev => ({
-                      ...prev,
-                      end_date: e.target.value
-                    }))}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="value">Vertragswert (€)</Label>
-                <Input
-                  id="value"
-                  type="number"
-                  value={variableValues.value || ''}
-                  onChange={(e) => setVariableValues(prev => ({
-                    ...prev,
-                    value: e.target.value
-                  }))}
-                  placeholder="0.00"
                 />
               </div>
               <div className="space-y-2">
@@ -374,6 +369,38 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                     assigned_to: e.target.value
                   }))}
                   placeholder="Name des Bearbeiters"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select 
+                  value={variableValues.status || 'draft'} 
+                  onValueChange={(value) => setVariableValues(prev => ({
+                    ...prev,
+                    status: value
+                  }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status auswählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Entwurf</SelectItem>
+                    <SelectItem value="ready_for_review">Bereit zur Prüfung</SelectItem>
+                    <SelectItem value="approved">Genehmigt</SelectItem>
+                    <SelectItem value="active">Aktiv</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="gueltig_bis">Angebot gültig bis</Label>
+                <Input
+                  id="gueltig_bis"
+                  type="date"
+                  value={variableValues.gueltig_bis || ''}
+                  onChange={(e) => setVariableValues(prev => ({
+                    ...prev,
+                    gueltig_bis: e.target.value
+                  }))}
                 />
               </div>
             </CardContent>
