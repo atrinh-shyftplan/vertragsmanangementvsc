@@ -151,7 +151,8 @@ export function ContractBuilder({
     
     // Replace module-specific variables with highlighted spans
     moduleVariables.forEach((variable) => {
-      const variableName = variable.name;
+      const variableName = (variable.name || variable.key);
+      if (!variableName) return;
       const value = variableValues[variableName] || variableName;
       const regex = new RegExp(`{{${variableName}}}`, 'g');
       processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 border-2 border-yellow-400 px-1 rounded">${value}</span>`);
@@ -165,17 +166,17 @@ export function ContractBuilder({
     return processedContent;
   };
 
-  // Safe JSON parse function to handle empty strings and invalid JSON
-  const safeJsonParse = (jsonString: any): any[] => {
-    if (!jsonString || typeof jsonString !== 'string' || jsonString.trim() === '') {
-      return [];
-    }
-    
+  // Safe JSON parse function to handle empty strings, arrays, and invalid JSON
+  const safeJsonParse = (jsonValue: any): any[] => {
+    if (!jsonValue) return [];
+    if (Array.isArray(jsonValue)) return jsonValue;
+    if (typeof jsonValue !== 'string') return [];
+    if (jsonValue.trim() === '') return [];
     try {
-      const parsed = JSON.parse(jsonString);
+      const parsed = JSON.parse(jsonValue);
       return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
-      console.warn('Failed to parse JSON:', jsonString, error);
+      console.warn('Failed to parse JSON:', jsonValue, error);
       return [];
     }
   };

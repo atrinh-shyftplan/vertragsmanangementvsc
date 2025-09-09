@@ -63,7 +63,8 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     
     // Replace module-specific variables with highlighted spans
     moduleVariables.forEach((variable) => {
-      const variableName = variable.name;
+      const variableName = (variable.name || variable.key);
+      if (!variableName) return;
       const value = variableValues[variableName] || variableName;
       const regex = new RegExp(`{{${variableName}}}`, 'g');
       processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 border-2 border-yellow-400 px-1 rounded">${value}</span>`);
@@ -381,60 +382,66 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {moduleVariables.map((variable: any) => (
-                    <div key={variable.name} className="space-y-2">
-                      <Label htmlFor={`${selectedModule.moduleKey}_${variable.name}`}>
-                        {variable.label || variable.name}
-                        {variable.required && <span className="text-destructive ml-1">*</span>}
-                      </Label>
-                      {variable.type === 'textarea' ? (
-                        <Textarea
-                          id={`${selectedModule.moduleKey}_${variable.name}`}
-                          value={variableValues[variable.name] || ''}
-                          onChange={(e) => setVariableValues(prev => ({
-                            ...prev,
-                            [variable.name]: e.target.value
-                          }))}
-                          placeholder={variable.placeholder}
-                          required={variable.required}
-                        />
-                      ) : variable.type === 'select' ? (
-                        <Select 
-                          value={variableValues[variable.name] || ''} 
-                          onValueChange={(value) => setVariableValues(prev => ({
-                            ...prev,
-                            [variable.name]: value
-                          }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder={variable.placeholder || "Auswählen..."} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {variable.options?.map((option: string) => (
-                              <SelectItem key={option} value={option}>
-                                {option}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Input
-                          id={`${selectedModule.moduleKey}_${variable.name}`}
-                          type={variable.type || 'text'}
-                          value={variableValues[variable.name] || ''}
-                          onChange={(e) => setVariableValues(prev => ({
-                            ...prev,
-                            [variable.name]: e.target.value
-                          }))}
-                          placeholder={variable.placeholder}
-                          required={variable.required}
-                        />
-                      )}
-                      {variable.description && (
-                        <p className="text-sm text-muted-foreground">{variable.description}</p>
-                      )}
-                    </div>
-                  ))}
+                  {moduleVariables.map((variable: any) => {
+                    const varName = variable.name || variable.key;
+                    const varLabel = variable.label || variable.name_de || variable.name || variable.key;
+                    const placeholder = variable.placeholder || variable.description || '';
+                    if (!varName) return null;
+                    return (
+                      <div key={varName} className="space-y-2">
+                        <Label htmlFor={`${selectedModule.moduleKey}_${varName}`}>
+                          {varLabel}
+                          {variable.required && <span className="text-destructive ml-1">*</span>}
+                        </Label>
+                        {variable.type === 'textarea' ? (
+                          <Textarea
+                            id={`${selectedModule.moduleKey}_${varName}`}
+                            value={variableValues[varName] || ''}
+                            onChange={(e) => setVariableValues(prev => ({
+                              ...prev,
+                              [varName]: e.target.value
+                            }))}
+                            placeholder={placeholder}
+                            required={variable.required}
+                          />
+                        ) : variable.type === 'select' ? (
+                          <Select 
+                            value={variableValues[varName] || ''} 
+                            onValueChange={(value) => setVariableValues(prev => ({
+                              ...prev,
+                              [varName]: value
+                            }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder={placeholder || "Auswählen..."} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {variable.options?.map((option: string) => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input
+                            id={`${selectedModule.moduleKey}_${varName}`}
+                            type={variable.type || 'text'}
+                            value={variableValues[varName] || ''}
+                            onChange={(e) => setVariableValues(prev => ({
+                              ...prev,
+                              [varName]: e.target.value
+                            }))}
+                            placeholder={placeholder}
+                            required={variable.required}
+                          />
+                        )}
+                        {variable.description && (
+                          <p className="text-sm text-muted-foreground">{variable.description}</p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </CardContent>
               </Card>
             );
