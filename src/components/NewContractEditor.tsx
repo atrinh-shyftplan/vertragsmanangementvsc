@@ -92,7 +92,15 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           const hasGermanContent = (module.content_de || '').trim().length > 0;
           const hasEnglishContent = (module.content_en || '').trim().length > 0;
           
-          preview += `<div class="mb-8">`;
+          // Special handling for Header Sales module - center it and override prose styles
+          const isHeaderModule = module.key === 'Header Sales';
+          
+          if (isHeaderModule) {
+            preview += `<div class="mb-8 not-prose flex justify-center">`;
+            preview += `<div style="text-align: center; margin: 0 auto; max-width: fit-content;">`;
+          } else {
+            preview += `<div class="mb-8">`;
+          }
           
           // Case 1: Both German and English content - two-column layout
           if (hasGermanContent && hasEnglishContent) {
@@ -100,17 +108,23 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             
             // German column
             preview += `<div class="pr-6 space-y-4">`;
-            preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
-            preview += `<div class="text-sm leading-relaxed text-justify">${processContent(module.content_de, moduleVariables)}</div>`;
+            if (!isHeaderModule) {
+              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
+            }
+            preview += `<div class="text-sm leading-relaxed ${isHeaderModule ? '' : 'text-justify'}">${processContent(module.content_de, moduleVariables)}</div>`;
             preview += `</div>`;
             
             // Gray vertical divider line
-            preview += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
+            if (!isHeaderModule) {
+              preview += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
+            }
             
             // English column
             preview += `<div class="pl-6 space-y-4">`;
-            preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
-            preview += `<div class="text-sm leading-relaxed text-justify">${processContent(module.content_en, moduleVariables)}</div>`;
+            if (!isHeaderModule) {
+              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
+            }
+            preview += `<div class="text-sm leading-relaxed ${isHeaderModule ? '' : 'text-justify'}">${processContent(module.content_en, moduleVariables)}</div>`;
             preview += `</div>`;
             
             preview += `</div>`;
@@ -118,18 +132,25 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           // Case 2: Only German content - single-column layout
           else if (hasGermanContent && !hasEnglishContent) {
             preview += `<div class="space-y-4">`;
-            preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
-            preview += `<div class="text-sm leading-relaxed text-justify">${processContent(module.content_de, moduleVariables)}</div>`;
+            if (!isHeaderModule) {
+              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
+            }
+            preview += `<div class="text-sm leading-relaxed ${isHeaderModule ? '' : 'text-justify'}">${processContent(module.content_de, moduleVariables)}</div>`;
             preview += `</div>`;
           }
           // Case 3: Only English content - single-column layout
           else if (!hasGermanContent && hasEnglishContent) {
             preview += `<div class="space-y-4">`;
-            preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
-            preview += `<div class="text-sm leading-relaxed text-justify">${processContent(module.content_en, moduleVariables)}</div>`;
+            if (!isHeaderModule) {
+              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
+            }
+            preview += `<div class="text-sm leading-relaxed ${isHeaderModule ? '' : 'text-justify'}">${processContent(module.content_en, moduleVariables)}</div>`;
             preview += `</div>`;
           }
           
+          if (isHeaderModule) {
+            preview += `</div>`; // Close centering wrapper
+          }
           preview += `</div>`;
         }
       });
