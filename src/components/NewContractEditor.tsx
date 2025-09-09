@@ -111,7 +111,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             if (!isHeaderModule) {
               preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
             }
-            preview += `<div class="text-sm leading-relaxed ${isHeaderModule ? '' : 'text-justify'}">${processContent(module.content_de, moduleVariables)}</div>`;
+            preview += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
             preview += `</div>`;
             
             // Gray vertical divider line
@@ -124,7 +124,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             if (!isHeaderModule) {
               preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
             }
-            preview += `<div class="text-sm leading-relaxed ${isHeaderModule ? '' : 'text-justify'}">${processContent(module.content_en, moduleVariables)}</div>`;
+            preview += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
             preview += `</div>`;
             
             preview += `</div>`;
@@ -135,7 +135,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             if (!isHeaderModule) {
               preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
             }
-            preview += `<div class="text-sm leading-relaxed ${isHeaderModule ? '' : 'text-justify'}">${processContent(module.content_de, moduleVariables)}</div>`;
+            preview += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
             preview += `</div>`;
           }
           // Case 3: Only English content - single-column layout
@@ -144,7 +144,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             if (!isHeaderModule) {
               preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
             }
-            preview += `<div class="text-sm leading-relaxed ${isHeaderModule ? '' : 'text-justify'}">${processContent(module.content_en, moduleVariables)}</div>`;
+            preview += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
             preview += `</div>`;
           }
           
