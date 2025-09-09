@@ -468,86 +468,174 @@ export function ContractBuilder({
                   Keine Module ausgewählt
                 </div>
               ) : (
-                <div 
-                  className="prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ 
-                    __html: (() => {
-                      let preview = '';
+              <div 
+                className="prose max-w-none whitespace-pre-wrap bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner"
+                style={{ 
+                  fontSize: '12px', 
+                  lineHeight: '1.6',
+                  fontFamily: 'Arial, sans-serif'
+                }}
+                dangerouslySetInnerHTML={{ 
+                  __html: `
+                  <style>
+                    .header-content table {
+                      width: 100%;
+                      border-collapse: collapse;
+                      margin: 10px 0;
+                    }
+                    .header-content table td {
+                      padding: 8px 12px;
+                      vertical-align: top;
+                      border: 1px solid #e5e7eb;
+                    }
+                    .header-content table td:first-child {
+                      font-weight: 600;
+                      background-color: #f9fafb;
+                      width: 40%;
+                    }
+                    .header-content .company-logo {
+                      font-size: 24px;
+                      font-weight: bold;
+                      color: #1f2937;
+                      margin-bottom: 30px;
+                    }
+                    .header-content .offer-info-block {
+                      margin: 25px 0;
+                      padding: 15px;
+                      background-color: white;
+                      border: 1px solid #d1d5db;
+                      border-radius: 6px;
+                    }
+                    .header-content .convenience-block {
+                      margin: 25px 0;
+                      padding: 15px;
+                      background-color: white;
+                      border: 1px solid #d1d5db;
+                      border-radius: 6px;
+                      border-style: dashed;
+                    }
+                    .header-content .company-section {
+                      margin: 30px 0;
+                      padding: 20px;
+                      background-color: white;
+                      border: 1px solid #e5e7eb;
+                      border-radius: 8px;
+                    }
+                    .header-content .company-divider {
+                      margin: 40px 0;
+                      height: 2px;
+                      background-color: #e5e7eb;
+                      border-radius: 1px;
+                    }
+                    .header-content .info-line {
+                      display: flex;
+                      justify-content: space-between;
+                      margin: 8px 0;
+                      padding: 6px 10px;
+                      background-color: #f8fafc;
+                      border-radius: 4px;
+                      border-left: 4px solid #3b82f6;
+                    }
+                    .header-content .info-label {
+                      font-weight: 600;
+                      color: #374151;
+                      min-width: 120px;
+                    }
+                    .header-content .info-value {
+                      color: #1f2937;
+                    }
+                    .header-content p {
+                      margin: 8px 0;
+                      line-height: 1.5;
+                    }
+                    .header-content strong {
+                      font-weight: 600;
+                    }
+                    .header-content .between-text {
+                      margin: 30px 0 20px 0;
+                      font-size: 14px;
+                      color: #6b7280;
+                      font-style: italic;
+                    }
+                  </style>
+                  ${(() => {
+                    let preview = '';
+                    
+                     getSelectedModulesInOrder().forEach((module) => {
+                       const moduleVariables = safeJsonParse(module.variables);
                       
-                       getSelectedModulesInOrder().forEach((module) => {
-                         const moduleVariables = safeJsonParse(module.variables);
+                      // Check if content exists for each language
+                      const hasGermanContent = module.content_de && module.content_de.trim().length > 0;
+                      const hasEnglishContent = module.content_en && module.content_en.trim().length > 0;
+                      
+                      // Special handling for Header Sales module - center it and override prose styles
+                      const isHeaderModule = module.key === 'Header Sales';
+                      
+                      if (isHeaderModule) {
+                        preview += `<div class="mb-8 not-prose flex justify-center">`;
+                        preview += `<div class="header-content" style="text-align: center; margin: 0 auto; max-width: 800px; padding: 20px; border: 2px solid #e5e7eb; border-radius: 8px; background-color: white;">`;
+                      } else {
+                        preview += `<div class="mb-8">`;
+                      }
+                      
+                      // Case 1: Both German and English content - two-column layout
+                      if (hasGermanContent && hasEnglishContent) {
+                        preview += `<div class="grid grid-cols-2 gap-0 relative">`;
                         
-                        // Check if content exists for each language
-                        const hasGermanContent = module.content_de && module.content_de.trim().length > 0;
-                        const hasEnglishContent = module.content_en && module.content_en.trim().length > 0;
+                        // German column
+                        preview += `<div class="pr-6 space-y-4">`;
+                        if (!isHeaderModule) {
+                          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
+                        }
+                        preview += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
+                        preview += `</div>`;
                         
-                        // Special handling for Header Sales module - center it and override prose styles
-                        const isHeaderModule = module.key === 'Header Sales';
-                        
-                        if (isHeaderModule) {
-                          preview += `<div class="mb-8 not-prose flex justify-center">`;
-                          preview += `<div class="header-content" style="text-align: center; margin: 0 auto; max-width: 800px; padding: 20px; border: 2px solid #e5e7eb; border-radius: 8px; background-color: white;">`;
-                        } else {
-                          preview += `<div class="mb-8">`;
+                        // Gray vertical divider line
+                        if (!isHeaderModule) {
+                          preview += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
                         }
                         
-                        // Case 1: Both German and English content - two-column layout
-                        if (hasGermanContent && hasEnglishContent) {
-                          preview += `<div class="grid grid-cols-2 gap-0 relative">`;
-                          
-                          // German column
-                          preview += `<div class="pr-6 space-y-4">`;
-                          if (!isHeaderModule) {
-                            preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
-                          }
-                          preview += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
-                          preview += `</div>`;
-                          
-                          // Gray vertical divider line
-                          if (!isHeaderModule) {
-                            preview += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
-                          }
-                          
-                          // English column
-                          preview += `<div class="pl-6 space-y-4">`;
-                          if (!isHeaderModule) {
-                            preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
-                          }
-                          preview += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
-                          preview += `</div>`;
-                          
-                          preview += `</div>`;
+                        // English column
+                        preview += `<div class="pl-6 space-y-4">`;
+                        if (!isHeaderModule) {
+                          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
                         }
-                        // Case 2: Only German content - single-column layout
-                        else if (hasGermanContent && !hasEnglishContent) {
-                          preview += `<div class="space-y-4">`;
-                          if (!isHeaderModule) {
-                            preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
-                          }
-                          preview += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
-                          preview += `</div>`;
-                        }
-                        // Case 3: Only English content - single-column layout
-                        else if (!hasGermanContent && hasEnglishContent) {
-                          preview += `<div class="space-y-4">`;
-                          if (!isHeaderModule) {
-                            preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
-                          }
-                          preview += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
-                          preview += `</div>`;
-                        }
-                        
-                        if (isHeaderModule) {
-                          preview += `</div>`;
-                        }
+                        preview += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
+                        preview += `</div>`;
                         
                         preview += `</div>`;
-                      });
+                      }
+                      // Case 2: Only German content - single-column layout
+                      else if (hasGermanContent && !hasEnglishContent) {
+                        preview += `<div class="space-y-4">`;
+                        if (!isHeaderModule) {
+                          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
+                        }
+                        preview += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
+                        preview += `</div>`;
+                      }
+                      // Case 3: Only English content - single-column layout
+                      else if (!hasGermanContent && hasEnglishContent) {
+                        preview += `<div class="space-y-4">`;
+                        if (!isHeaderModule) {
+                          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
+                        }
+                        preview += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
+                        preview += `</div>`;
+                      }
                       
-                      return preview;
-                    })()
-                  }} 
-                />
+                      if (isHeaderModule) {
+                        preview += `</div>`;
+                      }
+                      
+                      preview += `</div>`;
+                    });
+                    
+                    return preview;
+                  })()}
+                  ` 
+                }}
+              />
               )}
             </div>
           </CardContent>
