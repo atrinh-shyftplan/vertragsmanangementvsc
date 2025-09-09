@@ -97,7 +97,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           
           if (isHeaderModule) {
             preview += `<div class="mb-8 not-prose flex justify-center">`;
-            preview += `<div style="text-align: center; margin: 0 auto; max-width: fit-content;">`;
+            preview += `<div class="header-content" style="text-align: center; margin: 0 auto; max-width: 800px; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: #fafafa;">`;
           } else {
             preview += `<div class="mb-8">`;
           }
@@ -458,7 +458,71 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                   lineHeight: '1.6',
                   fontFamily: 'Arial, sans-serif'
                 }}
-                dangerouslySetInnerHTML={{ __html: renderPreview() }}
+                dangerouslySetInnerHTML={{ 
+                  __html: `
+                  <style>
+                    .header-content table {
+                      width: 100%;
+                      border-collapse: collapse;
+                      margin: 10px 0;
+                    }
+                    .header-content table td {
+                      padding: 8px 12px;
+                      vertical-align: top;
+                      border: 1px solid #e5e7eb;
+                    }
+                    .header-content table td:first-child {
+                      font-weight: 600;
+                      background-color: #f9fafb;
+                      width: 40%;
+                    }
+                    .header-content .company-logo {
+                      font-size: 24px;
+                      font-weight: bold;
+                      color: #1f2937;
+                      margin-bottom: 20px;
+                    }
+                    .header-content .contact-section {
+                      margin: 15px 0;
+                      padding: 10px;
+                      background-color: #f8fafc;
+                      border-radius: 6px;
+                    }
+                    .header-content .bank-details {
+                      margin: 15px 0;
+                      padding: 10px;
+                      background-color: #fef7cd;
+                      border-radius: 6px;
+                      border: 1px solid #fbbf24;
+                    }
+                    .header-content .info-line {
+                      display: flex;
+                      justify-content: space-between;
+                      margin: 8px 0;
+                      padding: 6px 10px;
+                      background-color: #f8fafc;
+                      border-radius: 4px;
+                      border-left: 4px solid #3b82f6;
+                    }
+                    .header-content .info-label {
+                      font-weight: 600;
+                      color: #374151;
+                      min-width: 120px;
+                    }
+                    .header-content .info-value {
+                      color: #1f2937;
+                    }
+                    .header-content p {
+                      margin: 8px 0;
+                      line-height: 1.5;
+                    }
+                    .header-content strong {
+                      font-weight: 600;
+                    }
+                  </style>
+                  ${renderPreview()}
+                  ` 
+                }}
               />
             </CardContent>
           </Card>
