@@ -126,12 +126,10 @@
 @layer components {
   .prose-paragraph {
     @apply mb-3;
-    text-align: left;
   }
 
   .prose-heading {
     @apply font-semibold mb-4 mt-6 first:mt-0;
-    text-align: left;
   }
 
   .prose h1 {
@@ -332,35 +330,5 @@
 
   .prose-list-item p {
     @apply inline m-0;
-  }
-
-  /* Text alignment classes for rich text editor */
-  .prose [style*="text-align: left"] {
-    text-align: left !important;
-  }
-
-  .prose [style*="text-align: center"] {
-    text-align: center !important;
-  }
-
-  .prose [style*="text-align: right"] {
-    text-align: right !important;
-  }
-
-  .prose [style*="text-align: justify"] {
-    text-align: justify !important;
-  }
-
-  /* Default prose styling - left aligned, no justify */
-  .prose {
-    text-align: left;
-  }
-
-  .prose p {
-    text-align: inherit;
-  }
-
-  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
-    text-align: inherit;
   }
 }

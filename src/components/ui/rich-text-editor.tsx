@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { TextStyle } from '@tiptap/extension-text-style';
-import { TextAlign } from '@tiptap/extension-text-align';
 import { ListKeymap } from '@tiptap/extension-list-keymap';
 import { TaskList } from '@tiptap/extension-task-list';
 import { TaskItem } from '@tiptap/extension-task-item';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Bold, Italic, Underline, List, ListOrdered, Quote, CheckSquare, Indent, Outdent, AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react';
+import { Bold, Italic, Underline, List, ListOrdered, Quote, CheckSquare, Indent, Outdent, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RichTextEditorProps {
@@ -55,9 +54,6 @@ export function RichTextEditor({ content, onChange, placeholder, className }: Ri
         },
       }),
       TextStyle,
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
       ListKeymap,
       TaskList.configure({
         HTMLAttributes: {
@@ -256,48 +252,6 @@ export function RichTextEditor({ content, onChange, placeholder, className }: Ri
             className="h-8 w-8 p-0"
           >
             <Indent className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="w-px h-6 bg-border mx-1" />
-
-        {/* Text Alignment */}
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().setTextAlign('left').run()}
-            className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'left' }) && "bg-primary/20")}
-          >
-            <AlignLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().setTextAlign('center').run()}
-            className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'center' }) && "bg-primary/20")}
-          >
-            <AlignCenter className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().setTextAlign('right').run()}
-            className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'right' }) && "bg-primary/20")}
-          >
-            <AlignRight className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-            className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'justify' }) && "bg-primary/20")}
-          >
-            <AlignJustify className="h-4 w-4" />
           </Button>
         </div>
 
