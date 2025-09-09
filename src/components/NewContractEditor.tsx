@@ -97,7 +97,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           
           if (isHeaderModule) {
             preview += `<div class="mb-8 not-prose flex justify-center">`;
-            preview += `<div class="header-content" style="text-align: center; margin: 0 auto; max-width: 800px; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: #fafafa;">`;
+            preview += `<div class="header-content" style="text-align: center; margin: 0 auto; max-width: 800px; padding: 20px; border: 2px solid #e5e7eb; border-radius: 8px; background-color: white;">`;
           } else {
             preview += `<div class="mb-8">`;
           }
@@ -480,20 +480,35 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                       font-size: 24px;
                       font-weight: bold;
                       color: #1f2937;
-                      margin-bottom: 20px;
+                      margin-bottom: 30px;
                     }
-                    .header-content .contact-section {
-                      margin: 15px 0;
-                      padding: 10px;
-                      background-color: #f8fafc;
+                    .header-content .offer-info-block {
+                      margin: 25px 0;
+                      padding: 15px;
+                      background-color: white;
+                      border: 1px solid #d1d5db;
                       border-radius: 6px;
                     }
-                    .header-content .bank-details {
-                      margin: 15px 0;
-                      padding: 10px;
-                      background-color: #fef7cd;
+                    .header-content .convenience-block {
+                      margin: 25px 0;
+                      padding: 15px;
+                      background-color: white;
+                      border: 1px solid #d1d5db;
                       border-radius: 6px;
-                      border: 1px solid #fbbf24;
+                      border-style: dashed;
+                    }
+                    .header-content .company-section {
+                      margin: 30px 0;
+                      padding: 20px;
+                      background-color: white;
+                      border: 1px solid #e5e7eb;
+                      border-radius: 8px;
+                    }
+                    .header-content .company-divider {
+                      margin: 40px 0;
+                      height: 2px;
+                      background-color: #e5e7eb;
+                      border-radius: 1px;
                     }
                     .header-content .info-line {
                       display: flex;
@@ -518,6 +533,12 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                     }
                     .header-content strong {
                       font-weight: 600;
+                    }
+                    .header-content .between-text {
+                      margin: 30px 0 20px 0;
+                      font-size: 14px;
+                      color: #6b7280;
+                      font-style: italic;
                     }
                   </style>
                   ${renderPreview()}
