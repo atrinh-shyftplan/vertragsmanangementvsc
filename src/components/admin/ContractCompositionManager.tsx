@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, Move3D } from 'lucide-react';
+import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
@@ -96,18 +96,55 @@ export function ContractCompositionManager({
     }
   };
 
-  const updateSortOrder = async (compositionId: string, newSortOrder: number) => {
+  const updateCompositionOrder = async (contractTypeKey: string, compositionId: string, direction: 'up' | 'down') => {
+    const compositions = getCompositionsForType(contractTypeKey);
+    const currentIndex = compositions.findIndex(c => c.id === compositionId);
+    
+    if (
+      (direction === 'up' && currentIndex === 0) ||
+      (direction === 'down' && currentIndex === compositions.length - 1)
+    ) {
+      return;
+    }
+
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    const currentComposition = compositions[currentIndex];
+    const targetComposition = compositions[newIndex];
+
     try {
+      // Swap sort orders
       const { error } = await supabase
         .from('contract_compositions')
-        .update({ sort_order: newSortOrder })
-        .eq('id', compositionId);
+        .upsert([
+          { 
+            id: currentComposition.id,
+            sort_order: targetComposition.sort_order,
+            contract_type_key: currentComposition.contract_type_key,
+            module_key: currentComposition.module_key
+          },
+          { 
+            id: targetComposition.id,
+            sort_order: currentComposition.sort_order,
+            contract_type_key: targetComposition.contract_type_key,
+            module_key: targetComposition.module_key
+          }
+        ]);
 
       if (error) throw error;
 
+      toast({
+        title: 'Erfolg',
+        description: 'Reihenfolge wurde aktualisiert.'
+      });
+
       onUpdate();
     } catch (error) {
-      console.error('Error updating sort order:', error);
+      console.error('Error updating composition order:', error);
+      toast({
+        title: 'Fehler',
+        description: 'Reihenfolge konnte nicht gespeichert werden.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -213,31 +250,43 @@ export function ContractCompositionManager({
                     const module = getModuleByKey(composition.module_key);
                     
                     return (
-                      <div key={composition.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex items-center space-x-2">
-                            <Move3D className="h-4 w-4 text-muted-foreground" />
-                            <Input
-                              type="number"
-                              value={composition.sort_order || 0}
-                              onChange={(e) => updateSortOrder(composition.id, parseInt(e.target.value) || 0)}
-                              className="w-20"
-                            />
-                          </div>
-                          <div>
-                            <div className="font-medium">{module?.title_de || composition.module_key}</div>
-                            <div className="text-sm text-muted-foreground">
-                              Kategorie: {module?.category || 'general'}
-                            </div>
-                          </div>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeModuleFromContract(composition.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                       <div key={composition.id} className="flex items-center justify-between p-3 border rounded-lg animate-fade-in">
+                         <div className="flex items-center space-x-3">
+                           <Badge variant="outline">{index + 1}</Badge>
+                           <div>
+                             <div className="font-medium">{module?.title_de || composition.module_key}</div>
+                             <div className="text-sm text-muted-foreground">
+                               Kategorie: {module?.category || 'general'}
+                             </div>
+                           </div>
+                         </div>
+                         <div className="flex items-center space-x-1">
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => updateCompositionOrder(contractType.key, composition.id, 'up')}
+                             disabled={index === 0}
+                             className="hover-scale"
+                           >
+                             <ChevronUp className="h-4 w-4" />
+                           </Button>
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => updateCompositionOrder(contractType.key, composition.id, 'down')}
+                             disabled={index === compositions.length - 1}
+                             className="hover-scale"
+                           >
+                             <ChevronDown className="h-4 w-4" />
+                           </Button>
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             onClick={() => removeModuleFromContract(composition.id)}
+                           >
+                             <Trash2 className="h-4 w-4" />
+                           </Button>
+                         </div>
                       </div>
                     );
                   })}
