@@ -157,6 +157,11 @@ export function ContractBuilder({
       processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 border-2 border-yellow-400 px-1 rounded">${value}</span>`);
     });
     
+    // Process numbered paragraphs for synchronization
+    processedContent = processedContent.replace(/^(\d+(?:\.\d+)*\.?)\s+(.+)/gm, (match, number, text) => {
+      return `<div class="sync-paragraph"><span class="sync-number">${number}</span><span class="sync-text">${text}</span></div>`;
+    });
+    
     return processedContent;
   };
 
@@ -558,6 +563,38 @@ export function ContractBuilder({
                       font-size: 14px;
                       color: #6b7280;
                       font-style: italic;
+                    }
+                    /* Synchronization styles for numbered content */
+                    .content-sync-container {
+                      display: flex;
+                      align-items: stretch;
+                    }
+                    .content-sync-item {
+                      flex: 1;
+                      display: flex;
+                      flex-direction: column;
+                    }
+                    .content-sync-item p,
+                    .content-sync-item div {
+                      margin: 4px 0;
+                      line-height: 1.6;
+                    }
+                    /* Special handling for numbered paragraphs */
+                    .sync-paragraph {
+                      display: flex;
+                      align-items: flex-start;
+                      margin: 8px 0;
+                      min-height: 1.5em;
+                    }
+                    .sync-number {
+                      font-weight: 600;
+                      margin-right: 8px;
+                      min-width: 30px;
+                      flex-shrink: 0;
+                    }
+                    .sync-text {
+                      flex: 1;
+                      line-height: 1.6;
                     }
                   </style>
                   ${(() => {
