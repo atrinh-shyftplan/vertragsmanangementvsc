@@ -148,16 +148,39 @@
 
   .prose-bullet-list {
     @apply list-disc pl-6 mb-4 space-y-1;
-    color: hsl(var(--foreground));
+    color: hsl(var(--foreground)) !important;
   }
 
   .prose-bullet-list li {
     @apply text-foreground;
-    color: hsl(var(--foreground));
+    color: hsl(var(--foreground)) !important;
   }
 
   .prose-bullet-list li::marker {
     color: hsl(var(--foreground)) !important;
+  }
+
+  /* Additional bullet list styles for better visibility */
+  .prose ul {
+    @apply list-disc pl-6 mb-4 space-y-1;
+    color: hsl(220 26% 14%) !important;
+  }
+
+  .prose ul li {
+    color: hsl(220 26% 14%) !important;
+  }
+
+  .prose ul li::marker {
+    color: hsl(220 26% 14%) !important;
+  }
+
+  /* Ensure ordered lists also have proper colors */
+  .prose ol {
+    color: hsl(220 26% 14%) !important;
+  }
+
+  .prose ol li {
+    color: hsl(220 26% 14%) !important;
   }
 
   .prose-ordered-list {

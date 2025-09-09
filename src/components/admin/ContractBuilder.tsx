@@ -476,7 +476,7 @@ export function ContractBuilder({
                 </div>
               ) : (
               <div 
-                className="prose max-w-none whitespace-pre-wrap bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner"
+                className="prose max-w-none whitespace-pre-wrap bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
                 style={{ 
                   fontSize: '12px', 
                   lineHeight: '1.6',
@@ -595,6 +595,33 @@ export function ContractBuilder({
                     .sync-text {
                       flex: 1;
                       line-height: 1.6;
+                    }
+                    /* List styling for contract preview */
+                    .contract-preview ul {
+                      list-style-type: disc;
+                      padding-left: 1.5rem;
+                      margin: 0.5rem 0;
+                      color: hsl(220 26% 14%) !important;
+                    }
+                    .contract-preview ul li {
+                      color: hsl(220 26% 14%) !important;
+                      margin: 0.25rem 0;
+                    }
+                    .contract-preview ul li::marker {
+                      color: hsl(220 26% 14%) !important;
+                    }
+                    .contract-preview ol {
+                      padding-left: 1.5rem;
+                      margin: 0.5rem 0;
+                      color: hsl(220 26% 14%) !important;
+                    }
+                    .contract-preview ol li {
+                      color: hsl(220 26% 14%) !important;
+                      margin: 0.25rem 0;
+                    }
+                    .contract-preview p {
+                      color: hsl(220 26% 14%) !important;
+                      margin: 0.5rem 0;
                     }
                   </style>
                   ${(() => {

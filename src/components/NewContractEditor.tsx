@@ -452,7 +452,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             </CardHeader>
             <CardContent>
               <div 
-                className="prose max-w-none whitespace-pre-wrap bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner"
+                className="prose max-w-none whitespace-pre-wrap bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
                 style={{ 
                   fontSize: '12px', 
                   lineHeight: '1.6',
