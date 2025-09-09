@@ -154,11 +154,7 @@ export function VariableInputRenderer({
                       variable.globalVar?.description || 
                       `${variable.label} eingeben`
                     }
-                    className={
-                      variable.isGlobal 
-                        ? "bg-amber-50 border-amber-200 focus:border-amber-400"
-                        : "bg-blue-50 border-blue-200 focus:border-blue-400"
-                    }
+                    className=""
                     required={variable.globalVar?.is_required}
                   />
                   {variable.globalVar?.description && (
