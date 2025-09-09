@@ -19,13 +19,14 @@ interface RichTextEditorProps {
   onChange: (content: string) => void;
   placeholder?: string;
   className?: string;
-  globalVariables?: Array<{key: string; name_de: string; description?: string}>;
+  globalVariables?: Array<{key: string; name_de: string; description?: string; category?: string}>;
 }
 
 export function RichTextEditor({ content, onChange, placeholder, className, globalVariables = [] }: RichTextEditorProps) {
   const [listStyle, setListStyle] = useState<'decimal' | 'decimal-paren' | 'decimal-dot'>('decimal');
   const [variablePopoverOpen, setVariablePopoverOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const editor = useEditor({
     extensions: [
@@ -337,8 +338,9 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                 <Search className="h-3 w-3 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0 bg-popover border shadow-lg z-50" align="start">
-              <div className="p-2 border-b">
+            <PopoverContent className="w-96 p-0 bg-popover border shadow-lg z-50" align="start">
+              {/* Search and Filter Controls */}
+              <div className="p-3 border-b space-y-2">
                 <input
                   type="text"
                   placeholder="Suche Variablen..."
@@ -346,46 +348,100 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full px-3 py-2 text-sm bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="all">Alle Kategorien</option>
+                  {Array.from(new Set(globalVariables.map(v => v.category || 'general'))).map(category => (
+                    <option key={category} value={category}>
+                      {category === 'header' ? 'Header' : 
+                       category === 'vertragskonditionen' ? 'Vertragskonditionen' :
+                       category === 'general' ? 'Allgemein' : category}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <ScrollArea className="max-h-64">
-                <div className="p-1">
-                  {globalVariables
-                    .filter(variable => 
+
+              {/* Variables List */}
+              <div className="max-h-80 overflow-y-auto">
+                {(() => {
+                  // Filter variables based on search and category
+                  const filteredVariables = globalVariables.filter(variable => {
+                    const matchesSearch = searchTerm === '' ||
                       variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase())
-                    )
-                    .map(variable => (
-                      <div
-                        key={variable.key}
-                        onClick={() => {
-                          editor.chain().focus().insertContent(`{{${variable.key}}}`).run();
-                          setVariablePopoverOpen(false);
-                          setSearchTerm('');
-                        }}
-                        className="flex flex-col gap-1 p-3 cursor-pointer hover:bg-accent rounded-md m-1"
-                      >
-                        <div className="flex w-full justify-between items-center">
-                          <span className="font-medium">{variable.name_de}</span>
-                          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">{`{{${variable.key}}}`}</span>
-                        </div>
-                        {variable.description && (
-                          <span className="text-xs text-muted-foreground w-full">{variable.description}</span>
-                        )}
+                      (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+                    
+                    const matchesCategory = selectedCategory === 'all' || 
+                      (variable.category || 'general') === selectedCategory;
+                    
+                    return matchesSearch && matchesCategory;
+                  });
+
+                  // Group by category
+                  const groupedVariables = filteredVariables.reduce((acc, variable) => {
+                    const category = variable.category || 'general';
+                    if (!acc[category]) acc[category] = [];
+                    acc[category].push(variable);
+                    return acc;
+                  }, {} as Record<string, typeof globalVariables>);
+
+                  const categoryNames = {
+                    header: 'Header',
+                    vertragskonditionen: 'Vertragskonditionen', 
+                    general: 'Allgemein'
+                  };
+
+                  return Object.entries(groupedVariables).map(([category, variables]) => (
+                    <div key={category} className="p-2">
+                      <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b mb-2">
+                        {categoryNames[category as keyof typeof categoryNames] || category}
                       </div>
-                    ))}
-                  {globalVariables
-                    .filter(variable => 
-                      variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase())
-                    ).length === 0 && (
-                    <div className="p-4 text-center text-muted-foreground text-sm">
-                      Keine Variablen gefunden.
+                      {variables.map(variable => (
+                        <div
+                          key={variable.key}
+                          onClick={() => {
+                            editor.chain().focus().insertContent(`{{${variable.key}}}`).run();
+                            setVariablePopoverOpen(false);
+                            setSearchTerm('');
+                            setSelectedCategory('all');
+                          }}
+                          className="flex flex-col gap-1 p-3 cursor-pointer hover:bg-accent rounded-md mx-1 mb-1"
+                        >
+                          <div className="flex w-full justify-between items-center">
+                            <span className="font-medium text-sm">{variable.name_de}</span>
+                            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded font-mono">
+                              {`{{${variable.key}}}`}
+                            </span>
+                          </div>
+                          {variable.description && (
+                            <span className="text-xs text-muted-foreground">{variable.description}</span>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  )}
-                </div>
-              </ScrollArea>
+                  ));
+                })()}
+                
+                {/* No results message */}
+                {globalVariables.filter(variable => {
+                  const matchesSearch = searchTerm === '' ||
+                    variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+                  
+                  const matchesCategory = selectedCategory === 'all' || 
+                    (variable.category || 'general') === selectedCategory;
+                  
+                  return matchesSearch && matchesCategory;
+                }).length === 0 && (
+                  <div className="p-8 text-center text-muted-foreground text-sm">
+                    Keine Variablen gefunden.
+                  </div>
+                )}
+              </div>
             </PopoverContent>
           </Popover>
         )}

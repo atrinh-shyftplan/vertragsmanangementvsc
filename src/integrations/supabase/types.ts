@@ -216,6 +216,7 @@ export type Database = {
       }
       global_variables: {
         Row: {
+          category: string | null
           created_at: string
           created_by: string | null
           default_value: string | null
@@ -229,6 +230,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           created_by?: string | null
           default_value?: string | null
@@ -242,6 +244,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           created_by?: string | null
           default_value?: string | null

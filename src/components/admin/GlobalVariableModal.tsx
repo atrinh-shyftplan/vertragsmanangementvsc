@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Database } from '@/integrations/supabase/types';
 
 type GlobalVariable = Database['public']['Tables']['global_variables']['Row'];
@@ -25,7 +26,8 @@ export function GlobalVariableModal({ open, onOpenChange, onSave, globalVariable
     description: '',
     default_value: '',
     is_required: false,
-    is_active: true
+    is_active: true,
+    category: 'general'
   });
 
   useEffect(() => {
@@ -37,7 +39,8 @@ export function GlobalVariableModal({ open, onOpenChange, onSave, globalVariable
         description: globalVariable.description || '',
         default_value: globalVariable.default_value || '',
         is_required: globalVariable.is_required,
-        is_active: globalVariable.is_active
+        is_active: globalVariable.is_active,
+        category: globalVariable.category || 'general'
       });
     } else {
       setFormData({
@@ -47,7 +50,8 @@ export function GlobalVariableModal({ open, onOpenChange, onSave, globalVariable
         description: '',
         default_value: '',
         is_required: false,
-        is_active: true
+        is_active: true,
+        category: 'general'
       });
     }
   }, [globalVariable, open]);
@@ -107,6 +111,25 @@ export function GlobalVariableModal({ open, onOpenChange, onSave, globalVariable
               className="col-span-3"
               placeholder="Company Name"
             />
+          </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="category" className="text-right">
+              Kategorie
+            </Label>
+            <Select
+              value={formData.category || 'general'}
+              onValueChange={(value) => setFormData({ ...formData, category: value })}
+            >
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Kategorie wählen" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="general">Allgemein</SelectItem>
+                <SelectItem value="header">Header</SelectItem>
+                <SelectItem value="vertragskonditionen">Vertragskonditionen</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="grid grid-cols-4 items-start gap-4">
