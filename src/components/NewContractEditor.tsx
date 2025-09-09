@@ -391,18 +391,6 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="gueltig_bis">Angebot gültig bis</Label>
-                <Input
-                  id="gueltig_bis"
-                  type="date"
-                  value={variableValues.gueltig_bis || ''}
-                  onChange={(e) => setVariableValues(prev => ({
-                    ...prev,
-                    gueltig_bis: e.target.value
-                  }))}
-                />
-              </div>
             </CardContent>
           </Card>
 
@@ -431,8 +419,8 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div 
-                className="max-w-none whitespace-pre-wrap bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
+                <div 
+                className="max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
                 style={{ 
                   fontSize: '12px', 
                   lineHeight: '1.6',
@@ -441,6 +429,18 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                 dangerouslySetInnerHTML={{ 
                   __html: `
                   <style>
+                    .contract-preview p {
+                      margin: 1em 0;
+                      white-space: pre-wrap;
+                    }
+                    .contract-preview br {
+                      display: block;
+                      margin: 0.5em 0;
+                      content: "";
+                    }
+                    .contract-preview div {
+                      margin: 0.5em 0;
+                    }
                     .header-content table {
                       width: 100%;
                       border-collapse: collapse;

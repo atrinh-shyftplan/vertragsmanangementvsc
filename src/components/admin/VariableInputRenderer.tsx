@@ -37,9 +37,20 @@ export function VariableInputRenderer({
     return variables;
   };
 
-  // Group variables by module
+  // Group variables by module - separate contract conditions
   const moduleVariableGroups = React.useMemo(() => {
-    const groups: Array<{
+    const regularGroups: Array<{
+      moduleTitle: string;
+      variables: Array<{
+        id: string;
+        label: string;
+        value?: string;
+        isGlobal: boolean;
+        globalVar?: GlobalVariable;
+      }>;
+    }> = [];
+    
+    const contractConditionsGroups: Array<{
       moduleTitle: string;
       variables: Array<{
         id: string;
@@ -107,65 +118,124 @@ export function VariableInputRenderer({
       }
       
       if (moduleVariables.length > 0) {
-        groups.push({
+        const moduleGroup = {
           moduleTitle: module.title_de,
           variables: moduleVariables
-        });
+        };
+        
+        // Check if this is a contract conditions module
+        const isContractConditions = module.title_de?.toLowerCase().includes('vertragskonditionen') ||
+                                   module.key?.toLowerCase().includes('conditions') ||
+                                   module.key?.toLowerCase().includes('rollout');
+        
+        if (isContractConditions) {
+          contractConditionsGroups.push(moduleGroup);
+        } else {
+          regularGroups.push(moduleGroup);
+        }
       }
     });
     
-    return groups;
+    return { regularGroups, contractConditionsGroups };
   }, [selectedModules, globalVariables]);
 
-  if (moduleVariableGroups.length === 0) {
+  if (moduleVariableGroups.regularGroups.length === 0 && moduleVariableGroups.contractConditionsGroups.length === 0) {
     return null;
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Vertragsdaten eingeben</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        
-        {/* Variables grouped by module */}
-        {moduleVariableGroups.map((group, groupIndex) => (
-          <div key={groupIndex} className="space-y-4">
-            <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-              {group.moduleTitle}
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {group.variables.map((variable) => (
-                <div key={variable.id} className="space-y-2">
-                  <Label htmlFor={variable.id}>
-                    {variable.label}
-                    {variable.globalVar?.is_required && <span className="text-destructive ml-1">*</span>}
-                  </Label>
-                  <Input
-                    id={variable.id}
-                    value={
-                      variableValues[variable.id] || 
-                      variable.globalVar?.default_value || 
-                      variable.value || 
-                      ''
-                    }
-                    onChange={(e) => onVariableChange(variable.id, e.target.value)}
-                    placeholder={
-                      variable.globalVar?.description || 
-                      `${variable.label} eingeben`
-                    }
-                    className=""
-                    required={variable.globalVar?.is_required}
-                  />
-                  {variable.globalVar?.description && (
-                    <p className="text-xs text-muted-foreground">{variable.globalVar.description}</p>
-                  )}
+    <div className="space-y-6">
+      {/* Regular Customer Data */}
+      {moduleVariableGroups.regularGroups.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Kundendaten eingeben</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {moduleVariableGroups.regularGroups.map((group, groupIndex) => (
+              <div key={groupIndex} className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                  {group.moduleTitle}
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {group.variables.map((variable) => (
+                    <div key={variable.id} className="space-y-2">
+                      <Label htmlFor={variable.id}>
+                        {variable.label}
+                        {variable.globalVar?.is_required && <span className="text-destructive ml-1">*</span>}
+                      </Label>
+                      <Input
+                        id={variable.id}
+                        value={
+                          variableValues[variable.id] || 
+                          variable.globalVar?.default_value || 
+                          variable.value || 
+                          ''
+                        }
+                        onChange={(e) => onVariableChange(variable.id, e.target.value)}
+                        placeholder={
+                          variable.globalVar?.description || 
+                          `${variable.label} eingeben`
+                        }
+                        required={variable.globalVar?.is_required}
+                      />
+                      {variable.globalVar?.description && (
+                        <p className="text-xs text-muted-foreground">{variable.globalVar.description}</p>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Contract Conditions */}
+      {moduleVariableGroups.contractConditionsGroups.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Vertragskonditionen</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {moduleVariableGroups.contractConditionsGroups.map((group, groupIndex) => (
+              <div key={groupIndex} className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                  {group.moduleTitle}
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {group.variables.map((variable) => (
+                    <div key={variable.id} className="space-y-2">
+                      <Label htmlFor={variable.id}>
+                        {variable.label}
+                        {variable.globalVar?.is_required && <span className="text-destructive ml-1">*</span>}
+                      </Label>
+                      <Input
+                        id={variable.id}
+                        value={
+                          variableValues[variable.id] || 
+                          variable.globalVar?.default_value || 
+                          variable.value || 
+                          ''
+                        }
+                        onChange={(e) => onVariableChange(variable.id, e.target.value)}
+                        placeholder={
+                          variable.globalVar?.description || 
+                          `${variable.label} eingeben`
+                        }
+                        required={variable.globalVar?.is_required}
+                      />
+                      {variable.globalVar?.description && (
+                        <p className="text-xs text-muted-foreground">{variable.globalVar.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
