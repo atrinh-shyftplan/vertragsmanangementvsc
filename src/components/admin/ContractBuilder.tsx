@@ -141,20 +141,22 @@ export function ContractBuilder({
   const processContent = (content: string, moduleVariables: any[] = []) => {
     let processedContent = content;
     
-    // Replace global variables
-    globalVariables.forEach(variable => {
-      const value = variableValues[variable.key] || variable.default_value || `[${variable.name_de}]`;
-      const regex = new RegExp(`{{${variable.key}}}`, 'g');
-      processedContent = processedContent.replace(regex, value);
+    // Replace global variables with highlighted spans
+    globalVariables.forEach((variable) => {
+      const variableName = variable.key;
+      const value = variableValues[variableName] || variableName;
+      const regex = new RegExp(`{{${variableName}}}`, 'g');
+      processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 border-2 border-yellow-400 px-1 rounded">${value}</span>`);
     });
-
-    // Replace module-specific variables
-    moduleVariables.forEach((variable: any) => {
-      const value = variableValues[variable.id] || variable.value || `[${variable.label}]`;
-      const regex = new RegExp(`{{${variable.id}}}`, 'g');
-      processedContent = processedContent.replace(regex, value.toString());
+    
+    // Replace module-specific variables with highlighted spans
+    moduleVariables.forEach((variable) => {
+      const variableName = variable.name;
+      const value = variableValues[variableName] || variableName;
+      const regex = new RegExp(`{{${variableName}}}`, 'g');
+      processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 border-2 border-yellow-400 px-1 rounded">${value}</span>`);
     });
-
+    
     return processedContent;
   };
 
