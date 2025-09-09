@@ -584,12 +584,12 @@ export function ContractBuilder({
                       if (hasGermanContent && hasEnglishContent) {
                         preview += `<div class="grid grid-cols-2 gap-0 relative">`;
                         
-                        // German column
-                        preview += `<div class="pr-6 space-y-4">`;
+                        // German column with aligned baseline
+                        preview += `<div class="pr-6" style="display: flex; flex-direction: column;">`;
                         if (!isHeaderModule) {
-                          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
+                          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4" style="min-height: 2em; display: flex; align-items: baseline;">${module.title_de}</h3>`;
                         }
-                        preview += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
+                        preview += `<div class="text-sm leading-relaxed" style="flex: 1;">${processContent(module.content_de, moduleVariables)}</div>`;
                         preview += `</div>`;
                         
                         // Gray vertical divider line
@@ -597,12 +597,12 @@ export function ContractBuilder({
                           preview += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
                         }
                         
-                        // English column
-                        preview += `<div class="pl-6 space-y-4">`;
+                        // English column with aligned baseline
+                        preview += `<div class="pl-6" style="display: flex; flex-direction: column;">`;
                         if (!isHeaderModule) {
-                          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
+                          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4" style="min-height: 2em; display: flex; align-items: baseline;">${module.title_en || module.title_de}</h3>`;
                         }
-                        preview += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
+                        preview += `<div class="text-sm leading-relaxed" style="flex: 1;">${processContent(module.content_en, moduleVariables)}</div>`;
                         preview += `</div>`;
                         
                         preview += `</div>`;
