@@ -20,11 +20,12 @@ interface ContractModuleModalProps {
   contractModule?: ContractModule | null;
   contractCategories: ContractCategory[];
   globalVariables?: Array<{key: string; name_de: string; description?: string}>;
+  availableProductTags?: string[];
 }
 
 type ContractCategory = Database['public']['Tables']['contract_categories']['Row'];
 
-export function ContractModuleModal({ open, onOpenChange, onSave, contractModule, contractCategories, globalVariables = [] }: ContractModuleModalProps) {
+export function ContractModuleModal({ open, onOpenChange, onSave, contractModule, contractCategories, globalVariables = [], availableProductTags = ['core', 'shyftplanner', 'shyftskills'] }: ContractModuleModalProps) {
   const [formData, setFormData] = useState<ContractModuleInsert>({
     key: '',
     title_de: '',
@@ -191,7 +192,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
               <div className="text-sm text-muted-foreground mb-2">
                 Wählen Sie die Produkte aus, für die dieses Modul relevant ist:
               </div>
-              {['core', 'shyftplanner', 'shyftskills'].map((tag) => (
+              {availableProductTags.map((tag) => (
                 <div key={tag} className="flex items-center space-x-2">
                   <Checkbox
                     id={`product-${tag}`}
@@ -212,8 +213,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
                     }}
                   />
                   <Label htmlFor={`product-${tag}`} className="text-sm">
-                    {tag === 'core' ? 'Immer enthalten (Core)' : 
-                     tag === 'shyftplanner' ? 'shyftplanner' : 'shyftskills'}
+                    {tag === 'core' ? 'Immer enthalten (Core)' : tag}
                   </Label>
                 </div>
               ))}

@@ -122,17 +122,26 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     return processedContent;
   };
 
-  const renderPreview = () => {
-    if (selectedModules.length === 0) {
-      return '<p class="text-gray-500">Keine Module ausgewählt</p>';
-    }
-
+  // Generate contract preview with variable substitution
+  const generatePreview = () => {
     let preview = '';
     let annexCounter = 1;
     
-    selectedModules
-      .sort((a, b) => a.order - b.order)
-      .forEach((selectedModule) => {
+    // Filter modules based on selected products first, then sort
+    const filteredSelectedModules = selectedModules
+      .filter(selectedModule => {
+        const module = contractModules.find(m => m.key === selectedModule.moduleKey);
+        if (!module) return false;
+        
+        // Core modules are always included
+        if (module.product_tags?.includes('core')) return true;
+        
+        // Check if any of the selected products match the module's product tags
+        return selectedProducts.some(product => module.product_tags?.includes(product));
+      })
+      .sort((a, b) => a.order - b.order);
+    
+    filteredSelectedModules.forEach((selectedModule) => {
         const module = contractModules.find(m => m.key === selectedModule.moduleKey);
         if (module) {
           const moduleVariables = Array.isArray(module.variables) 
@@ -678,7 +687,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                       font-weight: bold !important;
                     }
                   </style>
-                  ${renderPreview()}
+                  ${generatePreview()}
                   ` 
                 }}
               />

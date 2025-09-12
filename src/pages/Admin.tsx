@@ -9,6 +9,7 @@ import { ContractCategoryModal } from '@/components/admin/ContractCategoryModal'
 import { GlobalVariableModal } from '@/components/admin/GlobalVariableModal';
 import { ContractCompositionManager } from '@/components/admin/ContractCompositionManager';
 import { TemplateBuilder } from '@/components/admin/TemplateBuilder';
+import { ProductTagManager } from '@/components/admin/ProductTagManager';
 import { ContractBuilder } from '@/components/admin/ContractBuilder';
 import { Plus, Edit2, Trash2, Copy, Settings, Database, FileText, Blocks, Variable, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -107,7 +108,7 @@ export default function Admin() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="types" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Vertragstypen
@@ -131,6 +132,10 @@ export default function Admin() {
           <TabsTrigger value="composition" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
             Template-Editor
+          </TabsTrigger>
+          <TabsTrigger value="products" className="flex items-center gap-2">
+            <Tag className="h-4 w-4" />
+            Product-Tags
           </TabsTrigger>
         </TabsList>
 
@@ -502,6 +507,10 @@ export default function Admin() {
         contractModule={selectedContractModule}
         contractCategories={contractCategories}
         globalVariables={globalVariables}
+        availableProductTags={(() => {
+          const stored = localStorage.getItem('productTags');
+          return stored ? JSON.parse(stored) : ['core', 'shyftplanner', 'shyftskills'];
+        })()}
       />
 
       <ContractCategoryModal
@@ -531,6 +540,32 @@ export default function Admin() {
         }}
         globalVariable={selectedGlobalVariable}
       />
+
+      {/* Product-Tags Tab hinzufügen */}
+      {activeTab === 'products' && (
+        <ProductTagManager 
+          productTags={(() => {
+            const stored = localStorage.getItem('productTags');
+            const storedTags = stored ? JSON.parse(stored) : [];
+            // Merge with existing tags from modules
+            const existingProductTags = Array.from(new Set(
+              contractModules.flatMap(module => module.product_tags || [])
+            ));
+            const allTags = Array.from(new Set([...storedTags, ...existingProductTags]));
+            // Ensure system tags are always present
+            const systemTags = ['core', 'shyftplanner', 'shyftskills'];
+            systemTags.forEach(tag => {
+              if (!allTags.includes(tag)) {
+                allTags.push(tag);
+              }
+            });
+            return allTags.sort();
+          })()}
+          onProductTagsChange={(newTags: string[]) => {
+            localStorage.setItem('productTags', JSON.stringify(newTags));
+          }}
+        />
+      )}
     </div>
   );
 }
