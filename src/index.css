@@ -199,116 +199,31 @@
     color: hsl(var(--foreground)) !important;
   }
 
+  /* Standard numbered lists - simplified with native browser behavior */
   .prose-ordered-list {
     @apply pl-6 mb-4;
-    list-style: none;
-    counter-reset: item;
+    list-style-type: decimal !important;
+    padding-left: 1.5em !important;
   }
 
-  .prose-ordered-list > li {
-    @apply block mb-2;
-    counter-increment: item;
+  .prose-ordered-list li {
+    @apply text-foreground mb-2;
+    display: list-item !important;
     padding-left: 0.25rem;
+    list-style-type: inherit !important;
   }
 
-  /* Default numbering: 1. 2. 3. */
-  .prose-ordered-list:not(.list-style-decimal-paren):not(.list-style-decimal-dot) > li::before {
-    content: counter(item) ".";
-    @apply font-medium mr-2;
+  .prose-ordered-list li::marker {
+    color: hsl(var(--foreground)) !important;
   }
 
-  /* Parentheses numbering: 1) 2) 3) */
-  .prose-ordered-list.list-style-decimal-paren > li::before {
-    content: counter(item) ")";
-    @apply font-medium mr-2;
+  /* Nested ordered lists */
+  .prose-ordered-list .prose-ordered-list {
+    list-style-type: lower-alpha !important;
   }
 
-  /* Decimal dot numbering: 1.1. 1.2. etc */
-  .prose-ordered-list.list-style-decimal-dot {
-    counter-reset: level1;
-    list-style: none;
-    padding-left: 0;
-  }
-
-  .prose-ordered-list.list-style-decimal-dot > li {
-    counter-increment: level1;
-    position: relative;
-    padding-left: 2em;
-  }
-
-  .prose-ordered-list.list-style-decimal-dot > li::before {
-    content: counter(level1) ".";
-    @apply font-medium mr-2 absolute;
-    left: 0;
-    top: 0;
-  }
-
-  /* First level nested lists in decimal-dot style */
-  .prose-ordered-list.list-style-decimal-dot ol {
-    counter-reset: level2;
-    list-style: none;
-    padding-left: 0;
-    margin-left: 2em;
-  }
-
-  .prose-ordered-list.list-style-decimal-dot ol > li {
-    counter-increment: level2;
-    padding-left: 2.5em;
-  }
-
-  .prose-ordered-list.list-style-decimal-dot ol > li::before {
-    content: counter(level1) "." counter(level2) ".";
-    left: 0;
-  }
-
-  /* Second level nested lists in decimal-dot style */
-  .prose-ordered-list.list-style-decimal-dot ol ol {
-    counter-reset: level3;
-  }
-
-  .prose-ordered-list.list-style-decimal-dot ol ol > li {
-    counter-increment: level3;
-    padding-left: 3em;
-  }
-
-  .prose-ordered-list.list-style-decimal-dot ol ol > li::before {
-    content: counter(level1) "." counter(level2) "." counter(level3) ".";
-    left: 0;
-  }
-
-  /* Nested lists - Default style */
-  .prose-ordered-list:not(.list-style-decimal-paren):not(.list-style-decimal-dot) .prose-ordered-list {
-    @apply list-none;
-    counter-reset: subitem;
-  }
-
-  .prose-ordered-list:not(.list-style-decimal-paren):not(.list-style-decimal-dot) .prose-ordered-list > li::before {
-    content: counter(subitem, lower-alpha) ".";
-    counter-increment: subitem;
-  }
-
-  .prose-ordered-list:not(.list-style-decimal-paren):not(.list-style-decimal-dot) .prose-ordered-list .prose-ordered-list {
-    counter-reset: subsubitem;
-  }
-
-  .prose-ordered-list:not(.list-style-decimal-paren):not(.list-style-decimal-dot) .prose-ordered-list .prose-ordered-list > li::before {
-    content: counter(subsubitem, lower-roman) ".";
-    counter-increment: subsubitem;
-  }
-
-  /* Nested lists - Parentheses style */
-  .prose-ordered-list.list-style-decimal-paren .prose-ordered-list {
-    counter-reset: subitem;
-  }
-
-  .prose-ordered-list.list-style-decimal-paren .prose-ordered-list > li::before {
-    content: counter(subitem, lower-alpha) ")";
-    counter-increment: subitem;
-  }
-
-  .prose-ordered-list.list-style-decimal-paren .prose-ordered-list .prose-ordered-list > li::before {
-    content: counter(subsubitem, lower-roman) ")";
-    counter-increment: subsubitem;
+  .prose-ordered-list .prose-ordered-list .prose-ordered-list {
+    list-style-type: lower-roman !important;
   }
 
 
@@ -391,7 +306,7 @@
     text-align: justify !important;
   }
 
-  /* Paragraph indentation support using classes */
+  /* Paragraph indentation support using classes and inline styles */
   .ProseMirror p {
     display: block;
   }
@@ -403,6 +318,11 @@
   .ProseMirror p.indent-4 { margin-left: 96px; }
   .ProseMirror p.indent-5 { margin-left: 120px; }
   .ProseMirror p.indent-6 { margin-left: 144px; }
+
+  /* Support for inline style indentation */
+  .ProseMirror p[style*="margin-left"] {
+    display: block !important;
+  }
 
   /* Default prose styling - left aligned, no justify */
   .prose {

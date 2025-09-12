@@ -7,10 +7,7 @@ import { ListKeymap } from '@tiptap/extension-list-keymap';
 import { TaskList } from '@tiptap/extension-task-list';
 import { TaskItem } from '@tiptap/extension-task-item';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bold, Italic, Underline, List, ListOrdered, Quote, CheckSquare, Indent, Outdent, AlignLeft, AlignCenter, AlignRight, AlignJustify, Variable, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -23,7 +20,6 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ content, onChange, placeholder, className, globalVariables = [] }: RichTextEditorProps) {
-  const [listStyle, setListStyle] = useState<'decimal' | 'decimal-paren' | 'decimal-dot'>('decimal');
   const [variablePopoverOpen, setVariablePopoverOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -42,7 +38,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
           keepMarks: true,
           keepAttributes: false,
           HTMLAttributes: {
-            class: `prose-ordered-list list-style-${listStyle}`,
+            class: 'prose-ordered-list',
           },
         },
         listItem: {
@@ -195,52 +191,11 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => {
-              // Reset counter and create new ordered list
-              editor.chain().focus().toggleOrderedList().run();
-              // Ensure proper counter reset for new lists
-              setTimeout(() => {
-                const allLists = editor.view.dom.querySelectorAll('ol.prose-ordered-list');
-                allLists.forEach((list: Element) => {
-                  if (!list.parentElement?.closest('ol.prose-ordered-list')) {
-                    // This is a top-level list, ensure counter reset
-                    (list as HTMLElement).style.counterReset = 'item';
-                  }
-                });
-              }, 10);
-            }}
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
             className={cn("h-8 w-8 p-0", editor.isActive('orderedList') && "bg-primary/20")}
           >
             <ListOrdered className="h-4 w-4" />
           </Button>
-          
-          <Select 
-            value={listStyle} 
-            onValueChange={(value: 'decimal' | 'decimal-paren' | 'decimal-dot') => {
-              setListStyle(value);
-              // Apply style to existing lists immediately
-              setTimeout(() => {
-                const allLists = editor.view.dom.querySelectorAll('ol');
-                allLists.forEach(list => {
-                  // Remove existing style classes
-                  list.classList.remove('list-style-decimal', 'list-style-decimal-paren', 'list-style-decimal-dot');
-                  // Add new style class
-                  list.classList.add('prose-ordered-list', `list-style-${value}`);
-                });
-                // Force editor to update
-                editor.commands.focus();
-              }, 10);
-            }}
-          >
-            <SelectTrigger className="h-8 w-16 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-popover border shadow-md z-50">
-              <SelectItem value="decimal">1. a. i.</SelectItem>
-              <SelectItem value="decimal-paren">1) a) i)</SelectItem>
-              <SelectItem value="decimal-dot">1.1. 1.2.</SelectItem>
-            </SelectContent>
-          </Select>
           
           <Button
             type="button"
@@ -255,7 +210,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
 
         <div className="w-px h-6 bg-border mx-1" />
 
-        {/* Indentation - Enhanced for paragraphs and lists */}
+        {/* Indentation */}
         <div className="flex items-center gap-1">
           <Button
             type="button"
@@ -265,26 +220,23 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
               if (editor.isActive('listItem')) {
                 editor.chain().focus().liftListItem('listItem').run();
               } else {
-                // General paragraph outdent using class-based indentation
+                // Simple paragraph outdent using margin-left style
                 const { from, to } = editor.state.selection;
-                const currentIndent = parseInt(editor.getAttributes('paragraph')['data-indent'] || '0');
-                const newIndent = Math.max(0, currentIndent - 1);
+                const currentStyle = editor.getAttributes('paragraph').style || '';
+                const currentMargin = parseInt(currentStyle.match(/margin-left:\s*(\d+)px/)?.[1] || '0');
+                const newMargin = Math.max(0, currentMargin - 24);
                 
-                if (newIndent === 0) {
-                  editor.chain().focus().setTextSelection({ from, to }).updateAttributes('paragraph', {
-                    'data-indent': null,
-                    'class': null
-                  }).run();
+                if (newMargin === 0) {
+                  editor.chain().focus().updateAttributes('paragraph', { style: null }).run();
                 } else {
-                  editor.chain().focus().setTextSelection({ from, to }).updateAttributes('paragraph', {
-                    'data-indent': newIndent.toString(),
-                    'class': `indent-${newIndent}`
+                  editor.chain().focus().updateAttributes('paragraph', { 
+                    style: `margin-left: ${newMargin}px` 
                   }).run();
                 }
               }
             }}
             className="h-8 w-8 p-0"
-            title="Ausrücken (auch für normale Absätze)"
+            title="Ausrücken"
           >
             <Outdent className="h-4 w-4" />
           </Button>
@@ -296,19 +248,18 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
               if (editor.isActive('listItem')) {
                 editor.chain().focus().sinkListItem('listItem').run();
               } else {
-                // General paragraph indent using class-based indentation
-                const { from, to } = editor.state.selection;
-                const currentIndent = parseInt(editor.getAttributes('paragraph')['data-indent'] || '0');
-                const newIndent = currentIndent + 1;
+                // Simple paragraph indent using margin-left style
+                const currentStyle = editor.getAttributes('paragraph').style || '';
+                const currentMargin = parseInt(currentStyle.match(/margin-left:\s*(\d+)px/)?.[1] || '0');
+                const newMargin = currentMargin + 24;
                 
-                editor.chain().focus().setTextSelection({ from, to }).updateAttributes('paragraph', {
-                  'data-indent': newIndent.toString(),
-                  'class': `indent-${newIndent}`
+                editor.chain().focus().updateAttributes('paragraph', { 
+                  style: `margin-left: ${newMargin}px` 
                 }).run();
               }
             }}
             className="h-8 w-8 p-0"
-            title="Einrücken (auch für normale Absätze)"
+            title="Einrücken"
           >
             <Indent className="h-4 w-4" />
           </Button>
