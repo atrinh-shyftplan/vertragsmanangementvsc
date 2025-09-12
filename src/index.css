@@ -149,14 +149,15 @@
   /* Standard bullet lists - always visible black bullets */
   .prose-bullet-list,
   .prose ul {
-    @apply list-disc pl-6 mb-4 space-y-1;
+    @apply list-disc pl-6 mb-4;
     list-style-type: disc !important;
   }
 
   .prose-bullet-list li,
   .prose ul li {
-    @apply text-foreground;
+    @apply text-foreground mb-2;
     display: list-item !important;
+    padding-left: 0.25rem;
   }
 
   .prose-bullet-list li::marker,
@@ -167,13 +168,14 @@
 
   /* Standard numbered lists - always visible numbers */
   .prose ol:not(.prose-ordered-list) {
-    @apply list-decimal pl-6 mb-4 space-y-1;
+    @apply list-decimal pl-6 mb-4;
     list-style-type: decimal !important;
   }
 
   .prose ol:not(.prose-ordered-list) li {
-    @apply text-foreground;
+    @apply text-foreground mb-2;
     display: list-item !important;
+    padding-left: 0.25rem;
   }
 
   .prose ol:not(.prose-ordered-list) li::marker {
@@ -198,14 +200,15 @@
   }
 
   .prose-ordered-list {
-    @apply pl-6 mb-4 space-y-1;
+    @apply pl-6 mb-4;
     list-style: none;
     counter-reset: item;
   }
 
   .prose-ordered-list > li {
-    @apply block;
+    @apply block mb-2;
     counter-increment: item;
+    padding-left: 0.25rem;
   }
 
   /* Default numbering: 1. 2. 3. */
@@ -388,13 +391,18 @@
     text-align: justify !important;
   }
 
-  /* Paragraph indentation support */
+  /* Paragraph indentation support - improved */
   .prose p[style*="margin-left"] {
-    margin-left: var(--margin-left, 0) !important;
+    display: block !important;
   }
 
   .ProseMirror p[style*="margin-left"] {
-    margin-left: var(--margin-left, 0) !important;
+    display: block !important;
+  }
+
+  /* Support for inline style margin-left */
+  .ProseMirror p {
+    display: block;
   }
 
   /* Default prose styling - left aligned, no justify */

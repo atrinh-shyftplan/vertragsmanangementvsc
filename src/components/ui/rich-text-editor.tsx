@@ -195,7 +195,20 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            onClick={() => {
+              // Reset counter and create new ordered list
+              editor.chain().focus().toggleOrderedList().run();
+              // Ensure proper counter reset for new lists
+              setTimeout(() => {
+                const allLists = editor.view.dom.querySelectorAll('ol.prose-ordered-list');
+                allLists.forEach((list: Element) => {
+                  if (!list.parentElement?.closest('ol.prose-ordered-list')) {
+                    // This is a top-level list, ensure counter reset
+                    (list as HTMLElement).style.counterReset = 'item';
+                  }
+                });
+              }, 10);
+            }}
             className={cn("h-8 w-8 p-0", editor.isActive('orderedList') && "bg-primary/20")}
           >
             <ListOrdered className="h-4 w-4" />
@@ -252,12 +265,13 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
               if (editor.isActive('listItem')) {
                 editor.chain().focus().liftListItem('listItem').run();
               } else {
-                // General paragraph outdent
+                // General paragraph outdent with proper styling
                 const { from, to } = editor.state.selection;
-                const currentMargin = editor.getAttributes('paragraph').marginLeft || 0;
+                const currentStyle = editor.getAttributes('paragraph').style || '';
+                const currentMargin = parseInt(currentStyle.match(/margin-left:\s*(\d+)px/)?.[1] || '0');
                 const newMargin = Math.max(0, currentMargin - 24);
                 editor.chain().focus().setTextSelection({ from, to }).updateAttributes('paragraph', {
-                  marginLeft: newMargin
+                  style: newMargin > 0 ? `margin-left: ${newMargin}px; padding-left: 0px;` : ''
                 }).run();
               }
             }}
@@ -274,12 +288,10 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
               if (editor.isActive('listItem')) {
                 editor.chain().focus().sinkListItem('listItem').run();
               } else {
-                // General paragraph indent
+                // General paragraph indent with proper styling
                 const { from, to } = editor.state.selection;
-                const currentMargin = editor.getAttributes('paragraph').marginLeft || 0;
-                const newMargin = currentMargin + 24;
                 editor.chain().focus().setTextSelection({ from, to }).updateAttributes('paragraph', {
-                  marginLeft: newMargin
+                  style: `margin-left: 24px; padding-left: 0px;`
                 }).run();
               }
             }}
