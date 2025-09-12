@@ -391,19 +391,18 @@
     text-align: justify !important;
   }
 
-  /* Paragraph indentation support - improved */
-  .prose p[style*="margin-left"] {
-    display: block !important;
-  }
-
-  .ProseMirror p[style*="margin-left"] {
-    display: block !important;
-  }
-
-  /* Support for inline style margin-left */
+  /* Paragraph indentation support using classes */
   .ProseMirror p {
     display: block;
   }
+
+  /* Indentation classes for paragraphs */
+  .ProseMirror p.indent-1 { margin-left: 24px; }
+  .ProseMirror p.indent-2 { margin-left: 48px; }
+  .ProseMirror p.indent-3 { margin-left: 72px; }
+  .ProseMirror p.indent-4 { margin-left: 96px; }
+  .ProseMirror p.indent-5 { margin-left: 120px; }
+  .ProseMirror p.indent-6 { margin-left: 144px; }
 
   /* Default prose styling - left aligned, no justify */
   .prose {

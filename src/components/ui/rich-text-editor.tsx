@@ -265,14 +265,22 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
               if (editor.isActive('listItem')) {
                 editor.chain().focus().liftListItem('listItem').run();
               } else {
-                // General paragraph outdent with proper styling
+                // General paragraph outdent using class-based indentation
                 const { from, to } = editor.state.selection;
-                const currentStyle = editor.getAttributes('paragraph').style || '';
-                const currentMargin = parseInt(currentStyle.match(/margin-left:\s*(\d+)px/)?.[1] || '0');
-                const newMargin = Math.max(0, currentMargin - 24);
-                editor.chain().focus().setTextSelection({ from, to }).updateAttributes('paragraph', {
-                  style: newMargin > 0 ? `margin-left: ${newMargin}px; padding-left: 0px;` : ''
-                }).run();
+                const currentIndent = parseInt(editor.getAttributes('paragraph')['data-indent'] || '0');
+                const newIndent = Math.max(0, currentIndent - 1);
+                
+                if (newIndent === 0) {
+                  editor.chain().focus().setTextSelection({ from, to }).updateAttributes('paragraph', {
+                    'data-indent': null,
+                    'class': null
+                  }).run();
+                } else {
+                  editor.chain().focus().setTextSelection({ from, to }).updateAttributes('paragraph', {
+                    'data-indent': newIndent.toString(),
+                    'class': `indent-${newIndent}`
+                  }).run();
+                }
               }
             }}
             className="h-8 w-8 p-0"
@@ -288,10 +296,14 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
               if (editor.isActive('listItem')) {
                 editor.chain().focus().sinkListItem('listItem').run();
               } else {
-                // General paragraph indent with proper styling
+                // General paragraph indent using class-based indentation
                 const { from, to } = editor.state.selection;
+                const currentIndent = parseInt(editor.getAttributes('paragraph')['data-indent'] || '0');
+                const newIndent = currentIndent + 1;
+                
                 editor.chain().focus().setTextSelection({ from, to }).updateAttributes('paragraph', {
-                  style: `margin-left: 24px; padding-left: 0px;`
+                  'data-indent': newIndent.toString(),
+                  'class': `indent-${newIndent}`
                 }).run();
               }
             }}
