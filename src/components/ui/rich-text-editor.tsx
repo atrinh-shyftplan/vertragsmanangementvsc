@@ -242,15 +242,27 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
 
         <div className="w-px h-6 bg-border mx-1" />
 
-        {/* Indentation */}
+        {/* Indentation - Enhanced for paragraphs and lists */}
         <div className="flex items-center gap-1">
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => editor.chain().focus().liftListItem('listItem').run()}
-            disabled={!editor.can().liftListItem('listItem')}
+            onClick={() => {
+              if (editor.isActive('listItem')) {
+                editor.chain().focus().liftListItem('listItem').run();
+              } else {
+                // General paragraph outdent
+                const { from, to } = editor.state.selection;
+                const currentMargin = editor.getAttributes('paragraph').marginLeft || 0;
+                const newMargin = Math.max(0, currentMargin - 24);
+                editor.chain().focus().setTextSelection({ from, to }).updateAttributes('paragraph', {
+                  marginLeft: newMargin
+                }).run();
+              }
+            }}
             className="h-8 w-8 p-0"
+            title="Ausrücken (auch für normale Absätze)"
           >
             <Outdent className="h-4 w-4" />
           </Button>
@@ -258,9 +270,21 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => editor.chain().focus().sinkListItem('listItem').run()}
-            disabled={!editor.can().sinkListItem('listItem')}
+            onClick={() => {
+              if (editor.isActive('listItem')) {
+                editor.chain().focus().sinkListItem('listItem').run();
+              } else {
+                // General paragraph indent
+                const { from, to } = editor.state.selection;
+                const currentMargin = editor.getAttributes('paragraph').marginLeft || 0;
+                const newMargin = currentMargin + 24;
+                editor.chain().focus().setTextSelection({ from, to }).updateAttributes('paragraph', {
+                  marginLeft: newMargin
+                }).run();
+              }
+            }}
             className="h-8 w-8 p-0"
+            title="Einrücken (auch für normale Absätze)"
           >
             <Indent className="h-4 w-4" />
           </Button>

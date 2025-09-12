@@ -146,70 +146,54 @@
     @apply text-lg;
   }
 
-  .prose-bullet-list {
-    @apply list-disc pl-6 mb-4 space-y-1;
-    color: hsl(var(--foreground)) !important;
-  }
-
-  .prose-bullet-list li {
-    @apply text-foreground;
-    color: hsl(var(--foreground)) !important;
-  }
-
-  .prose-bullet-list li::marker {
-    color: hsl(var(--foreground)) !important;
-  }
-
-  /* Additional bullet list styles for better visibility */
+  /* Standard bullet lists - always visible black bullets */
+  .prose-bullet-list,
   .prose ul {
     @apply list-disc pl-6 mb-4 space-y-1;
-    color: hsl(var(--foreground)) !important;
+    list-style-type: disc !important;
   }
 
+  .prose-bullet-list li,
   .prose ul li {
-    color: hsl(var(--foreground)) !important;
+    @apply text-foreground;
+    display: list-item !important;
   }
 
+  .prose-bullet-list li::marker,
   .prose ul li::marker {
     color: hsl(var(--foreground)) !important;
+    content: "•" !important;
   }
 
-  /* Ensure ordered lists also have proper colors */
-  .prose ol {
+  /* Standard numbered lists - always visible numbers */
+  .prose ol:not(.prose-ordered-list) {
+    @apply list-decimal pl-6 mb-4 space-y-1;
+    list-style-type: decimal !important;
+  }
+
+  .prose ol:not(.prose-ordered-list) li {
+    @apply text-foreground;
+    display: list-item !important;
+  }
+
+  .prose ol:not(.prose-ordered-list) li::marker {
     color: hsl(var(--foreground)) !important;
   }
 
-  .prose ol li {
-    color: hsl(var(--foreground)) !important;
+  /* Global list overrides for consistency */
+  .ProseMirror ul {
+    list-style-type: disc !important;
   }
 
-  /* AGGRESSIVE OVERRIDE FOR ALL LISTS */
-  ul, ol {
-    color: hsl(var(--foreground)) !important;
-  }
-  
-  ul li, ol li {
-    color: hsl(var(--foreground)) !important;
-  }
-  
-  ul li::marker, ol li::marker {
-    color: hsl(var(--foreground)) !important;
-  }
-  
-  /* Override TipTap and Prose styles */
   .ProseMirror ul li::marker {
     color: hsl(var(--foreground)) !important;
   }
-  
-  .ProseMirror ol li::marker {
-    color: hsl(var(--foreground)) !important;
+
+  .ProseMirror ol:not(.prose-ordered-list) {
+    list-style-type: decimal !important;
   }
-  
-  /* Force all list content to use theme colors */
-  .prose-bullet-list li::marker,
-  .prose-ordered-list li::before,
-  ul.prose-bullet-list li::marker,
-  ol.prose-ordered-list li::before {
+
+  .ProseMirror ol:not(.prose-ordered-list) li::marker {
     color: hsl(var(--foreground)) !important;
   }
 
@@ -402,6 +386,15 @@
 
   .prose [style*="text-align: justify"] {
     text-align: justify !important;
+  }
+
+  /* Paragraph indentation support */
+  .prose p[style*="margin-left"] {
+    margin-left: var(--margin-left, 0) !important;
+  }
+
+  .ProseMirror p[style*="margin-left"] {
+    margin-left: var(--margin-left, 0) !important;
   }
 
   /* Default prose styling - left aligned, no justify */
