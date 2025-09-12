@@ -324,72 +324,102 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       <div className="grid gap-6 lg:grid-cols-5">
         {/* Input Fields - smaller width */}
         <div className="space-y-6 lg:col-span-2">
-          {/* Basic Contract Fields */}
+          {/* Basic Contract Fields with better structure */}
           <Card>
             <CardHeader>
               <CardTitle>Vertragsdaten</CardTitle>
               <CardDescription>
-                Grundlegende Vertragsinformationen - kompakt und übersichtlich
+                Grundlegende Vertragsinformationen
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Titel <span className="text-destructive">*</span></Label>
-                <Input
-                  id="title"
-                  value={variableValues.title || ''}
-                  onChange={(e) => setVariableValues(prev => ({
-                    ...prev,
-                    title: e.target.value
-                  }))}
-                  placeholder="Vertragstitel"
-                  required
-                />
+            <CardContent className="space-y-6">
+              {/* Grunddaten Section */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide border-b pb-2">
+                  Grunddaten
+                </h4>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Titel <span className="text-destructive">*</span></Label>
+                    <Input
+                      id="title"
+                      value={variableValues.title || ''}
+                      onChange={(e) => setVariableValues(prev => ({
+                        ...prev,
+                        title: e.target.value
+                      }))}
+                      placeholder="Vertragstitel"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="start_date">Startdatum <span className="text-destructive">*</span></Label>
+                    <Input
+                      id="start_date"
+                      type="date"
+                      value={variableValues.start_date || ''}
+                      onChange={(e) => setVariableValues(prev => ({
+                        ...prev,
+                        start_date: e.target.value
+                      }))}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="gueltig_bis">Angebot gültig bis</Label>
+                    <Input
+                      id="gueltig_bis"
+                      type="date"
+                      value={variableValues.gueltig_bis || ''}
+                      onChange={(e) => setVariableValues(prev => ({
+                        ...prev,
+                        gueltig_bis: e.target.value
+                      }))}
+                      placeholder="Gültigkeitsdatum"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="start_date">Startdatum <span className="text-destructive">*</span></Label>
-                <Input
-                  id="start_date"
-                  type="date"
-                  value={variableValues.start_date || ''}
-                  onChange={(e) => setVariableValues(prev => ({
-                    ...prev,
-                    start_date: e.target.value
-                  }))}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="assigned_to">Zugewiesen an</Label>
-                <Input
-                  id="assigned_to"
-                  value={variableValues.assigned_to || ''}
-                  onChange={(e) => setVariableValues(prev => ({
-                    ...prev,
-                    assigned_to: e.target.value
-                  }))}
-                  placeholder="Name des Bearbeiters"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select 
-                  value={variableValues.status || 'draft'} 
-                  onValueChange={(value) => setVariableValues(prev => ({
-                    ...prev,
-                    status: value
-                  }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status auswählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Entwurf</SelectItem>
-                    <SelectItem value="ready_for_review">Bereit zur Prüfung</SelectItem>
-                    <SelectItem value="approved">Genehmigt</SelectItem>
-                    <SelectItem value="active">Aktiv</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              {/* Zuständigkeit Section */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide border-b pb-2">
+                  Zuständigkeit
+                </h4>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="assigned_to">Zugewiesen an</Label>
+                    <Input
+                      id="assigned_to"
+                      value={variableValues.assigned_to || ''}
+                      onChange={(e) => setVariableValues(prev => ({
+                        ...prev,
+                        assigned_to: e.target.value
+                      }))}
+                      placeholder="Name des Bearbeiters"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select 
+                      value={variableValues.status || 'draft'} 
+                      onValueChange={(value) => setVariableValues(prev => ({
+                        ...prev,
+                        status: value
+                      }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Status auswählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">Entwurf</SelectItem>
+                        <SelectItem value="ready_for_review">Bereit zur Prüfung</SelectItem>
+                        <SelectItem value="approved">Genehmigt</SelectItem>
+                        <SelectItem value="active">Aktiv</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -440,6 +470,10 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                     }
                     .contract-preview div {
                       margin: 0.5em 0;
+                      white-space: pre-wrap;
+                    }
+                    .contract-preview * {
+                      white-space: pre-wrap;
                     }
                     .header-content table {
                       width: 100%;
