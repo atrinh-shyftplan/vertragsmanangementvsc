@@ -8,8 +8,9 @@ import { TaskList } from '@tiptap/extension-task-list';
 import { TaskItem } from '@tiptap/extension-task-item';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Bold, Italic, Underline, List, ListOrdered, Quote, CheckSquare, Indent, Outdent, AlignLeft, AlignCenter, AlignRight, AlignJustify, Variable, Search } from 'lucide-react';
+import { Bold, Italic, Underline, List, ListOrdered, Quote, CheckSquare, Indent as IndentIcon, Outdent as OutdentIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify, Variable, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { IndentExtension } from '@/lib/indent-extension';
 
 interface RichTextEditorProps {
   content: string;
@@ -60,6 +61,11 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
       TextStyle,
       TextAlign.configure({
         types: ['heading', 'paragraph'],
+      }),
+      IndentExtension.configure({
+        types: ['heading', 'paragraph', 'listItem'],
+        minLevel: 0,
+        maxLevel: 8,
       }),
       ListKeymap,
       TaskList.configure({
@@ -216,52 +222,21 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => {
-              if (editor.isActive('listItem')) {
-                editor.chain().focus().liftListItem('listItem').run();
-              } else {
-                // Simple paragraph outdent using margin-left style
-                const { from, to } = editor.state.selection;
-                const currentStyle = editor.getAttributes('paragraph').style || '';
-                const currentMargin = parseInt(currentStyle.match(/margin-left:\s*(\d+)px/)?.[1] || '0');
-                const newMargin = Math.max(0, currentMargin - 24);
-                
-                if (newMargin === 0) {
-                  editor.chain().focus().updateAttributes('paragraph', { style: null }).run();
-                } else {
-                  editor.chain().focus().updateAttributes('paragraph', { 
-                    style: `margin-left: ${newMargin}px` 
-                  }).run();
-                }
-              }
-            }}
+            onClick={() => editor.chain().focus().outdent().run()}
             className="h-8 w-8 p-0"
             title="Ausrücken"
           >
-            <Outdent className="h-4 w-4" />
+            <OutdentIcon className="h-4 w-4" />
           </Button>
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => {
-              if (editor.isActive('listItem')) {
-                editor.chain().focus().sinkListItem('listItem').run();
-              } else {
-                // Simple paragraph indent using margin-left style
-                const currentStyle = editor.getAttributes('paragraph').style || '';
-                const currentMargin = parseInt(currentStyle.match(/margin-left:\s*(\d+)px/)?.[1] || '0');
-                const newMargin = currentMargin + 24;
-                
-                editor.chain().focus().updateAttributes('paragraph', { 
-                  style: `margin-left: ${newMargin}px` 
-                }).run();
-              }
-            }}
+            onClick={() => editor.chain().focus().indent().run()}
             className="h-8 w-8 p-0"
             title="Einrücken"
           >
-            <Indent className="h-4 w-4" />
+            <IndentIcon className="h-4 w-4" />
           </Button>
         </div>
 
