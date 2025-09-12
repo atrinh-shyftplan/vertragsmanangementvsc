@@ -171,9 +171,15 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
   // Helper function to render individual modules
   const renderModule = (module: any, isAnnex: boolean, annexNumber: number) => {
-    const moduleVariables = Array.isArray(module.variables) 
-      ? module.variables 
-      : (module.variables ? JSON.parse(module.variables as string) : []) || [];
+    let moduleVariables = [];
+    try {
+      moduleVariables = Array.isArray(module.variables) 
+        ? module.variables 
+        : (module.variables && module.variables.trim() !== '' ? JSON.parse(module.variables as string) : []) || [];
+    } catch (error) {
+      console.error('Failed to parse module variables:', error);
+      moduleVariables = [];
+    }
     
     // Check if content exists (not empty or just whitespace)
     const hasGermanContent = (module.content_de || '').trim().length > 0;

@@ -6,11 +6,13 @@ import { TextAlign } from '@tiptap/extension-text-align';
 import { ListKeymap } from '@tiptap/extension-list-keymap';
 import { TaskList } from '@tiptap/extension-task-list';
 import { TaskItem } from '@tiptap/extension-task-item';
+import { Image } from '@tiptap/extension-image';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Bold, Italic, Underline, List, ListOrdered, Quote, CheckSquare, Indent as IndentIcon, Outdent as OutdentIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify, Variable, Search } from 'lucide-react';
+import { Bold, Italic, Underline, List, ListOrdered, Quote, CheckSquare, Indent as IndentIcon, Outdent as OutdentIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify, Variable, Search, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IndentExtension } from '@/lib/indent-extension';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RichTextEditorProps {
   content: string;
@@ -24,6 +26,51 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
   const [variablePopoverOpen, setVariablePopoverOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  // Image upload function
+  const uploadImage = async (file: File): Promise<string> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `contract-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('Anhang 5 Bilder')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from('Anhang 5 Bilder')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  };
+
+  // Handle image upload button click
+  const handleImageUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file && editor) {
+        try {
+          const imageUrl = await uploadImage(file);
+          editor.chain().focus().setImage({ src: imageUrl }).run();
+        } catch (error) {
+          console.error('Failed to upload image:', error);
+        }
+      }
+    };
+    input.click();
+  };
 
   const editor = useEditor({
     extensions: [
@@ -66,6 +113,11 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
         types: ['heading', 'paragraph', 'listItem'],
         minLevel: 0,
         maxLevel: 8,
+      }),
+      Image.configure({
+        HTMLAttributes: {
+          class: 'prose-image max-w-full h-auto rounded-lg',
+        },
       }),
       ListKeymap,
       TaskList.configure({
@@ -293,6 +345,20 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
           className={cn("h-8 w-8 p-0", editor.isActive('blockquote') && "bg-primary/20")}
         >
           <Quote className="h-4 w-4" />
+        </Button>
+
+        <div className="w-px h-6 bg-border mx-1" />
+
+        {/* Image Upload */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={handleImageUpload}
+          className="h-8 w-8 p-0"
+          title="Bild hochladen"
+        >
+          <ImageIcon className="h-4 w-4" />
         </Button>
 
         <div className="w-px h-6 bg-border mx-1" />
