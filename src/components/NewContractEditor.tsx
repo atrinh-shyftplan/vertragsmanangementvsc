@@ -69,6 +69,12 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 border-2 border-yellow-400 px-1 rounded">${value}</span>`);
     });
     
+    // Also process the gueltig_bis variable specifically
+    if (variableValues.gueltig_bis) {
+      const regex = new RegExp(`{{gueltig_bis}}`, 'g');
+      processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 border-2 border-yellow-400 px-1 rounded">${variableValues.gueltig_bis}</span>`);
+    }
+    
     // Replace module-specific variables with highlighted spans
     moduleVariables.forEach((variable) => {
       const variableName = (variable.name || variable.key);
