@@ -9,6 +9,7 @@ import { FileText, ArrowLeft, Save, X } from 'lucide-react';
 import { useAdminData } from '@/hooks/useAdminData';
 import { toast } from 'sonner';
 import { VariableInputRenderer } from '@/components/admin/VariableInputRenderer';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface SelectedModule {
   moduleKey: string;
@@ -32,6 +33,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const [selectedModules, setSelectedModules] = useState<SelectedModule[]>([]);
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
   const [showDetails, setShowDetails] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>(['core']);
 
   const handleTypeSelect = (typeKey: string) => {
     setSelectedType(typeKey);
@@ -40,23 +42,56 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     setSelectedModules([]);
     setVariableValues({});
     
-    // Get compositions for this type and set as selected modules
+    // Get compositions for this type
     const compositions = contractCompositions
       .filter(comp => comp.contract_type_key === typeKey)
       .sort((a, b) => a.sort_order - b.sort_order);
     
-    const modules = compositions.map(comp => ({
+    // Filter compositions based on selected products and set as selected modules
+    const filteredCompositions = compositions.filter(comp => {
+      const module = contractModules.find(m => m.key === comp.module_key);
+      if (!module || !module.is_active) return false;
+      
+      const moduleTags = module.product_tags || ['core'];
+      return moduleTags.some(tag => selectedProducts.includes(tag));
+    });
+    
+    const modules = filteredCompositions.map(comp => ({
       moduleKey: comp.module_key,
       order: comp.sort_order
     }));
     
     setSelectedModules(modules);
-    setShowDetails(true); // Show details immediately after type selection
+    setShowDetails(true);
     
     console.log('Selected type:', typeKey);
     console.log('Available compositions:', compositions);
-    console.log('Selected modules:', modules);
+    console.log('Filtered modules:', modules);
   };
+
+  // Update modules when product selection changes
+  useEffect(() => {
+    if (selectedType) {
+      const compositions = contractCompositions
+        .filter(comp => comp.contract_type_key === selectedType)
+        .sort((a, b) => a.sort_order - b.sort_order);
+      
+      const filteredCompositions = compositions.filter(comp => {
+        const module = contractModules.find(m => m.key === comp.module_key);
+        if (!module || !module.is_active) return false;
+        
+        const moduleTags = module.product_tags || ['core'];
+        return moduleTags.some(tag => selectedProducts.includes(tag));
+      });
+      
+      const modules = filteredCompositions.map(comp => ({
+        moduleKey: comp.module_key,
+        order: comp.sort_order
+      }));
+      
+      setSelectedModules(modules);
+    }
+  }, [selectedProducts, contractCompositions, contractModules, selectedType]);
 
   const processContent = (content: string, moduleVariables: any[] = []) => {
     let processedContent = content;
@@ -93,6 +128,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     }
 
     let preview = '';
+    let annexCounter = 1;
     
     selectedModules
       .sort((a, b) => a.order - b.order)
@@ -109,6 +145,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           
           // Special handling for Header Sales module - center it and override prose styles
           const isHeaderModule = module.key === 'Header Sales';
+          const isAnnex = module.category === 'anhang';
           
           if (isHeaderModule) {
             preview += `<div class="mb-8 not-prose flex justify-center">`;
@@ -124,7 +161,9 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             // German column
             preview += `<div class="pr-6 space-y-4">`;
             if (!isHeaderModule) {
-              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
+              const displayTitle = isAnnex ? `Anhang ${annexCounter}` : module.title_de;
+              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
+              if (isAnnex) annexCounter++;
             }
             preview += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
             preview += `</div>`;
@@ -137,7 +176,8 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             // English column
             preview += `<div class="pl-6 space-y-4">`;
             if (!isHeaderModule) {
-              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
+              const displayTitle = isAnnex ? `Annex ${annexCounter - 1}` : (module.title_en || module.title_de);
+              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
             }
             preview += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
             preview += `</div>`;
@@ -148,7 +188,9 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           else if (hasGermanContent && !hasEnglishContent) {
             preview += `<div class="space-y-4">`;
             if (!isHeaderModule) {
-              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
+              const displayTitle = isAnnex ? `Anhang ${annexCounter}` : module.title_de;
+              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
+              if (isAnnex) annexCounter++;
             }
             preview += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
             preview += `</div>`;
@@ -157,7 +199,9 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           else if (!hasGermanContent && hasEnglishContent) {
             preview += `<div class="space-y-4">`;
             if (!isHeaderModule) {
-              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
+              const displayTitle = isAnnex ? `Annex ${annexCounter}` : (module.title_en || module.title_de);
+              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
+              if (isAnnex) annexCounter++;
             }
             preview += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
             preview += `</div>`;
@@ -431,6 +475,37 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           </Card>
 
           {/* Module Variables using VariableInputRenderer */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Produktauswahl</CardTitle>
+              <CardDescription>
+                Wählen Sie die Produkte aus, für die dieser Vertrag erstellt werden soll
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {['shyftplanner', 'shyftskills'].map((product) => (
+                  <div key={product} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`product-${product}`}
+                      checked={selectedProducts.includes(product)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedProducts(prev => [...prev.filter(p => p !== product), product]);
+                        } else {
+                          setSelectedProducts(prev => prev.filter(p => p !== product));
+                        }
+                      }}
+                    />
+                    <Label htmlFor={`product-${product}`}>
+                      {product === 'shyftplanner' ? 'shyftplanner' : 'shyftskills'}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           <VariableInputRenderer
             selectedModules={selectedModules.map(sm => {
               const module = contractModules.find(m => m.key === sm.moduleKey);

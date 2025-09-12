@@ -96,6 +96,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           key: string
+          product_tags: string[] | null
           sort_order: number | null
           title_de: string
           title_en: string | null
@@ -111,6 +112,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           key: string
+          product_tags?: string[] | null
           sort_order?: number | null
           title_de: string
           title_en?: string | null
@@ -126,6 +128,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           key?: string
+          product_tags?: string[] | null
           sort_order?: number | null
           title_de?: string
           title_en?: string | null

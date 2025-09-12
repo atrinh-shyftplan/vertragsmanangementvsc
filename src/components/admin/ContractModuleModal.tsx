@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { Checkbox } from '@/components/ui/checkbox';
 import type { Database } from '@/integrations/supabase/types';
 
 type ContractModule = Database['public']['Tables']['contract_modules']['Row'];
@@ -32,7 +33,8 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
     content_en: '',
     category: 'general',
     is_active: true,
-    sort_order: 0
+    sort_order: 0,
+    product_tags: ['core']
   });
 
   useEffect(() => {
@@ -45,7 +47,8 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
         content_en: contractModule.content_en || '',
         category: contractModule.category || 'general',
         is_active: contractModule.is_active,
-        sort_order: contractModule.sort_order || 0
+        sort_order: contractModule.sort_order || 0,
+        product_tags: contractModule.product_tags || ['core']
       });
     } else {
       setFormData({
@@ -56,7 +59,8 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
         content_en: '',
         category: 'general',
         is_active: true,
-        sort_order: 0
+        sort_order: 0,
+        product_tags: ['core']
       });
     }
   }, [contractModule, open]);
@@ -177,6 +181,43 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
               onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
               className="col-span-3"
             />
+          </div>
+          
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label className="text-right pt-2">
+              Produkt-Tags
+            </Label>
+            <div className="col-span-3 space-y-2">
+              <div className="text-sm text-muted-foreground mb-2">
+                Wählen Sie die Produkte aus, für die dieses Modul relevant ist:
+              </div>
+              {['core', 'shyftplanner', 'shyftskills'].map((tag) => (
+                <div key={tag} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`product-${tag}`}
+                    checked={formData.product_tags?.includes(tag) || false}
+                    onCheckedChange={(checked) => {
+                      const currentTags = formData.product_tags || [];
+                      if (checked) {
+                        setFormData({ 
+                          ...formData, 
+                          product_tags: [...currentTags.filter(t => t !== tag), tag] 
+                        });
+                      } else {
+                        setFormData({ 
+                          ...formData, 
+                          product_tags: currentTags.filter(t => t !== tag) 
+                        });
+                      }
+                    }}
+                  />
+                  <Label htmlFor={`product-${tag}`} className="text-sm">
+                    {tag === 'core' ? 'Immer enthalten (Core)' : 
+                     tag === 'shyftplanner' ? 'shyftplanner' : 'shyftskills'}
+                  </Label>
+                </div>
+              ))}
+            </div>
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">
