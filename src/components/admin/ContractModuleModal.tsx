@@ -155,7 +155,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
           
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="category" className="text-right">
-              Kategorie
+              Tag
             </Label>
             <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
               <SelectTrigger className="col-span-3">

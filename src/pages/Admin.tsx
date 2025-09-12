@@ -119,7 +119,7 @@ export default function Admin() {
           </TabsTrigger>
           <TabsTrigger value="categories" className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
-            Kategorien
+            Tags
           </TabsTrigger>
           <TabsTrigger value="variables" className="flex items-center gap-2">
             <Variable className="h-4 w-4" />
@@ -295,9 +295,9 @@ export default function Admin() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Modul-Kategorien</CardTitle>
+                <CardTitle>Modul Tags</CardTitle>
                 <CardDescription>
-                  Verwalten Sie die Kategorien für Vertragsmodule. Kategorien helfen bei der Organisation und Strukturierung Ihrer Vertragsbausteine.
+                  Verwalten Sie die Tags für Vertragsmodule. Tags helfen bei der Organisation und Strukturierung Ihrer Vertragsbausteine.
                 </CardDescription>
               </div>
               <Button onClick={() => {
@@ -305,7 +305,7 @@ export default function Admin() {
                 setContractCategoryModalOpen(true);
               }}>
                 <Plus className="h-4 w-4 mr-2" />
-                Neue Kategorie
+                Neuer Tag
               </Button>
             </CardHeader>
             <CardContent>
@@ -354,12 +354,12 @@ export default function Admin() {
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Kategorie löschen</AlertDialogTitle>
+                                <AlertDialogTitle>Tag löschen</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Sind Sie sicher, dass Sie die Kategorie "{category.name_de}" löschen möchten?
+                                  Sind Sie sicher, dass Sie den Tag "{category.name_de}" löschen möchten?
                                   {moduleCount > 0 && (
                                     <span className="block mt-2 text-destructive">
-                                      Diese Kategorie kann nicht gelöscht werden, da sie noch {moduleCount} Module enthält.
+                                      Dieser Tag kann nicht gelöscht werden, da er noch {moduleCount} Module enthält.
                                     </span>
                                   )}
                                 </AlertDialogDescription>
