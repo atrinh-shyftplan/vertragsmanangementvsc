@@ -125,7 +125,6 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   // Generate contract preview with variable substitution
   const generatePreview = () => {
     let preview = '';
-    let annexCounter = 1;
     
     // Filter modules based on selected products first, then sort
     const filteredSelectedModules = selectedModules
@@ -141,89 +140,113 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       })
       .sort((a, b) => a.order - b.order);
     
+    // Separate regular modules from annexes and count annexes for proper numbering
+    const regularModules = [];
+    const annexModules = [];
+    
     filteredSelectedModules.forEach((selectedModule) => {
-        const module = contractModules.find(m => m.key === selectedModule.moduleKey);
-        if (module) {
-          const moduleVariables = Array.isArray(module.variables) 
-            ? module.variables 
-            : (module.variables ? JSON.parse(module.variables as string) : []) || [];
-          
-          // Check if content exists (not empty or just whitespace)
-          const hasGermanContent = (module.content_de || '').trim().length > 0;
-          const hasEnglishContent = (module.content_en || '').trim().length > 0;
-          
-          // Special handling for Header Sales module - center it and override prose styles
-          const isHeaderModule = module.key === 'Header Sales';
-          const isAnnex = module.category === 'anhang';
-          
-          if (isHeaderModule) {
-            preview += `<div class="mb-8 not-prose flex justify-center">`;
-            preview += `<div class="header-content" style="text-align: center; margin: 0 auto; max-width: 800px; padding: 20px; border: 2px solid #e5e7eb; border-radius: 8px; background-color: white;">`;
-          } else {
-            preview += `<div class="mb-8">`;
-          }
-          
-          // Case 1: Both German and English content - two-column layout
-          if (hasGermanContent && hasEnglishContent) {
-            preview += `<div class="grid grid-cols-2 gap-0 relative">`;
-            
-            // German column
-            preview += `<div class="pr-6 space-y-4">`;
-            if (!isHeaderModule) {
-              const displayTitle = isAnnex ? `Anhang ${annexCounter}` : module.title_de;
-              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
-              if (isAnnex) annexCounter++;
-            }
-            preview += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
-            preview += `</div>`;
-            
-            // Gray vertical divider line
-            if (!isHeaderModule) {
-              preview += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
-            }
-            
-            // English column
-            preview += `<div class="pl-6 space-y-4">`;
-            if (!isHeaderModule) {
-              const displayTitle = isAnnex ? `Annex ${annexCounter - 1}` : (module.title_en || module.title_de);
-              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
-            }
-            preview += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
-            preview += `</div>`;
-            
-            preview += `</div>`;
-          }
-          // Case 2: Only German content - single-column layout
-          else if (hasGermanContent && !hasEnglishContent) {
-            preview += `<div class="space-y-4">`;
-            if (!isHeaderModule) {
-              const displayTitle = isAnnex ? `Anhang ${annexCounter}` : module.title_de;
-              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
-              if (isAnnex) annexCounter++;
-            }
-            preview += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
-            preview += `</div>`;
-          }
-          // Case 3: Only English content - single-column layout
-          else if (!hasGermanContent && hasEnglishContent) {
-            preview += `<div class="space-y-4">`;
-            if (!isHeaderModule) {
-              const displayTitle = isAnnex ? `Annex ${annexCounter}` : (module.title_en || module.title_de);
-              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
-              if (isAnnex) annexCounter++;
-            }
-            preview += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
-            preview += `</div>`;
-          }
-          
-          if (isHeaderModule) {
-            preview += `</div>`; // Close centering wrapper
-          }
-          preview += `</div>`;
+      const module = contractModules.find(m => m.key === selectedModule.moduleKey);
+      if (module) {
+        if (module.category === 'anhang') {
+          annexModules.push({ selectedModule, module });
+        } else {
+          regularModules.push({ selectedModule, module });
         }
-      });
+      }
+    });
+    
+    // Process regular modules first
+    regularModules.forEach(({ selectedModule, module }) => {
+      preview += renderModule(module, false, 0);
+    });
+    
+    // Process annex modules with proper numbering
+    annexModules.forEach(({ selectedModule, module }, index) => {
+      const annexNumber = index + 1;
+      preview += renderModule(module, true, annexNumber);
+    });
     
     return preview || '<p class="text-gray-500">Keine Inhalte verfügbar</p>';
+  };
+
+  // Helper function to render individual modules
+  const renderModule = (module: any, isAnnex: boolean, annexNumber: number) => {
+    const moduleVariables = Array.isArray(module.variables) 
+      ? module.variables 
+      : (module.variables ? JSON.parse(module.variables as string) : []) || [];
+    
+    // Check if content exists (not empty or just whitespace)
+    const hasGermanContent = (module.content_de || '').trim().length > 0;
+    const hasEnglishContent = (module.content_en || '').trim().length > 0;
+    
+    // Special handling for Header Sales module - center it and override prose styles
+    const isHeaderModule = module.key === 'Header Sales';
+    
+    let moduleHtml = '';
+    
+    if (isHeaderModule) {
+      moduleHtml += `<div class="mb-8 not-prose flex justify-center">`;
+      moduleHtml += `<div class="header-content" style="text-align: center; margin: 0 auto; max-width: 800px; padding: 20px; border: 2px solid #e5e7eb; border-radius: 8px; background-color: white;">`;
+    } else {
+      moduleHtml += `<div class="mb-8">`;
+    }
+    
+    // Case 1: Both German and English content - two-column layout
+    if (hasGermanContent && hasEnglishContent) {
+      moduleHtml += `<div class="grid grid-cols-2 gap-0 relative">`;
+      
+      // German column
+      moduleHtml += `<div class="pr-6 space-y-4">`;
+      if (!isHeaderModule) {
+        const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
+        moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
+      }
+      moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
+      moduleHtml += `</div>`;
+      
+      // Gray vertical divider line
+      if (!isHeaderModule) {
+        moduleHtml += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
+      }
+      
+      // English column
+      moduleHtml += `<div class="pl-6 space-y-4">`;
+      if (!isHeaderModule) {
+        const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
+        moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
+      }
+      moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
+      moduleHtml += `</div>`;
+      
+      moduleHtml += `</div>`;
+    }
+    // Case 2: Only German content - single-column layout
+    else if (hasGermanContent && !hasEnglishContent) {
+      moduleHtml += `<div class="space-y-4">`;
+      if (!isHeaderModule) {
+        const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
+        moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
+      }
+      moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
+      moduleHtml += `</div>`;
+    }
+    // Case 3: Only English content - single-column layout
+    else if (!hasGermanContent && hasEnglishContent) {
+      moduleHtml += `<div class="space-y-4">`;
+      if (!isHeaderModule) {
+        const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
+        moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
+      }
+      moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
+      moduleHtml += `</div>`;
+    }
+    
+    if (isHeaderModule) {
+      moduleHtml += `</div>`; // Close centering wrapper
+    }
+    moduleHtml += `</div>`;
+    
+    return moduleHtml;
   };
 
   const saveContract = async () => {
