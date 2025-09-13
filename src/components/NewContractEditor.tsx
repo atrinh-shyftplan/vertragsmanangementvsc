@@ -661,22 +661,6 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                 dangerouslySetInnerHTML={{ 
                   __html: `
                   <style>
-                    .contract-preview p {
-                      margin: 1em 0;
-                      white-space: pre-wrap;
-                    }
-                    .contract-preview br {
-                      display: block;
-                      margin: 0.5em 0;
-                      content: "";
-                    }
-                    .contract-preview div {
-                      margin: 0.5em 0;
-                      white-space: pre-wrap;
-                    }
-                    .contract-preview * {
-                      white-space: pre-wrap;
-                    }
                     .header-content table {
                       width: 100%;
                       border-collapse: collapse;
