@@ -135,6 +135,17 @@
   space-y: 1rem;
 }
 
+/* Prevent double spacing from prose classes and grid structure */
+.preview-content-de > *:first-child,
+.preview-content-en > *:first-child {
+  margin-top: 0 !important;
+}
+
+.preview-content-de > *:last-child,
+.preview-content-en > *:last-child {
+  margin-bottom: 0 !important;
+}
+
 .preview-content-de::after {
   content: '';
   position: absolute;

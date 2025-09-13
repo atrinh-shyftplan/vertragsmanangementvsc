@@ -303,14 +303,14 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         // German block
         moduleHtml += `<div class="preview-content-de">`;
         if (i < germanBlocks.length) {
-          moduleHtml += `<div class="text-sm leading-relaxed">${germanBlocks[i]}</div>`;
+          moduleHtml += `<div class="prose prose-sm sm:prose-base max-w-none text-sm leading-relaxed">${germanBlocks[i]}</div>`;
         }
         moduleHtml += `</div>`;
         
         // English block
         moduleHtml += `<div class="preview-content-en">`;
         if (i < englishBlocks.length) {
-          moduleHtml += `<div class="text-sm leading-relaxed">${englishBlocks[i]}</div>`;
+          moduleHtml += `<div class="prose prose-sm sm:prose-base max-w-none text-sm leading-relaxed">${englishBlocks[i]}</div>`;
         }
         moduleHtml += `</div>`;
         
@@ -320,13 +320,13 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     // Case 2: Only German content - single-column layout
     else if (hasGermanContent && !hasEnglishContent) {
       moduleHtml += `<div class="space-y-4">`;
-      moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
+      moduleHtml += `<div class="prose prose-sm sm:prose-base max-w-none text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
       moduleHtml += `</div>`;
     }
     // Case 3: Only English content - single-column layout
     else if (!hasGermanContent && hasEnglishContent) {
       moduleHtml += `<div class="space-y-4">`;
-      moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
+      moduleHtml += `<div class="prose prose-sm sm:prose-base max-w-none text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
       moduleHtml += `</div>`;
     }
     
