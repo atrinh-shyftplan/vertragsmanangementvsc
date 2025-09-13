@@ -301,16 +301,16 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         moduleHtml += `<div class="preview-module-grid mb-4">`;
         
         // German block
-        moduleHtml += `<div class="preview-content-de">`;
+        moduleHtml += `<div class="preview-content-de prose prose-sm sm:prose-base max-w-none">`;
         if (i < germanBlocks.length) {
-          moduleHtml += `<div class="prose prose-sm sm:prose-base max-w-none text-sm leading-relaxed">${germanBlocks[i]}</div>`;
+          moduleHtml += germanBlocks[i];
         }
         moduleHtml += `</div>`;
         
         // English block
-        moduleHtml += `<div class="preview-content-en">`;
+        moduleHtml += `<div class="preview-content-en prose prose-sm sm:prose-base max-w-none">`;
         if (i < englishBlocks.length) {
-          moduleHtml += `<div class="prose prose-sm sm:prose-base max-w-none text-sm leading-relaxed">${englishBlocks[i]}</div>`;
+          moduleHtml += englishBlocks[i];
         }
         moduleHtml += `</div>`;
         
@@ -319,15 +319,11 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     }
     // Case 2: Only German content - single-column layout
     else if (hasGermanContent && !hasEnglishContent) {
-      moduleHtml += `<div class="space-y-4">`;
-      moduleHtml += `<div class="prose prose-sm sm:prose-base max-w-none text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
-      moduleHtml += `</div>`;
+      moduleHtml += `<div class="prose prose-sm sm:prose-base max-w-none">${processContent(module.content_de, moduleVariables)}</div>`;
     }
     // Case 3: Only English content - single-column layout
     else if (!hasGermanContent && hasEnglishContent) {
-      moduleHtml += `<div class="space-y-4">`;
-      moduleHtml += `<div class="prose prose-sm sm:prose-base max-w-none text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
-      moduleHtml += `</div>`;
+      moduleHtml += `<div class="prose prose-sm sm:prose-base max-w-none">${processContent(module.content_en, moduleVariables)}</div>`;
     }
     
     if (isHeaderModule) {
