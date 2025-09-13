@@ -122,39 +122,40 @@
   }
 }
 
-/* Contract Preview Grid Styles */
-.preview-module-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  position: relative;
+/* Contract Preview Table-Based Layout Styles */
+.contract-preview table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1rem 0;
 }
 
-.preview-content-de,
-.preview-content-en {
-  space-y: 1rem;
+.contract-preview table th,
+.contract-preview table td {
+  vertical-align: top;
+  text-align: left;
 }
 
-.preview-content-de::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background-color: hsl(var(--border));
-  transform: translateX(-50%);
-}
-
-/* Responsive: Mobile view (single column) */
+/* Responsive: Mobile view (single column tables become stacked) */
 @media (max-width: 768px) {
-  .preview-module-grid {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+  .contract-preview table,
+  .contract-preview table tbody,
+  .contract-preview table tr,
+  .contract-preview table td,
+  .contract-preview table th {
+    display: block;
+    width: 100%;
   }
   
-  .preview-content-de::after {
-    display: none;
+  .contract-preview table td,
+  .contract-preview table th {
+    border-right: none;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  
+  .contract-preview table th:first-child {
+    margin-bottom: 1rem;
   }
 }
 

@@ -169,7 +169,20 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     return preview || '<p class="text-gray-500">Keine Inhalte verfügbar</p>';
   };
 
-  // Helper function to render individual modules
+  // Helper function to parse content into logical blocks
+  const parseContentIntoBlocks = (content: string) => {
+    if (!content) return [];
+    
+    // Split content by paragraphs and clean up
+    const blocks = content
+      .split(/\n\s*\n/) // Split by double newlines
+      .map(block => block.replace(/\n/g, ' ').trim()) // Clean up single newlines and trim
+      .filter(block => block.length > 0); // Remove empty blocks
+    
+    return blocks;
+  };
+
+  // Helper function to render individual modules with table-based layout
   const renderModule = (module: any, isAnnex: boolean, annexNumber: number) => {
     let moduleVariables = [];
     try {
@@ -197,49 +210,61 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       moduleHtml += `<div class="mb-8">`;
     }
     
-    // Case 1: Both German and English content - two-column layout
+    // Case 1: Both German and English content - table-based side-by-side layout
     if (hasGermanContent && hasEnglishContent) {
-      moduleHtml += `<div class="preview-module-grid">`;
+      // Parse content into blocks
+      const germanBlocks = parseContentIntoBlocks(processContent(module.content_de, moduleVariables));
+      const englishBlocks = parseContentIntoBlocks(processContent(module.content_en, moduleVariables));
       
-      // German column
-      moduleHtml += `<div class="preview-content-de">`;
+      // Create table structure
+      moduleHtml += `<table class="w-full border-separate border-spacing-0">`;
+      
+      // Add titles as table header if not header module
       if (!isHeaderModule) {
-        const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
-        moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
+        const germanTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
+        const englishTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
+        
+        moduleHtml += `<thead>`;
+        moduleHtml += `<tr>`;
+        moduleHtml += `<th class="text-lg font-bold text-gray-800 mb-4 text-left align-top w-1/2 pr-6 pb-4 border-r border-gray-200">${germanTitle}</th>`;
+        moduleHtml += `<th class="text-lg font-bold text-gray-800 mb-4 text-left align-top w-1/2 pl-6 pb-4">${englishTitle}</th>`;
+        moduleHtml += `</tr>`;
+        moduleHtml += `</thead>`;
       }
-      moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
-      moduleHtml += `</div>`;
       
-      // English column
-      moduleHtml += `<div class="preview-content-en">`;
-      if (!isHeaderModule) {
-        const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
-        moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
+      moduleHtml += `<tbody>`;
+      
+      // Get max length to handle uneven content
+      const maxBlocks = Math.max(germanBlocks.length, englishBlocks.length);
+      
+      for (let i = 0; i < maxBlocks; i++) {
+        const germanBlock = germanBlocks[i] || '';
+        const englishBlock = englishBlocks[i] || '';
+        
+        moduleHtml += `<tr>`;
+        moduleHtml += `<td class="text-sm leading-relaxed align-top w-1/2 pr-6 pb-4 border-r border-gray-200">${germanBlock}</td>`;
+        moduleHtml += `<td class="text-sm leading-relaxed align-top w-1/2 pl-6 pb-4">${englishBlock}</td>`;
+        moduleHtml += `</tr>`;
       }
-      moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
-      moduleHtml += `</div>`;
       
-      moduleHtml += `</div>`;
+      moduleHtml += `</tbody>`;
+      moduleHtml += `</table>`;
     }
     // Case 2: Only German content - single-column layout
     else if (hasGermanContent && !hasEnglishContent) {
-      moduleHtml += `<div class="space-y-4">`;
       if (!isHeaderModule) {
         const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
         moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
       }
       moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
-      moduleHtml += `</div>`;
     }
     // Case 3: Only English content - single-column layout
     else if (!hasGermanContent && hasEnglishContent) {
-      moduleHtml += `<div class="space-y-4">`;
       if (!isHeaderModule) {
         const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
         moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
       }
       moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
-      moduleHtml += `</div>`;
     }
     
     if (isHeaderModule) {
@@ -564,7 +589,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             </CardHeader>
             <CardContent>
                 <div 
-                className="max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
+                className="prose prose-sm sm:prose-base max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
                 style={{ 
                   fontSize: '12px', 
                   lineHeight: '1.6',
@@ -573,6 +598,34 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                 dangerouslySetInnerHTML={{ 
                   __html: `
                   <style>
+                    /* Table-specific styling for side-by-side layout */
+                    .contract-preview table {
+                      width: 100%;
+                      border-collapse: separate;
+                      border-spacing: 0;
+                      margin: 1rem 0;
+                    }
+                    .contract-preview table th {
+                      padding: 0 24px 16px 0;
+                      vertical-align: top;
+                      border-right: 1px solid #e5e7eb;
+                      text-align: left;
+                    }
+                    .contract-preview table th:last-child {
+                      border-right: none;
+                      padding-left: 24px;
+                      padding-right: 0;
+                    }
+                    .contract-preview table td {
+                      padding: 0 24px 16px 0;
+                      vertical-align: top;
+                      border-right: 1px solid #e5e7eb;
+                    }
+                    .contract-preview table td:last-child {
+                      border-right: none;
+                      padding-left: 24px;
+                      padding-right: 0;
+                    }
                     .contract-preview p {
                       margin: 1em 0;
                       white-space: pre-wrap;
@@ -589,7 +642,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                     .contract-preview * {
                       white-space: pre-wrap;
                     }
-                    .header-content table {
+                    /* Header content table styling - unchanged */
                       width: 100%;
                       border-collapse: collapse;
                       margin: 10px 0;
