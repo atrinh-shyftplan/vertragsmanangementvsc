@@ -122,6 +122,42 @@
   }
 }
 
+/* Contract Preview Grid Styles */
+.preview-module-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.preview-content-de,
+.preview-content-en {
+  space-y: 1rem;
+}
+
+.preview-content-de::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: hsl(var(--border));
+  transform: translateX(-50%);
+}
+
+/* Responsive: Mobile view (single column) */
+@media (max-width: 768px) {
+  .preview-module-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .preview-content-de::after {
+    display: none;
+  }
+}
+
 /* Rich Text Editor Prose Styles */
 @layer components {
   .prose-paragraph {

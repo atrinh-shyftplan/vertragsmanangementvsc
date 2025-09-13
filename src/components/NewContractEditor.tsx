@@ -199,10 +199,10 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     
     // Case 1: Both German and English content - two-column layout
     if (hasGermanContent && hasEnglishContent) {
-      moduleHtml += `<div class="grid grid-cols-2 gap-0 relative">`;
+      moduleHtml += `<div class="preview-module-grid">`;
       
       // German column
-      moduleHtml += `<div class="pr-6 space-y-4">`;
+      moduleHtml += `<div class="preview-content-de">`;
       if (!isHeaderModule) {
         const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
         moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
@@ -210,13 +210,8 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
       moduleHtml += `</div>`;
       
-      // Gray vertical divider line
-      if (!isHeaderModule) {
-        moduleHtml += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
-      }
-      
       // English column
-      moduleHtml += `<div class="pl-6 space-y-4">`;
+      moduleHtml += `<div class="preview-content-en">`;
       if (!isHeaderModule) {
         const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
         moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
