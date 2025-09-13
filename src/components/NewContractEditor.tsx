@@ -301,14 +301,14 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         moduleHtml += `<div class="preview-module-grid mb-4">`;
         
         // German block
-        moduleHtml += `<div class="preview-content-de prose prose-sm sm:prose-base max-w-none">`;
+        moduleHtml += `<div class="preview-content-de">`;
         if (i < germanBlocks.length) {
           moduleHtml += germanBlocks[i];
         }
         moduleHtml += `</div>`;
         
         // English block
-        moduleHtml += `<div class="preview-content-en prose prose-sm sm:prose-base max-w-none">`;
+        moduleHtml += `<div class="preview-content-en">`;
         if (i < englishBlocks.length) {
           moduleHtml += englishBlocks[i];
         }
@@ -319,11 +319,11 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     }
     // Case 2: Only German content - single-column layout
     else if (hasGermanContent && !hasEnglishContent) {
-      moduleHtml += `<div class="prose prose-sm sm:prose-base max-w-none">${processContent(module.content_de, moduleVariables)}</div>`;
+      moduleHtml += `<div class="single-column-content">${processContent(module.content_de, moduleVariables)}</div>`;
     }
     // Case 3: Only English content - single-column layout
     else if (!hasGermanContent && hasEnglishContent) {
-      moduleHtml += `<div class="prose prose-sm sm:prose-base max-w-none">${processContent(module.content_en, moduleVariables)}</div>`;
+      moduleHtml += `<div class="single-column-content">${processContent(module.content_en, moduleVariables)}</div>`;
     }
     
     if (isHeaderModule) {
@@ -648,7 +648,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             </CardHeader>
             <CardContent>
                 <div 
-                className="max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
+                className="prose prose-sm sm:prose-base max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
                 style={{ 
                   fontSize: '12px', 
                   lineHeight: '1.6',
