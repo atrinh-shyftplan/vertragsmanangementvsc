@@ -32,7 +32,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `contract-images/${fileName}`;
+      const filePath = `private/contract-images/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('images')
