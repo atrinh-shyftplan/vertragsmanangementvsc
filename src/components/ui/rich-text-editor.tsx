@@ -35,7 +35,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
       const filePath = `contract-images/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('Anhang 5 Bilder')
+        .from('images')
         .upload(filePath, file);
 
       if (uploadError) {
@@ -43,7 +43,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
       }
 
       const { data } = supabase.storage
-        .from('Anhang 5 Bilder')
+        .from('images')
         .getPublicUrl(filePath);
 
       return data.publicUrl;
