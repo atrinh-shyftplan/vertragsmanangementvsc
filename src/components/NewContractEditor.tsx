@@ -169,74 +169,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     return preview || '<p class="text-gray-500">Keine Inhalte verfügbar</p>';
   };
 
-  // Function to parse content into logical blocks with anchor points
-  const parseContentIntoBlocks = (htmlContent: string): string[] => {
-    if (!htmlContent) return [];
-    
-    // Split content by main structural elements (paragraphs and headings)
-    // These serve as anchor points for alignment
-    const anchorPattern = /(<(?:p|h[1-6]|li)(?:\s[^>]*)?>.*?<\/(?:p|h[1-6]|li)>)/gi;
-    
-    // First, find all anchor elements
-    const anchors: { match: RegExpExecArray; content: string }[] = [];
-    let match;
-    
-    // Reset regex state to ensure clean execution
-    anchorPattern.lastIndex = 0;
-    
-    while ((match = anchorPattern.exec(htmlContent)) !== null) {
-      anchors.push({
-        match: match,
-        content: match[0]
-      });
-      
-      // Prevent infinite loop by checking if we've processed all content
-      if (match.index + match[0].length >= htmlContent.length) {
-        break;
-      }
-    }
-    
-    if (anchors.length === 0) {
-      // No anchor elements found, return entire content as single block
-      return htmlContent.trim() ? [htmlContent.trim()] : [];
-    }
-    
-    const blocks: string[] = [];
-    let lastIndex = 0;
-    
-    // Process each anchor and its associated content
-    anchors.forEach((anchor, index) => {
-      // Add any content before this anchor to the previous block or as standalone
-      if (anchor.match.index > lastIndex) {
-        const precedingContent = htmlContent.slice(lastIndex, anchor.match.index).trim();
-        if (precedingContent) {
-          if (blocks.length > 0) {
-            // Append to previous block
-            blocks[blocks.length - 1] += ' ' + precedingContent;
-          } else {
-            // Create new block
-            blocks.push(precedingContent);
-          }
-        }
-      }
-      
-      // Determine the end of this block
-      const nextAnchor = anchors[index + 1];
-      const blockEndIndex = nextAnchor ? nextAnchor.match.index : htmlContent.length;
-      
-      // Get the full block content (anchor + following content until next anchor)
-      const blockContent = htmlContent.slice(anchor.match.index, blockEndIndex).trim();
-      if (blockContent) {
-        blocks.push(blockContent);
-      }
-      
-      lastIndex = blockEndIndex;
-    });
-    
-    return blocks.filter(block => block.trim().length > 0);
-  };
-
-  // Helper function to render individual modules with block-aligned content
+  // Helper function to render individual modules
   const renderModule = (module: any, isAnnex: boolean, annexNumber: number) => {
     let moduleVariables = [];
     try {
@@ -264,66 +197,49 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       moduleHtml += `<div class="mb-8">`;
     }
     
-    // Add module title
-    if (!isHeaderModule && (hasGermanContent || hasEnglishContent)) {
-      moduleHtml += `<div class="mb-6">`;
-      if (hasGermanContent && hasEnglishContent) {
-        // Two-column title layout
-        moduleHtml += `<div class="preview-module-grid">`;
-        moduleHtml += `<div class="preview-content-de">`;
+    // Case 1: Both German and English content - two-column layout
+    if (hasGermanContent && hasEnglishContent) {
+      moduleHtml += `<div class="preview-module-grid">`;
+      
+      // German column
+      moduleHtml += `<div class="preview-content-de">`;
+      if (!isHeaderModule) {
         const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
         moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
-        moduleHtml += `</div>`;
-        moduleHtml += `<div class="preview-content-en">`;
-        const displayTitleEn = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
-        moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitleEn}</h3>`;
-        moduleHtml += `</div>`;
-        moduleHtml += `</div>`;
-      } else {
-        // Single column title
-        const displayTitle = hasGermanContent 
-          ? (isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de)
-          : (isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de));
+      }
+      moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
+      moduleHtml += `</div>`;
+      
+      // English column
+      moduleHtml += `<div class="preview-content-en">`;
+      if (!isHeaderModule) {
+        const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
         moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
       }
+      moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
       moduleHtml += `</div>`;
-    }
-    
-    // Case 1: Both German and English content - block-aligned layout
-    if (hasGermanContent && hasEnglishContent) {
-      const germanBlocks = parseContentIntoBlocks(processContent(module.content_de, moduleVariables));
-      const englishBlocks = parseContentIntoBlocks(processContent(module.content_en, moduleVariables));
       
-      // Create aligned rows for each pair of blocks
-      const maxBlocks = Math.max(germanBlocks.length, englishBlocks.length);
-      
-      for (let i = 0; i < maxBlocks; i++) {
-        moduleHtml += `<div class="preview-module-grid mb-4">`;
-        
-        // German block
-        moduleHtml += `<div class="preview-content-de">`;
-        if (i < germanBlocks.length) {
-          moduleHtml += germanBlocks[i];
-        }
-        moduleHtml += `</div>`;
-        
-        // English block
-        moduleHtml += `<div class="preview-content-en">`;
-        if (i < englishBlocks.length) {
-          moduleHtml += englishBlocks[i];
-        }
-        moduleHtml += `</div>`;
-        
-        moduleHtml += `</div>`;
-      }
+      moduleHtml += `</div>`;
     }
     // Case 2: Only German content - single-column layout
     else if (hasGermanContent && !hasEnglishContent) {
-      moduleHtml += `<div class="single-column-content">${processContent(module.content_de, moduleVariables)}</div>`;
+      moduleHtml += `<div class="space-y-4">`;
+      if (!isHeaderModule) {
+        const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
+        moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
+      }
+      moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
+      moduleHtml += `</div>`;
     }
     // Case 3: Only English content - single-column layout
     else if (!hasGermanContent && hasEnglishContent) {
-      moduleHtml += `<div class="single-column-content">${processContent(module.content_en, moduleVariables)}</div>`;
+      moduleHtml += `<div class="space-y-4">`;
+      if (!isHeaderModule) {
+        const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
+        moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
+      }
+      moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
+      moduleHtml += `</div>`;
     }
     
     if (isHeaderModule) {
@@ -648,7 +564,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             </CardHeader>
             <CardContent>
                 <div 
-                className="prose prose-sm sm:prose-base max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
+                className="max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
                 style={{ 
                   fontSize: '12px', 
                   lineHeight: '1.6',
@@ -657,6 +573,22 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                 dangerouslySetInnerHTML={{ 
                   __html: `
                   <style>
+                    .contract-preview p {
+                      margin: 1em 0;
+                      white-space: pre-wrap;
+                    }
+                    .contract-preview br {
+                      display: block;
+                      margin: 0.5em 0;
+                      content: "";
+                    }
+                    .contract-preview div {
+                      margin: 0.5em 0;
+                      white-space: pre-wrap;
+                    }
+                    .contract-preview * {
+                      white-space: pre-wrap;
+                    }
                     .header-content table {
                       width: 100%;
                       border-collapse: collapse;
