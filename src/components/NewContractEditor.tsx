@@ -177,20 +177,42 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     // These serve as anchor points for alignment
     const anchorPattern = /(<(?:p|h[1-6]|li)(?:\s[^>]*)?>.*?<\/(?:p|h[1-6]|li)>)/gi;
     
-    const blocks: string[] = [];
-    let lastIndex = 0;
+    // First, find all anchor elements
+    const anchors: { match: RegExpExecArray; content: string }[] = [];
     let match;
     
-    // Find all anchor elements and split content into blocks
+    // Reset regex state to ensure clean execution
+    anchorPattern.lastIndex = 0;
+    
     while ((match = anchorPattern.exec(htmlContent)) !== null) {
-      // Add any content before this anchor as part of the previous block
-      // or as a standalone block if it's at the beginning
-      if (match.index > lastIndex) {
-        const precedingContent = htmlContent.slice(lastIndex, match.index).trim();
+      anchors.push({
+        match: match,
+        content: match[0]
+      });
+      
+      // Prevent infinite loop by checking if we've processed all content
+      if (match.index + match[0].length >= htmlContent.length) {
+        break;
+      }
+    }
+    
+    if (anchors.length === 0) {
+      // No anchor elements found, return entire content as single block
+      return htmlContent.trim() ? [htmlContent.trim()] : [];
+    }
+    
+    const blocks: string[] = [];
+    let lastIndex = 0;
+    
+    // Process each anchor and its associated content
+    anchors.forEach((anchor, index) => {
+      // Add any content before this anchor to the previous block or as standalone
+      if (anchor.match.index > lastIndex) {
+        const precedingContent = htmlContent.slice(lastIndex, anchor.match.index).trim();
         if (precedingContent) {
           if (blocks.length > 0) {
             // Append to previous block
-            blocks[blocks.length - 1] += precedingContent;
+            blocks[blocks.length - 1] += ' ' + precedingContent;
           } else {
             // Create new block
             blocks.push(precedingContent);
@@ -198,44 +220,18 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         }
       }
       
-      // Start new block with the anchor element
-      const anchorContent = match[0];
+      // Determine the end of this block
+      const nextAnchor = anchors[index + 1];
+      const blockEndIndex = nextAnchor ? nextAnchor.match.index : htmlContent.length;
       
-      // Look ahead to find content that belongs to this anchor
-      const nextAnchorMatch = anchorPattern.exec(htmlContent);
-      let blockEndIndex;
-      
-      if (nextAnchorMatch) {
-        blockEndIndex = nextAnchorMatch.index;
-        // Reset regex position for next iteration
-        anchorPattern.lastIndex = nextAnchorMatch.index;
-      } else {
-        blockEndIndex = htmlContent.length;
+      // Get the full block content (anchor + following content until next anchor)
+      const blockContent = htmlContent.slice(anchor.match.index, blockEndIndex).trim();
+      if (blockContent) {
+        blocks.push(blockContent);
       }
-      
-      // Get the full block content (anchor + following content)
-      const blockContent = htmlContent.slice(match.index, blockEndIndex).trim();
-      blocks.push(blockContent);
       
       lastIndex = blockEndIndex;
-    }
-    
-    // Add any remaining content as the final block
-    if (lastIndex < htmlContent.length) {
-      const remainingContent = htmlContent.slice(lastIndex).trim();
-      if (remainingContent) {
-        if (blocks.length > 0) {
-          blocks[blocks.length - 1] += remainingContent;
-        } else {
-          blocks.push(remainingContent);
-        }
-      }
-    }
-    
-    // If no anchor elements found, treat entire content as one block
-    if (blocks.length === 0 && htmlContent.trim()) {
-      blocks.push(htmlContent.trim());
-    }
+    });
     
     return blocks.filter(block => block.trim().length > 0);
   };
