@@ -169,15 +169,31 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     return preview || '<p class="text-gray-500">Keine Inhalte verfügbar</p>';
   };
 
-  // Helper function to parse content into logical blocks
+  // Helper function to parse content into logical blocks for table layout
   const parseContentIntoBlocks = (content: string) => {
     if (!content) return [];
     
-    // Split content by paragraphs and clean up
+    // Use RegEx to split content into logical blocks (paragraphs, lists, etc.)
+    // This is more performant and handles edge cases better
     const blocks = content
-      .split(/\n\s*\n/) // Split by double newlines
-      .map(block => block.replace(/\n/g, ' ').trim()) // Clean up single newlines and trim
-      .filter(block => block.length > 0); // Remove empty blocks
+      // First, normalize line breaks
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      // Split by double newlines (paragraph breaks)
+      .split(/\n\s*\n+/)
+      // Clean up each block
+      .map(block => {
+        return block
+          // Convert single newlines within a block to spaces, except for list items
+          .replace(/\n(?![*•\-\d+\.])/g, ' ')
+          // Preserve list structure by keeping newlines for list items
+          .replace(/\n([*•\-]|\d+\.)/g, '\n$1')
+          // Clean up extra whitespace
+          .replace(/\s+/g, ' ')
+          .trim();
+      })
+      // Remove empty blocks
+      .filter(block => block.length > 0);
     
     return blocks;
   };
@@ -217,7 +233,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       const englishBlocks = parseContentIntoBlocks(processContent(module.content_en, moduleVariables));
       
       // Create table structure
-      moduleHtml += `<table class="w-full border-separate border-spacing-0">`;
+      moduleHtml += `<table class="side-by-side-table">`;
       
       // Add titles as table header if not header module
       if (!isHeaderModule) {
@@ -226,8 +242,8 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         
         moduleHtml += `<thead>`;
         moduleHtml += `<tr>`;
-        moduleHtml += `<th class="text-lg font-bold text-gray-800 mb-4 text-left align-top w-1/2 pr-6 pb-4 border-r border-gray-200">${germanTitle}</th>`;
-        moduleHtml += `<th class="text-lg font-bold text-gray-800 mb-4 text-left align-top w-1/2 pl-6 pb-4">${englishTitle}</th>`;
+        moduleHtml += `<th class="table-header-de">${germanTitle}</th>`;
+        moduleHtml += `<th class="table-header-en">${englishTitle}</th>`;
         moduleHtml += `</tr>`;
         moduleHtml += `</thead>`;
       }
@@ -242,8 +258,8 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         const englishBlock = englishBlocks[i] || '';
         
         moduleHtml += `<tr>`;
-        moduleHtml += `<td class="text-sm leading-relaxed align-top w-1/2 pr-6 pb-4 border-r border-gray-200">${germanBlock}</td>`;
-        moduleHtml += `<td class="text-sm leading-relaxed align-top w-1/2 pl-6 pb-4">${englishBlock}</td>`;
+        moduleHtml += `<td class="table-content-de">${germanBlock}</td>`;
+        moduleHtml += `<td class="table-content-en">${englishBlock}</td>`;
         moduleHtml += `</tr>`;
       }
       
@@ -598,49 +614,70 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                 dangerouslySetInnerHTML={{ 
                   __html: `
                   <style>
-                    /* Table-specific styling for side-by-side layout */
-                    .contract-preview table {
+                    /* Side-by-side table layout - prose-compatible */
+                    .contract-preview .side-by-side-table {
                       width: 100%;
                       border-collapse: separate;
                       border-spacing: 0;
-                      margin: 1rem 0;
+                      margin: 1.5rem 0;
+                      table-layout: fixed;
                     }
-                    .contract-preview table th {
-                      padding: 0 24px 16px 0;
+                    
+                    .contract-preview .table-header-de,
+                    .contract-preview .table-header-en {
+                      width: 50%;
+                      padding: 0 1.5rem 1rem 0;
                       vertical-align: top;
                       border-right: 1px solid #e5e7eb;
                       text-align: left;
+                      font-size: 1.125rem;
+                      font-weight: 700;
+                      color: #1f2937;
                     }
-                    .contract-preview table th:last-child {
+                    
+                    .contract-preview .table-header-en {
                       border-right: none;
-                      padding-left: 24px;
+                      padding-left: 1.5rem;
                       padding-right: 0;
                     }
-                    .contract-preview table td {
-                      padding: 0 24px 16px 0;
+                    
+                    .contract-preview .table-content-de,
+                    .contract-preview .table-content-en {
+                      width: 50%;
+                      padding: 0 1.5rem 1rem 0;
                       vertical-align: top;
                       border-right: 1px solid #e5e7eb;
                     }
-                    .contract-preview table td:last-child {
+                    
+                    .contract-preview .table-content-en {
                       border-right: none;
-                      padding-left: 24px;
+                      padding-left: 1.5rem;
                       padding-right: 0;
                     }
-                    .contract-preview p {
-                      margin: 1em 0;
-                      white-space: pre-wrap;
+                    
+                    /* Ensure prose styles work within table cells */
+                    .contract-preview .table-content-de p,
+                    .contract-preview .table-content-en p {
+                      margin: 0.75rem 0;
                     }
-                    .contract-preview br {
-                      display: block;
-                      margin: 0.5em 0;
-                      content: "";
+                    
+                    .contract-preview .table-content-de ul,
+                    .contract-preview .table-content-en ul {
+                      margin: 0.75rem 0;
+                      padding-left: 1.5rem;
+                      list-style-type: disc;
                     }
-                    .contract-preview div {
-                      margin: 0.5em 0;
-                      white-space: pre-wrap;
+                    
+                    .contract-preview .table-content-de ol,
+                    .contract-preview .table-content-en ol {
+                      margin: 0.75rem 0;
+                      padding-left: 1.5rem;
+                      list-style-type: decimal;
                     }
-                    .contract-preview * {
-                      white-space: pre-wrap;
+                    
+                    .contract-preview .table-content-de li,
+                    .contract-preview .table-content-en li {
+                      margin: 0.25rem 0;
                     }
                     /* Header content table styling - unchanged */
                       width: 100%;
