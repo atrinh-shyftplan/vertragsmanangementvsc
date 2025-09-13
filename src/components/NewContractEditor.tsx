@@ -169,7 +169,78 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     return preview || '<p class="text-gray-500">Keine Inhalte verfügbar</p>';
   };
 
-  // Helper function to render individual modules
+  // Function to parse content into logical blocks with anchor points
+  const parseContentIntoBlocks = (htmlContent: string): string[] => {
+    if (!htmlContent) return [];
+    
+    // Split content by main structural elements (paragraphs and headings)
+    // These serve as anchor points for alignment
+    const anchorPattern = /(<(?:p|h[1-6]|li)(?:\s[^>]*)?>.*?<\/(?:p|h[1-6]|li)>)/gi;
+    
+    const blocks: string[] = [];
+    let lastIndex = 0;
+    let match;
+    
+    // Find all anchor elements and split content into blocks
+    while ((match = anchorPattern.exec(htmlContent)) !== null) {
+      // Add any content before this anchor as part of the previous block
+      // or as a standalone block if it's at the beginning
+      if (match.index > lastIndex) {
+        const precedingContent = htmlContent.slice(lastIndex, match.index).trim();
+        if (precedingContent) {
+          if (blocks.length > 0) {
+            // Append to previous block
+            blocks[blocks.length - 1] += precedingContent;
+          } else {
+            // Create new block
+            blocks.push(precedingContent);
+          }
+        }
+      }
+      
+      // Start new block with the anchor element
+      const anchorContent = match[0];
+      
+      // Look ahead to find content that belongs to this anchor
+      const nextAnchorMatch = anchorPattern.exec(htmlContent);
+      let blockEndIndex;
+      
+      if (nextAnchorMatch) {
+        blockEndIndex = nextAnchorMatch.index;
+        // Reset regex position for next iteration
+        anchorPattern.lastIndex = nextAnchorMatch.index;
+      } else {
+        blockEndIndex = htmlContent.length;
+      }
+      
+      // Get the full block content (anchor + following content)
+      const blockContent = htmlContent.slice(match.index, blockEndIndex).trim();
+      blocks.push(blockContent);
+      
+      lastIndex = blockEndIndex;
+    }
+    
+    // Add any remaining content as the final block
+    if (lastIndex < htmlContent.length) {
+      const remainingContent = htmlContent.slice(lastIndex).trim();
+      if (remainingContent) {
+        if (blocks.length > 0) {
+          blocks[blocks.length - 1] += remainingContent;
+        } else {
+          blocks.push(remainingContent);
+        }
+      }
+    }
+    
+    // If no anchor elements found, treat entire content as one block
+    if (blocks.length === 0 && htmlContent.trim()) {
+      blocks.push(htmlContent.trim());
+    }
+    
+    return blocks.filter(block => block.trim().length > 0);
+  };
+
+  // Helper function to render individual modules with block-aligned content
   const renderModule = (module: any, isAnnex: boolean, annexNumber: number) => {
     let moduleVariables = [];
     try {
@@ -197,47 +268,68 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       moduleHtml += `<div class="mb-8">`;
     }
     
-    // Case 1: Both German and English content - two-column layout
-    if (hasGermanContent && hasEnglishContent) {
-      moduleHtml += `<div class="preview-module-grid">`;
-      
-      // German column
-      moduleHtml += `<div class="preview-content-de">`;
-      if (!isHeaderModule) {
+    // Add module title
+    if (!isHeaderModule && (hasGermanContent || hasEnglishContent)) {
+      moduleHtml += `<div class="mb-6">`;
+      if (hasGermanContent && hasEnglishContent) {
+        // Two-column title layout
+        moduleHtml += `<div class="preview-module-grid">`;
+        moduleHtml += `<div class="preview-content-de">`;
         const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
         moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
-      }
-      moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
-      moduleHtml += `</div>`;
-      
-      // English column
-      moduleHtml += `<div class="preview-content-en">`;
-      if (!isHeaderModule) {
-        const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
+        moduleHtml += `</div>`;
+        moduleHtml += `<div class="preview-content-en">`;
+        const displayTitleEn = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
+        moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitleEn}</h3>`;
+        moduleHtml += `</div>`;
+        moduleHtml += `</div>`;
+      } else {
+        // Single column title
+        const displayTitle = hasGermanContent 
+          ? (isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de)
+          : (isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de));
         moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
       }
-      moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
       moduleHtml += `</div>`;
+    }
+    
+    // Case 1: Both German and English content - block-aligned layout
+    if (hasGermanContent && hasEnglishContent) {
+      const germanBlocks = parseContentIntoBlocks(processContent(module.content_de, moduleVariables));
+      const englishBlocks = parseContentIntoBlocks(processContent(module.content_en, moduleVariables));
       
-      moduleHtml += `</div>`;
+      // Create aligned rows for each pair of blocks
+      const maxBlocks = Math.max(germanBlocks.length, englishBlocks.length);
+      
+      for (let i = 0; i < maxBlocks; i++) {
+        moduleHtml += `<div class="preview-module-grid mb-4">`;
+        
+        // German block
+        moduleHtml += `<div class="preview-content-de">`;
+        if (i < germanBlocks.length) {
+          moduleHtml += `<div class="text-sm leading-relaxed">${germanBlocks[i]}</div>`;
+        }
+        moduleHtml += `</div>`;
+        
+        // English block
+        moduleHtml += `<div class="preview-content-en">`;
+        if (i < englishBlocks.length) {
+          moduleHtml += `<div class="text-sm leading-relaxed">${englishBlocks[i]}</div>`;
+        }
+        moduleHtml += `</div>`;
+        
+        moduleHtml += `</div>`;
+      }
     }
     // Case 2: Only German content - single-column layout
     else if (hasGermanContent && !hasEnglishContent) {
       moduleHtml += `<div class="space-y-4">`;
-      if (!isHeaderModule) {
-        const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
-        moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
-      }
       moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
       moduleHtml += `</div>`;
     }
     // Case 3: Only English content - single-column layout
     else if (!hasGermanContent && hasEnglishContent) {
       moduleHtml += `<div class="space-y-4">`;
-      if (!isHeaderModule) {
-        const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
-        moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
-      }
       moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
       moduleHtml += `</div>`;
     }
