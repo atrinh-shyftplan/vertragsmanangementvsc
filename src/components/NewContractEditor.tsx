@@ -264,13 +264,15 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     if (hasGermanContent && hasEnglishContent) {
       moduleHtml += `<div class="module-grid">`;
       
-      // Add titles as grid header if not header module
+      // Add titles as side-by-side headers if not header module
       if (!isHeaderModule) {
         const germanTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
         const englishTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
         
+        moduleHtml += `<div class="grid-header-row">`;
         moduleHtml += `<div class="prose prose-sm max-w-none grid-header-de">${germanTitle}</div>`;
         moduleHtml += `<div class="prose prose-sm max-w-none grid-header-en">${englishTitle}</div>`;
+        moduleHtml += `</div>`;
       }
       
       // Parse both contents into logical blocks
