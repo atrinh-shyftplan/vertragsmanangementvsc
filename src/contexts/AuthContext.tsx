@@ -18,7 +18,7 @@ interface AuthContextValue {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
-  loading: boolean;
+  isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -30,7 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   const loadProfile = async (userId: string) => {
     try {
@@ -38,11 +38,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .maybeSingle();
+        .single();
       
       if (error) {
         console.error('Error loading profile:', error);
         setProfile(null);
+        setIsLoading(false);
         return;
       }
       
@@ -52,9 +53,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: data.role as 'admin' | 'ae'
         });
       }
+      setIsLoading(false);
     } catch (error) {
       console.error('Error loading profile:', error);
       setProfile(null);
+      setIsLoading(false);
     }
   };
 
@@ -70,7 +73,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           loadProfile(newSession.user.id);
         }, 0);
       } else {
+        setSession(null);
         setProfile(null);
+        setIsLoading(false);
       }
     });
 
@@ -81,9 +86,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (session?.user) {
         await loadProfile(session.user.id);
+      } else {
+        setIsLoading(false);
       }
-      
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -108,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
   };
 
-  const value: AuthContextValue = { user, session, profile, loading, signIn, signUp, signOut };
+  const value: AuthContextValue = { user, session, profile, isLoading, signIn, signUp, signOut };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

@@ -3,10 +3,10 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const RequireAdminAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { session, profile, loading } = useAuth();
+  const { session, profile, isLoading } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  if (isLoading) {
     return <div className="p-6 text-center text-muted-foreground">Laden...</div>;
   }
 
