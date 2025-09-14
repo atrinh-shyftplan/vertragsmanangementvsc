@@ -18,20 +18,7 @@ import { Plus, Edit2, Trash2, Copy, Settings, Database, FileText, Blocks, Variab
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
-import { createClient } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
-
-// Admin client for user management
-const supabaseAdmin = createClient(
-  "https://npesnjmygznqqadgkcfw.supabase.co",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || "",
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-);
 
 export default function Admin() {
   const {
@@ -176,9 +163,20 @@ export default function Admin() {
     if (!inviteEmail.trim()) return;
 
     try {
-      const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(inviteEmail.trim());
+      const response = await fetch('https://npesnjmygznqqadgkcfw.supabase.co/functions/v1/invite-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wZXNuam15Z3pucXFhZGdrY2Z3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY5Nzk3MTIsImV4cCI6MjA3MjU1NTcxMn0.4Ol4dwzsASb6cm7xlZClB8aM2CkFizMzrI5SxSYVeBg`,
+        },
+        body: JSON.stringify({ email: inviteEmail.trim() }),
+      });
 
-      if (error) throw error;
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to invite user');
+      }
 
       toast({
         title: "Erfolg",
