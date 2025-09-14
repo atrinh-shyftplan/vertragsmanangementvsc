@@ -7,6 +7,7 @@ import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import Contracts from "./pages/Contracts";
 import Admin from "./pages/Admin";
+import Users from "./pages/Users";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "@/contexts/AuthContext";
 import RequireAuth from "@/components/auth/RequireAuth";
@@ -28,7 +29,7 @@ const App = () => (
               <Route path="/contracts" element={<RequireAuth><Contracts /></RequireAuth>} />
               <Route path="/admin" element={<RequireAuth><Admin /></RequireAuth>} />
               <Route path="/analytics" element={<RequireAuth><div className="p-6 text-center text-muted-foreground">Analytics-Seite wird entwickelt...</div></RequireAuth>} />
-              <Route path="/users" element={<RequireAuth><div className="p-6 text-center text-muted-foreground">Benutzer-Verwaltung wird entwickelt...</div></RequireAuth>} />
+              <Route path="/users" element={<RequireAuth><Users /></RequireAuth>} />
               <Route path="/settings" element={<RequireAuth><div className="p-6 text-center text-muted-foreground">Einstellungen werden entwickelt...</div></RequireAuth>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
