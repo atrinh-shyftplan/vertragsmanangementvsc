@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { useAdminData } from '@/hooks/useAdminData';
 import { ContractTypeModal } from '@/components/admin/ContractTypeModal';
 import { ContractModuleModal } from '@/components/admin/ContractModuleModal';
@@ -11,9 +14,11 @@ import { ContractCompositionManager } from '@/components/admin/ContractCompositi
 import { TemplateBuilder } from '@/components/admin/TemplateBuilder';
 import { ProductTagManager } from '@/components/admin/ProductTagManager';
 import { ContractBuilder } from '@/components/admin/ContractBuilder';
-import { Plus, Edit2, Trash2, Copy, Settings, Database, FileText, Blocks, Variable, Tag } from 'lucide-react';
+import { Plus, Edit2, Trash2, Copy, Settings, Database, FileText, Blocks, Variable, Tag, Users, Mail } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Admin() {
   const {
@@ -51,6 +56,13 @@ export default function Admin() {
   const [selectedGlobalVariable, setSelectedGlobalVariable] = useState<any>(null);
   
   const [activeTab, setActiveTab] = useState("types");
+
+  // Users State
+  const [users, setUsers] = useState<any[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const { toast } = useToast();
 
   // Product Tags State
   const [productTags, setProductTags] = useState<string[]>(() => {
@@ -96,6 +108,91 @@ export default function Admin() {
     setGlobalVariableModalOpen(true);
   };
 
+  // Users Functions
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*, user_id')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast({
+        title: "Fehler",
+        description: "Benutzer konnten nicht geladen werden.",
+        variant: "destructive",
+      });
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const updateUserRole = async (userId: string, newRole: 'admin' | 'ae') => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      // Update local state
+      setUsers(users.map(user => 
+        user.user_id === userId ? { ...user, role: newRole } : user
+      ));
+
+      toast({
+        title: "Erfolg",
+        description: "Benutzerrolle wurde aktualisiert.",
+      });
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      toast({
+        title: "Fehler",
+        description: "Rolle konnte nicht aktualisiert werden.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const inviteUser = async () => {
+    if (!inviteEmail.trim()) return;
+
+    try {
+      const { error } = await supabase.auth.admin.inviteUserByEmail(inviteEmail.trim());
+
+      if (error) throw error;
+
+      toast({
+        title: "Erfolg",
+        description: `Einladung wurde an ${inviteEmail} gesendet.`,
+      });
+
+      setInviteEmail('');
+      setInviteModalOpen(false);
+      // Refresh users list
+      setTimeout(() => fetchUsers(), 1000);
+    } catch (error) {
+      console.error('Error inviting user:', error);
+      toast({
+        title: "Fehler",
+        description: "Benutzer konnte nicht eingeladen werden.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Load users when tab becomes active
+  useEffect(() => {
+    if (activeTab === 'users') {
+      fetchUsers();
+    }
+  }, [activeTab]);
+
   const closeModals = () => {
     setContractTypeModalOpen(false);
     setContractModuleModalOpen(false);
@@ -132,7 +229,7 @@ export default function Admin() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="types" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Vertragstypen
@@ -148,6 +245,10 @@ export default function Admin() {
           <TabsTrigger value="variables" className="flex items-center gap-2">
             <Variable className="h-4 w-4" />
             Variablen
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Benutzerverwaltung
           </TabsTrigger>
           <TabsTrigger value="builder" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -481,6 +582,89 @@ export default function Admin() {
           </Card>
         </TabsContent>
 
+        {/* Benutzerverwaltung */}
+        <TabsContent value="users" className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Benutzerverwaltung</CardTitle>
+                <CardDescription>
+                  Verwalten Sie Benutzer und deren Rollen im System.
+                </CardDescription>
+              </div>
+              <Button onClick={() => setInviteModalOpen(true)}>
+                <Mail className="h-4 w-4 mr-2" />
+                Benutzer einladen
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {usersLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Telefon</TableHead>
+                      <TableHead>Rolle</TableHead>
+                      <TableHead>Erstellt</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {user.avatar_url && (
+                              <img 
+                                src={user.avatar_url} 
+                                alt="Avatar" 
+                                className="h-8 w-8 rounded-full"
+                              />
+                            )}
+                            <div>
+                              <div className="font-medium">
+                                {user.display_name || 'Unbekannt'}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                ID: {user.user_id?.substring(0, 8)}...
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {user.phone_number || 'Nicht angegeben'}
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={user.role || 'ae'}
+                            onValueChange={(value: 'admin' | 'ae') => 
+                              updateUserRole(user.user_id, value)
+                            }
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="ae">AE</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(user.created_at).toLocaleDateString('de-DE')}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Vertrags-Builder */}
         <TabsContent value="builder" className="space-y-6">
           <ContractBuilder
@@ -562,6 +746,40 @@ export default function Admin() {
         }}
         globalVariable={selectedGlobalVariable}
       />
+
+      {/* Benutzer Einladungs-Dialog */}
+      <AlertDialog open={inviteModalOpen} onOpenChange={setInviteModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Benutzer einladen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Geben Sie die E-Mail-Adresse des Benutzers ein, den Sie einladen möchten.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Input
+              type="email"
+              placeholder="benutzer@beispiel.de"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  inviteUser();
+                }
+              }}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={inviteUser}
+              disabled={!inviteEmail.trim()}
+            >
+              Einladen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
