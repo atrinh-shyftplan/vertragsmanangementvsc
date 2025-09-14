@@ -138,14 +138,23 @@
 
 /* CSS Grid layout for side-by-side module display */
 .module-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 1rem;
+}
+
+/* Each row container holds one German-English pair */
+.grid-row-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 2rem;
-  margin-bottom: 1rem;
   align-items: start;
+  margin-bottom: 0.5rem;
 }
 
-.module-grid > div {
+.module-grid > div,
+.grid-row-container > div {
   align-self: start;
 }
 
@@ -159,13 +168,19 @@
   padding-bottom: 0.5rem;
 }
 
-/* Override prose spacing within module grid */
+/* Override prose spacing within module grid and grid rows */
 .module-grid .prose p,
 .module-grid .prose ul,
 .module-grid .prose ol,
 .module-grid .prose h3,
 .module-grid .prose h4,
-.module-grid .prose li {
+.module-grid .prose li,
+.grid-row-container .prose p,
+.grid-row-container .prose ul,
+.grid-row-container .prose ol,
+.grid-row-container .prose h3,
+.grid-row-container .prose h4,
+.grid-row-container .prose li {
   margin-top: 0;
   margin-bottom: 0.5rem;
 }
@@ -174,35 +189,81 @@
 .module-grid .prose ul:first-child,
 .module-grid .prose ol:first-child,
 .module-grid .prose h3:first-child,
-.module-grid .prose h4:first-child {
+.module-grid .prose h4:first-child,
+.grid-row-container .prose p:first-child,
+.grid-row-container .prose ul:first-child,
+.grid-row-container .prose ol:first-child,
+.grid-row-container .prose h3:first-child,
+.grid-row-container .prose h4:first-child {
   margin-top: 0;
 }
 
-/* Restore list styling within module grid */
-.module-grid .prose ul {
+/* Restore and enhance list styling within module grid */
+.module-grid .prose ul,
+.grid-row-container .prose ul {
   list-style-type: disc !important;
   padding-left: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
 }
 
-.module-grid .prose ol {
+.module-grid .prose ol,
+.grid-row-container .prose ol {
   list-style-type: decimal !important;
   padding-left: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
 }
 
-.module-grid .prose li {
+.module-grid .prose li,
+.grid-row-container .prose li {
   position: static !important;
-  padding-left: 0 !important;
+  padding-left: 0.25rem !important;
   margin-left: 0 !important;
+  margin-bottom: 0.25rem !important;
+  display: list-item !important;
 }
 
-/* Disable prose pseudo-elements for list items */
-.module-grid .prose li::before {
+/* Completely disable prose pseudo-elements for list items */
+.module-grid .prose li::before,
+.grid-row-container .prose li::before {
   display: none !important;
   content: none !important;
 }
 
-.module-grid .prose li::marker {
+/* Ensure list markers are always visible */
+.module-grid .prose li::marker,
+.grid-row-container .prose li::marker {
   display: list-item !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Force standard list appearance */
+.module-grid .prose ul li,
+.grid-row-container .prose ul li {
+  list-style: disc outside !important;
+}
+
+.module-grid .prose ol li,
+.grid-row-container .prose ol li {
+  list-style: decimal outside !important;
+}
+
+/* Nested list styling */
+.module-grid .prose ul ul,
+.module-grid .prose ol ol,
+.grid-row-container .prose ul ul,
+.grid-row-container .prose ol ol {
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.module-grid .prose ul ul li,
+.grid-row-container .prose ul ul li {
+  list-style-type: circle !important;
+}
+
+.module-grid .prose ul ul ul li,
+.grid-row-container .prose ul ul ul li {
+  list-style-type: square !important;
 }
 
 /* Responsive: Mobile view (grid becomes stacked) */
@@ -229,6 +290,10 @@
 
   /* Make module grid single column on mobile */
   .module-grid {
+    flex-direction: column;
+  }
+  
+  .grid-row-container {
     grid-template-columns: 1fr;
     gap: 1rem 0;
   }

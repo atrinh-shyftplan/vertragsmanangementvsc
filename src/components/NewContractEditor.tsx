@@ -277,15 +277,18 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       const germanBlocks = parseContentIntoBlocks(module.content_de);
       const englishBlocks = parseContentIntoBlocks(module.content_en);
       
-      // Create grid cells for each paragraph pair
+      // Create grid rows with each paragraph pair encapsulated in its own row
       const maxBlocks = Math.max(germanBlocks.length, englishBlocks.length);
       
       for (let i = 0; i < maxBlocks; i++) {
         const germanBlock = germanBlocks[i] || '';
         const englishBlock = englishBlocks[i] || '';
         
+        // Wrap each German-English block pair in its own grid row container
+        moduleHtml += `<div class="grid-row-container">`;
         moduleHtml += `<div class="prose prose-sm max-w-none grid-content-de">${processContent(germanBlock, moduleVariables)}</div>`;
         moduleHtml += `<div class="prose prose-sm max-w-none grid-content-en">${processContent(englishBlock, moduleVariables)}</div>`;
+        moduleHtml += `</div>`;
       }
       
       moduleHtml += `</div>`;
