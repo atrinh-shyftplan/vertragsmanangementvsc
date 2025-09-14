@@ -6,9 +6,14 @@ interface ContractHeaderProps {
   contractType: string;
   offerNumber?: string;
   date?: string;
+  assignedUser?: {
+    display_name: string | null;
+    email: string | null;
+    phone_number: string | null;
+  };
 }
 
-export function ContractHeader({ variableValues, contractType, offerNumber, date }: ContractHeaderProps) {
+export function ContractHeader({ variableValues, contractType, offerNumber, date, assignedUser }: ContractHeaderProps) {
   const getContractTitle = () => {
     switch (contractType) {
       case 'service_contract':
@@ -48,7 +53,10 @@ export function ContractHeader({ variableValues, contractType, offerNumber, date
           </div>
           <div className="text-sm">
             <div className="font-medium">Ansprechpartner:in shyftplan</div>
-            <div>{variableValues.ansprechpartner || 'Max Mustermann, xxx@shyftplan.com, +49 xxx'}</div>
+            <div>{assignedUser ? 
+              `${assignedUser.display_name || assignedUser.email}, ${assignedUser.email}, ${assignedUser.phone_number || 'Telefonnummer nicht verfügbar'}` :
+              (variableValues.ansprechpartner || 'Max Mustermann, xxx@shyftplan.com, +49 xxx')
+            }</div>
           </div>
           <div className="text-sm">
             <div className="font-medium">Bankverbindung</div>

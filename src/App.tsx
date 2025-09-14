@@ -11,6 +11,7 @@ import Users from "./pages/Users";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "@/contexts/AuthContext";
 import RequireAuth from "@/components/auth/RequireAuth";
+import RequireAdminAuth from "@/components/auth/RequireAdminAuth";
 import AuthPage from "./pages/Auth";
 
 const queryClient = new QueryClient();
@@ -27,10 +28,8 @@ const App = () => (
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/" element={<RequireAuth><Contracts /></RequireAuth>} />
               <Route path="/contracts" element={<RequireAuth><Contracts /></RequireAuth>} />
-              <Route path="/admin" element={<RequireAuth><Admin /></RequireAuth>} />
-              <Route path="/analytics" element={<RequireAuth><div className="p-6 text-center text-muted-foreground">Analytics-Seite wird entwickelt...</div></RequireAuth>} />
-              <Route path="/users" element={<RequireAuth><Users /></RequireAuth>} />
-              <Route path="/settings" element={<RequireAuth><div className="p-6 text-center text-muted-foreground">Einstellungen werden entwickelt...</div></RequireAuth>} />
+              <Route path="/admin" element={<RequireAdminAuth><Admin /></RequireAdminAuth>} />
+              <Route path="/users" element={<RequireAdminAuth><Users /></RequireAdminAuth>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

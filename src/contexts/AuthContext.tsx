@@ -2,9 +2,22 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+interface Profile {
+  id: string;
+  user_id: string;
+  display_name?: string | null;
+  email?: string | null;
+  phone_number?: string | null;
+  role?: 'admin' | 'ae';
+  avatar_url?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
+  profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string) => Promise<{ error: string | null }>;
@@ -16,19 +29,60 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const loadProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error loading profile:', error);
+        setProfile(null);
+        return;
+      }
+      
+      if (data) {
+        setProfile({
+          ...data,
+          role: data.role as 'admin' | 'ae'
+        });
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      setProfile(null);
+    }
+  };
 
   useEffect(() => {
     // 1) Subscribe first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
+      
+      if (newSession?.user) {
+        // Load profile after successful authentication
+        setTimeout(() => {
+          loadProfile(newSession.user.id);
+        }, 0);
+      } else {
+        setProfile(null);
+      }
     });
 
     // 2) Then get existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        await loadProfile(session.user.id);
+      }
+      
       setLoading(false);
     });
 
@@ -54,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
   };
 
-  const value: AuthContextValue = { user, session, loading, signIn, signUp, signOut };
+  const value: AuthContextValue = { user, session, profile, loading, signIn, signUp, signOut };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

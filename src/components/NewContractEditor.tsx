@@ -34,6 +34,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
   const [showDetails, setShowDetails] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<string[]>(['core']);
+  const [users, setUsers] = useState<any[]>([]);
 
   const handleTypeSelect = (typeKey: string) => {
     setSelectedType(typeKey);
@@ -68,6 +69,26 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     console.log('Available compositions:', compositions);
     console.log('Filtered modules:', modules);
   };
+
+  // Load users on component mount
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('display_name');
+        
+        if (error) throw error;
+        setUsers(data || []);
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    };
+    
+    loadUsers();
+  }, []);
 
   // Update modules when product selection changes
   useEffect(() => {
@@ -377,6 +398,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         tags: [contractTypes.find(t => t.key === selectedType)?.name_de || 'Vertrag'],
         progress: variableValues.status === 'draft' ? 0 : 25,
         contract_type_key: selectedType,
+        assigned_to_user_id: variableValues.assigned_to_user_id || null,
         template_variables: variableValues,
         global_variables: Object.fromEntries(
           globalVariables.map(gv => [gv.key, variableValues[gv.key] || ''])
@@ -545,6 +567,27 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                   Zuständigkeit
                 </h4>
                 <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="assigned_to_user_id">Zuständiger Ansprechpartner</Label>
+                    <Select
+                      value={variableValues.assigned_to_user_id || ''}
+                      onValueChange={(value) => setVariableValues(prev => ({
+                        ...prev,
+                        assigned_to_user_id: value
+                      }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Ansprechpartner auswählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {users.map(user => (
+                          <SelectItem key={user.id} value={user.user_id}>
+                            {user.display_name || user.email || 'Unbekannter Benutzer'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="assigned_to">Zugewiesen an</Label>
                     <Input

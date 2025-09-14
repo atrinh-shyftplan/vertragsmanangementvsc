@@ -39,6 +39,11 @@ interface Contract {
   startDate: string;
   endDate: string;
   assignedTo: string;
+  assignedUser?: {
+    display_name: string | null;
+    email: string | null;
+    phone_number: string | null;
+  };
   description: string;
   tags: string[];
   lastModified: string;
@@ -70,6 +75,7 @@ export default function Contracts() {
     startDate: dbContract.start_date,
     endDate: dbContract.end_date,
     assignedTo: dbContract.assigned_to || 'Unassigned',
+    assignedUser: dbContract.assigned_user || undefined,
     description: dbContract.description || '',
     tags: dbContract.tags || [],
     lastModified: dbContract.updated_at,
@@ -79,13 +85,20 @@ export default function Contracts() {
     globalVariables: dbContract.global_variables || undefined,
   });
 
-  // Load contracts from database
+  // Load contracts from database with assigned user data
   const loadContracts = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('contracts')
-        .select('*')
+        .select(`
+          *,
+          assigned_user:profiles!contracts_assigned_to_user_id_fkey(
+            display_name,
+            email,
+            phone_number
+          )
+        `)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;

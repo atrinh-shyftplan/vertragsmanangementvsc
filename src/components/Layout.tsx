@@ -12,7 +12,6 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import { mockUsers, type User } from '@/lib/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface LayoutProps {
@@ -20,25 +19,16 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const [currentUser, setCurrentUser] = useState<User>(mockUsers[0]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { session, signOut } = useAuth();
+  const { session, profile, signOut } = useAuth();
   const isActive = (path: string) => location.pathname === path;
-
-  const roleSwitch = () => {
-    const adminUser = mockUsers.find(u => u.role === 'admin');
-    const aeUser = mockUsers.find(u => u.role === 'ae');
-    setCurrentUser(currentUser.role === 'admin' ? aeUser! : adminUser!);
-  };
 
   const navigation = [
     { name: 'Verträge', href: '/', icon: FileText },
-    { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-    ...(currentUser.role === 'admin' ? [
+    ...(profile?.role === 'admin' ? [
       { name: 'Admin Panel', href: '/admin', icon: Settings },
-      { name: 'Benutzer', href: '/users', icon: Users },
-      { name: 'Einstellungen', href: '/settings', icon: Settings }
+      { name: 'Benutzerverwaltung', href: '/users', icon: Users }
     ] : [])
   ];
 
@@ -69,18 +59,15 @@ export default function Layout({ children }: LayoutProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={roleSwitch}
-              className="hidden sm:flex items-center gap-2"
-            >
-              <UserIcon className="h-4 w-4" />
-              {currentUser.name}
-              <Badge variant={currentUser.role === 'admin' ? 'default' : 'secondary'}>
-                {currentUser.role === 'admin' ? 'Admin' : 'AE'}
-              </Badge>
-            </Button>
+            {profile && (
+              <div className="hidden sm:flex items-center gap-2 text-sm">
+                <UserIcon className="h-4 w-4" />
+                <span>{profile.display_name || profile.email}</span>
+                <Badge variant={profile.role === 'admin' ? 'default' : 'secondary'}>
+                  {profile.role === 'admin' ? 'Admin' : 'AE'}
+                </Badge>
+              </div>
+            )}
             {session ? (
               <Button variant="ghost" size="sm" onClick={async () => { await signOut(); }}>
                 Logout
@@ -124,21 +111,18 @@ export default function Layout({ children }: LayoutProps) {
               })}
             </nav>
 
-            {/* Mobile Role Switch */}
-            <div className="border-t p-4 sm:hidden">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={roleSwitch}
-                className="w-full flex items-center gap-2"
-              >
-                <UserIcon className="h-4 w-4" />
-                {currentUser.name}
-                <Badge variant={currentUser.role === 'admin' ? 'default' : 'secondary'}>
-                  {currentUser.role === 'admin' ? 'Admin' : 'AE'}
-                </Badge>
-              </Button>
-            </div>
+            {/* Mobile User Info */}
+            {profile && (
+              <div className="border-t p-4 sm:hidden">
+                <div className="flex items-center gap-2 text-sm">
+                  <UserIcon className="h-4 w-4" />
+                  <span>{profile.display_name || profile.email}</span>
+                  <Badge variant={profile.role === 'admin' ? 'default' : 'secondary'}>
+                    {profile.role === 'admin' ? 'Admin' : 'AE'}
+                  </Badge>
+                </div>
+              </div>
+            )}
           </div>
         </aside>
 
