@@ -10,8 +10,10 @@ import {
   BarChart3,
   User as UserIcon,
   Menu,
-  X
+  X,
+  ChevronDown
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface LayoutProps {
@@ -59,19 +61,46 @@ export default function Layout({ children }: LayoutProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            {profile && (
-              <div className="hidden sm:flex items-center gap-2 text-sm">
-                <UserIcon className="h-4 w-4" />
-                <span>{profile.display_name || profile.email}</span>
-                <Badge variant={profile.role === 'admin' ? 'default' : 'secondary'}>
-                  {profile.role === 'admin' ? 'Admin' : 'AE'}
-                </Badge>
-              </div>
-            )}
-            {session ? (
-              <Button variant="ghost" size="sm" onClick={async () => { await signOut(); }}>
-                Logout
-              </Button>
+            {session && profile ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    <div className="hidden sm:flex items-center gap-2 text-sm">
+                      <UserIcon className="h-4 w-4" />
+                      <span>{profile.display_name || profile.email}</span>
+                      <Badge variant={profile.role === 'admin' ? 'default' : 'secondary'}>
+                        {profile.role === 'admin' ? 'Admin' : 'AE'}
+                      </Badge>
+                    </div>
+                    <div className="sm:hidden">
+                      <UserIcon className="h-4 w-4" />
+                    </div>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="flex items-center gap-2 p-2 sm:hidden">
+                    <UserIcon className="h-4 w-4" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{profile.display_name || profile.email}</span>
+                      <Badge variant={profile.role === 'admin' ? 'default' : 'secondary'} className="w-fit mt-1">
+                        {profile.role === 'admin' ? 'Admin' : 'AE'}
+                      </Badge>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator className="sm:hidden" />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center gap-2">
+                      <UserIcon className="h-4 w-4" />
+                      Mein Profil
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={async () => { await signOut(); }} className="text-destructive">
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Link to="/auth">
                 <Button size="sm">Login</Button>

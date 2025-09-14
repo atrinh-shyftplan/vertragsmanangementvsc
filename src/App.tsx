@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Contracts from "./pages/Contracts";
 import Admin from "./pages/Admin";
 import Users from "./pages/Users";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import RequireAuth from "@/components/auth/RequireAuth";
@@ -34,6 +35,7 @@ const AppContent = () => {
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/" element={<RequireAuth><Contracts /></RequireAuth>} />
           <Route path="/contracts" element={<RequireAuth><Contracts /></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/admin" element={<RequireAdminAuth><Admin /></RequireAdminAuth>} />
           <Route path="/users" element={<RequireAdminAuth><Users /></RequireAdminAuth>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
