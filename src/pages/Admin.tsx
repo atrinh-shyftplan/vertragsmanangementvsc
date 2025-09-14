@@ -18,7 +18,20 @@ import { Plus, Edit2, Trash2, Copy, Settings, Database, FileText, Blocks, Variab
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { createClient } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
+
+// Admin client for user management
+const supabaseAdmin = createClient(
+  "https://npesnjmygznqqadgkcfw.supabase.co",
+  process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
 
 export default function Admin() {
   const {
@@ -163,7 +176,7 @@ export default function Admin() {
     if (!inviteEmail.trim()) return;
 
     try {
-      const { error } = await supabase.auth.admin.inviteUserByEmail(inviteEmail.trim());
+      const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(inviteEmail.trim());
 
       if (error) throw error;
 
