@@ -169,7 +169,70 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     return preview || '<p class="text-gray-500">Keine Inhalte verfügbar</p>';
   };
 
-  // Simplified module rendering function
+  // Function to parse content into logical blocks based on paragraph markers
+  const parseContentIntoBlocks = (content: string) => {
+    if (!content || content.trim() === '') return [];
+    
+    // Regex pattern to match paragraph markers like § 1, (1), 1., 3.2, 3.2.1, etc.
+    // This matches:
+    // - § followed by numbers and dots (§ 1, § 3.2)
+    // - Numbers in parentheses ((1), (2))
+    // - Numbers followed by dots (1., 2., 3.2.1.)
+    // - Roman numerals followed by dots (I., II., III.)
+    const paragraphPattern = /^(\s*(?:§\s*\d+(?:\.\d+)*|(\d+(?:\.\d+)*\.?|\([0-9]+\)|[IVX]+\.)))/gm;
+    
+    const blocks = [];
+    let lastIndex = 0;
+    let match;
+    
+    // Reset the regex
+    paragraphPattern.lastIndex = 0;
+    
+    while ((match = paragraphPattern.exec(content)) !== null) {
+      // If there's content before this match, add it as a block
+      if (match.index > lastIndex) {
+        const beforeContent = content.substring(lastIndex, match.index).trim();
+        if (beforeContent) {
+          blocks.push(beforeContent);
+        }
+      }
+      
+      // Find the start of the next paragraph or end of content
+      const nextMatch = paragraphPattern.exec(content);
+      let blockEnd;
+      
+      if (nextMatch) {
+        blockEnd = nextMatch.index;
+        // Reset for next iteration
+        paragraphPattern.lastIndex = nextMatch.index;
+      } else {
+        blockEnd = content.length;
+      }
+      
+      // Extract the complete paragraph block
+      const blockContent = content.substring(match.index, blockEnd).trim();
+      if (blockContent) {
+        blocks.push(blockContent);
+      }
+      
+      lastIndex = blockEnd;
+      
+      if (!nextMatch) break;
+    }
+    
+    // Add any remaining content
+    if (lastIndex < content.length) {
+      const remaining = content.substring(lastIndex).trim();
+      if (remaining) {
+        blocks.push(remaining);
+      }
+    }
+    
+    // If no blocks were found, return the entire content as one block
+    return blocks.length > 0 ? blocks : [content.trim()];
+  };
+
+  // Simplified module rendering function with intelligent paragraph alignment
   const renderSimpleModule = (module: any, isAnnex: boolean, annexNumber: number) => {
     let moduleVariables = [];
     try {
@@ -197,7 +260,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       moduleHtml += `<div class="mb-8">`;
     }
     
-    // Side-by-Side view: Both German and English content - simple table
+    // Side-by-Side view: Both German and English content with intelligent paragraph alignment
     if (hasGermanContent && hasEnglishContent) {
       moduleHtml += `<table class="side-by-side-table">`;
       
@@ -215,10 +278,24 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       }
       
       moduleHtml += `<tbody>`;
-      moduleHtml += `<tr>`;
-      moduleHtml += `<td class="table-content-de">${processContent(module.content_de, moduleVariables)}</td>`;
-      moduleHtml += `<td class="table-content-en">${processContent(module.content_en, moduleVariables)}</td>`;
-      moduleHtml += `</tr>`;
+      
+      // Parse both contents into logical blocks
+      const germanBlocks = parseContentIntoBlocks(module.content_de);
+      const englishBlocks = parseContentIntoBlocks(module.content_en);
+      
+      // Create rows for each paragraph pair
+      const maxBlocks = Math.max(germanBlocks.length, englishBlocks.length);
+      
+      for (let i = 0; i < maxBlocks; i++) {
+        const germanBlock = germanBlocks[i] || '';
+        const englishBlock = englishBlocks[i] || '';
+        
+        moduleHtml += `<tr>`;
+        moduleHtml += `<td class="table-content-de">${processContent(germanBlock, moduleVariables)}</td>`;
+        moduleHtml += `<td class="table-content-en">${processContent(englishBlock, moduleVariables)}</td>`;
+        moduleHtml += `</tr>`;
+      }
+      
       moduleHtml += `</tbody>`;
       moduleHtml += `</table>`;
     }
