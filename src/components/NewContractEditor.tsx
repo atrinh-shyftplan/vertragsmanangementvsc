@@ -260,40 +260,44 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       moduleHtml += `<div class="mb-8">`;
     }
     
-    // Side-by-Side view: Both German and English content with CSS Grid alignment
+    // Side-by-Side view: Both German and English content with intelligent paragraph alignment
     if (hasGermanContent && hasEnglishContent) {
-      moduleHtml += `<div class="module-grid">`;
+      moduleHtml += `<table class="side-by-side-table">`;
       
-      // Add titles as side-by-side headers if not header module
+      // Add titles as table header if not header module
       if (!isHeaderModule) {
         const germanTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
         const englishTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
         
-        moduleHtml += `<div class="grid-header-row">`;
-        moduleHtml += `<div class="prose prose-sm max-w-none grid-header-de">${germanTitle}</div>`;
-        moduleHtml += `<div class="prose prose-sm max-w-none grid-header-en">${englishTitle}</div>`;
-        moduleHtml += `</div>`;
+        moduleHtml += `<thead>`;
+        moduleHtml += `<tr>`;
+        moduleHtml += `<th class="table-header-de">${germanTitle}</th>`;
+        moduleHtml += `<th class="table-header-en">${englishTitle}</th>`;
+        moduleHtml += `</tr>`;
+        moduleHtml += `</thead>`;
       }
+      
+      moduleHtml += `<tbody>`;
       
       // Parse both contents into logical blocks
       const germanBlocks = parseContentIntoBlocks(module.content_de);
       const englishBlocks = parseContentIntoBlocks(module.content_en);
       
-      // Create grid rows with each paragraph pair encapsulated in its own row
+      // Create rows for each paragraph pair
       const maxBlocks = Math.max(germanBlocks.length, englishBlocks.length);
       
       for (let i = 0; i < maxBlocks; i++) {
         const germanBlock = germanBlocks[i] || '';
         const englishBlock = englishBlocks[i] || '';
         
-        // Wrap each German-English block pair in its own grid row container
-        moduleHtml += `<div class="grid-row-container">`;
-        moduleHtml += `<div class="prose prose-sm max-w-none grid-content-de">${processContent(germanBlock, moduleVariables)}</div>`;
-        moduleHtml += `<div class="prose prose-sm max-w-none grid-content-en">${processContent(englishBlock, moduleVariables)}</div>`;
-        moduleHtml += `</div>`;
+        moduleHtml += `<tr>`;
+        moduleHtml += `<td class="table-content-de">${processContent(germanBlock, moduleVariables)}</td>`;
+        moduleHtml += `<td class="table-content-en">${processContent(englishBlock, moduleVariables)}</td>`;
+        moduleHtml += `</tr>`;
       }
       
-      moduleHtml += `</div>`;
+      moduleHtml += `</tbody>`;
+      moduleHtml += `</table>`;
     }
     // Single column view: Only German content
     else if (hasGermanContent && !hasEnglishContent) {
