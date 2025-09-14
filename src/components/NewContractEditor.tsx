@@ -157,49 +157,20 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     
     // Process regular modules first
     regularModules.forEach(({ selectedModule, module }) => {
-      preview += renderModule(module, false, 0);
+      preview += renderSimpleModule(module, false, 0);
     });
     
     // Process annex modules with proper numbering
     annexModules.forEach(({ selectedModule, module }, index) => {
       const annexNumber = index + 1;
-      preview += renderModule(module, true, annexNumber);
+      preview += renderSimpleModule(module, true, annexNumber);
     });
     
     return preview || '<p class="text-gray-500">Keine Inhalte verfügbar</p>';
   };
 
-  // Helper function to parse content into logical blocks for table layout
-  const parseContentIntoBlocks = (content: string) => {
-    if (!content) return [];
-    
-    // Use RegEx to split content into logical blocks (paragraphs, lists, etc.)
-    // This is more performant and handles edge cases better
-    const blocks = content
-      // First, normalize line breaks
-      .replace(/\r\n/g, '\n')
-      .replace(/\r/g, '\n')
-      // Split by double newlines (paragraph breaks)
-      .split(/\n\s*\n+/)
-      // Clean up each block
-      .map(block => {
-        return block
-          // Convert single newlines within a block to spaces, except for list items
-          .replace(/\n(?![*•\-\d+\.])/g, ' ')
-          // Preserve list structure by keeping newlines for list items
-          .replace(/\n([*•\-]|\d+\.)/g, '\n$1')
-          // Clean up extra whitespace
-          .replace(/\s+/g, ' ')
-          .trim();
-      })
-      // Remove empty blocks
-      .filter(block => block.length > 0);
-    
-    return blocks;
-  };
-
-  // Helper function to render individual modules with table-based layout
-  const renderModule = (module: any, isAnnex: boolean, annexNumber: number) => {
+  // Simplified module rendering function
+  const renderSimpleModule = (module: any, isAnnex: boolean, annexNumber: number) => {
     let moduleVariables = [];
     try {
       moduleVariables = Array.isArray(module.variables) 
@@ -214,7 +185,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     const hasGermanContent = (module.content_de || '').trim().length > 0;
     const hasEnglishContent = (module.content_en || '').trim().length > 0;
     
-    // Special handling for Header Sales module - center it and override prose styles
+    // Special handling for Header Sales module
     const isHeaderModule = module.key === 'Header Sales';
     
     let moduleHtml = '';
@@ -226,13 +197,8 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       moduleHtml += `<div class="mb-8">`;
     }
     
-    // Case 1: Both German and English content - table-based side-by-side layout
+    // Side-by-Side view: Both German and English content - simple table
     if (hasGermanContent && hasEnglishContent) {
-      // Parse content into blocks
-      const germanBlocks = parseContentIntoBlocks(processContent(module.content_de, moduleVariables));
-      const englishBlocks = parseContentIntoBlocks(processContent(module.content_en, moduleVariables));
-      
-      // Create table structure
       moduleHtml += `<table class="side-by-side-table">`;
       
       // Add titles as table header if not header module
@@ -249,24 +215,14 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       }
       
       moduleHtml += `<tbody>`;
-      
-      // Get max length to handle uneven content
-      const maxBlocks = Math.max(germanBlocks.length, englishBlocks.length);
-      
-      for (let i = 0; i < maxBlocks; i++) {
-        const germanBlock = germanBlocks[i] || '';
-        const englishBlock = englishBlocks[i] || '';
-        
-        moduleHtml += `<tr>`;
-        moduleHtml += `<td class="table-content-de">${germanBlock}</td>`;
-        moduleHtml += `<td class="table-content-en">${englishBlock}</td>`;
-        moduleHtml += `</tr>`;
-      }
-      
+      moduleHtml += `<tr>`;
+      moduleHtml += `<td class="table-content-de">${processContent(module.content_de, moduleVariables)}</td>`;
+      moduleHtml += `<td class="table-content-en">${processContent(module.content_en, moduleVariables)}</td>`;
+      moduleHtml += `</tr>`;
       moduleHtml += `</tbody>`;
       moduleHtml += `</table>`;
     }
-    // Case 2: Only German content - single-column layout
+    // Single column view: Only German content
     else if (hasGermanContent && !hasEnglishContent) {
       if (!isHeaderModule) {
         const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
@@ -274,7 +230,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       }
       moduleHtml += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
     }
-    // Case 3: Only English content - single-column layout
+    // Single column view: Only English content
     else if (!hasGermanContent && hasEnglishContent) {
       if (!isHeaderModule) {
         const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
@@ -290,6 +246,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     
     return moduleHtml;
   };
+
 
   const saveContract = async () => {
     try {
