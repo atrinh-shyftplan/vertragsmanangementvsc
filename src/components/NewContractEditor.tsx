@@ -260,44 +260,35 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       moduleHtml += `<div class="mb-8">`;
     }
     
-    // Side-by-Side view: Both German and English content with intelligent paragraph alignment
+    // Side-by-Side view: Both German and English content with CSS Grid alignment
     if (hasGermanContent && hasEnglishContent) {
-      moduleHtml += `<table class="side-by-side-table">`;
+      moduleHtml += `<div class="module-grid">`;
       
-      // Add titles as table header if not header module
+      // Add titles as grid header if not header module
       if (!isHeaderModule) {
         const germanTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
         const englishTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
         
-        moduleHtml += `<thead>`;
-        moduleHtml += `<tr>`;
-        moduleHtml += `<th class="table-header-de">${germanTitle}</th>`;
-        moduleHtml += `<th class="table-header-en">${englishTitle}</th>`;
-        moduleHtml += `</tr>`;
-        moduleHtml += `</thead>`;
+        moduleHtml += `<div class="prose prose-sm max-w-none grid-header-de">${germanTitle}</div>`;
+        moduleHtml += `<div class="prose prose-sm max-w-none grid-header-en">${englishTitle}</div>`;
       }
-      
-      moduleHtml += `<tbody>`;
       
       // Parse both contents into logical blocks
       const germanBlocks = parseContentIntoBlocks(module.content_de);
       const englishBlocks = parseContentIntoBlocks(module.content_en);
       
-      // Create rows for each paragraph pair
+      // Create grid cells for each paragraph pair
       const maxBlocks = Math.max(germanBlocks.length, englishBlocks.length);
       
       for (let i = 0; i < maxBlocks; i++) {
         const germanBlock = germanBlocks[i] || '';
         const englishBlock = englishBlocks[i] || '';
         
-        moduleHtml += `<tr>`;
-        moduleHtml += `<td class="table-content-de">${processContent(germanBlock, moduleVariables)}</td>`;
-        moduleHtml += `<td class="table-content-en">${processContent(englishBlock, moduleVariables)}</td>`;
-        moduleHtml += `</tr>`;
+        moduleHtml += `<div class="prose prose-sm max-w-none grid-content-de">${processContent(germanBlock, moduleVariables)}</div>`;
+        moduleHtml += `<div class="prose prose-sm max-w-none grid-content-en">${processContent(englishBlock, moduleVariables)}</div>`;
       }
       
-      moduleHtml += `</tbody>`;
-      moduleHtml += `</table>`;
+      moduleHtml += `</div>`;
     }
     // Single column view: Only German content
     else if (hasGermanContent && !hasEnglishContent) {

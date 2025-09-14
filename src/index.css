@@ -122,7 +122,7 @@
   }
 }
 
-/* Contract Preview Table-Based Layout Styles */
+/* Contract Preview CSS Grid Layout Styles */
 .contract-preview table {
   width: 100%;
   border-collapse: separate;
@@ -136,7 +136,76 @@
   text-align: left;
 }
 
-/* Responsive: Mobile view (single column tables become stacked) */
+/* CSS Grid layout for side-by-side module display */
+.module-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 2rem;
+  margin-bottom: 1rem;
+  align-items: start;
+}
+
+.module-grid > div {
+  align-self: start;
+}
+
+/* Grid headers styling */
+.grid-header-de,
+.grid-header-en {
+  font-weight: 600;
+  font-size: 1.1em;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid hsl(var(--border));
+  padding-bottom: 0.5rem;
+}
+
+/* Override prose spacing within module grid */
+.module-grid .prose p,
+.module-grid .prose ul,
+.module-grid .prose ol,
+.module-grid .prose h3,
+.module-grid .prose h4,
+.module-grid .prose li {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.module-grid .prose p:first-child,
+.module-grid .prose ul:first-child,
+.module-grid .prose ol:first-child,
+.module-grid .prose h3:first-child,
+.module-grid .prose h4:first-child {
+  margin-top: 0;
+}
+
+/* Restore list styling within module grid */
+.module-grid .prose ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+}
+
+.module-grid .prose ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+}
+
+.module-grid .prose li {
+  position: static !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Disable prose pseudo-elements for list items */
+.module-grid .prose li::before {
+  display: none !important;
+  content: none !important;
+}
+
+.module-grid .prose li::marker {
+  display: list-item !important;
+}
+
+/* Responsive: Mobile view (grid becomes stacked) */
 @media (max-width: 768px) {
   .contract-preview table,
   .contract-preview table tbody,
@@ -156,6 +225,12 @@
   
   .contract-preview table th:first-child {
     margin-bottom: 1rem;
+  }
+
+  /* Make module grid single column on mobile */
+  .module-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem 0;
   }
 }
 
