@@ -95,23 +95,20 @@ export default function Contracts() {
       setLoading(true);
     const { data, error } = await supabase
       .from('contracts')
-      .select(`
-        *,
-        assigned_user:profiles!contracts_assigned_to_user_id_fkey(
-          display_name,
-          email,
-          phone_number
-        ),
-        creator:profiles!contracts_created_by_fkey(
-          display_name
-        )
-      `)
+      .select(
+        '*, assigned_user:profiles!contracts_assigned_to_user_id_fkey(display_name), creator:profiles!contracts_created_by_fkey(display_name)'
+      )
       .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
-      const convertedContracts = data.map(convertDbContract);
-      setContracts(convertedContracts);
+      // Defensiv prüfen, ob die Daten ein Array sind und fehlerhafte Einträge (null) filtern.
+      if (Array.isArray(data)) {
+        const convertedContracts = data.filter(Boolean).map(convertDbContract);
+        setContracts(convertedContracts);
+      } else {
+        setContracts([]); // Fallback auf ein leeres Array, wenn keine Daten kommen.
+      }
     } catch (error) {
       console.error('Error loading contracts:', error);
       toast({
