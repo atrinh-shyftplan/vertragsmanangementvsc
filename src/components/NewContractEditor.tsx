@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { FileText, ArrowLeft, Save, X } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useAdminData } from '@/hooks/useAdminData';
 import { toast } from 'sonner';
 import { VariableInputRenderer } from '@/components/admin/VariableInputRenderer';
@@ -35,6 +36,8 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<string[]>(['core']);
   const [users, setUsers] = useState<any[]>([]);
+  const [isPdfDialogOpen, setIsPdfDialogOpen] = useState(false);
+  const [pdfFilename, setPdfFilename] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
 
   const handleTypeSelect = (typeKey: string) => {
@@ -697,20 +700,12 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
               <CardDescription>
                 Vorschau des generierten Vertrags - Variable Felder sind gelb markiert
               </CardDescription>
-              <div className="flex gap-2 mt-4">
-                <Button onClick={saveContract} className="flex items-center gap-2">
-                  <Save className="h-4 w-4" />
-                  Speichern
-                </Button>
+              <div className="mt-4">
                 <Button 
                   variant="outline" 
                   onClick={() => {
-                    const previewElement = document.querySelector('.contract-preview') as HTMLElement;
-                    if (previewElement) {
-                      import('@/lib/pdf-export').then(({ exportToPdf }) => {
-                        exportToPdf(previewElement, `${variableValues.title || 'Vertrag'}.pdf`);
-                      });
-                    }
+                    setPdfFilename(`${variableValues.title || 'Vertrag'}.pdf`);
+                    setIsPdfDialogOpen(true);
                   }}
                   className="flex items-center gap-2"
                 >
@@ -925,6 +920,40 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           </Card>
         </div>
       </div>
+
+      <AlertDialog open={isPdfDialogOpen} onOpenChange={setIsPdfDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>PDF exportieren</AlertDialogTitle>
+            <AlertDialogDescription>
+              Geben Sie einen Dateinamen für den PDF-Export ein.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Label htmlFor="pdf-filename">Dateiname</Label>
+            <Input
+              id="pdf-filename"
+              value={pdfFilename}
+              onChange={(e) => setPdfFilename(e.target.value)}
+              placeholder="Dateiname.pdf"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                const previewElement = document.querySelector('.contract-preview') as HTMLElement;
+                if (previewElement && pdfFilename) {
+                  const { exportToPdf } = await import('@/lib/pdf-export');
+                  exportToPdf(previewElement, pdfFilename);
+                }
+              }}
+            >
+              Exportieren
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

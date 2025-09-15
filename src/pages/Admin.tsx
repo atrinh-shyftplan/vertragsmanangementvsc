@@ -11,13 +11,11 @@ import { ContractModuleModal } from '@/components/admin/ContractModuleModal';
 import { ContractCategoryModal } from '@/components/admin/ContractCategoryModal';
 import { GlobalVariableModal } from '@/components/admin/GlobalVariableModal';
 import { ContractCompositionManager } from '@/components/admin/ContractCompositionManager';
-import { TemplateBuilder } from '@/components/admin/TemplateBuilder';
 import { ProductTagManager } from '@/components/admin/ProductTagManager';
 import { ContractBuilder } from '@/components/admin/ContractBuilder';
-import { Plus, Edit2, Trash2, Copy, Settings, Database, FileText, Blocks, Variable, Tag, Users, Mail } from 'lucide-react';
+import { Plus, Edit2, Trash2, Copy, Settings, Database, FileText, Blocks, Variable, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Admin() {
@@ -56,13 +54,6 @@ export default function Admin() {
   const [selectedGlobalVariable, setSelectedGlobalVariable] = useState<any>(null);
   
   const [activeTab, setActiveTab] = useState("types");
-
-  // Users State
-  const [users, setUsers] = useState<any[]>([]);
-  const [usersLoading, setUsersLoading] = useState(false);
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const { toast } = useToast();
 
   // Product Tags State
   const [productTags, setProductTags] = useState<string[]>(() => {
@@ -107,102 +98,6 @@ export default function Admin() {
     setSelectedGlobalVariable(globalVariable);
     setGlobalVariableModalOpen(true);
   };
-
-  // Users Functions
-  const fetchUsers = async () => {
-    setUsersLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*, user_id')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      setUsers(data || []);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      toast({
-        title: "Fehler",
-        description: "Benutzer konnten nicht geladen werden.",
-        variant: "destructive",
-      });
-    } finally {
-      setUsersLoading(false);
-    }
-  };
-
-  const updateUserRole = async (userId: string, newRole: 'admin' | 'ae') => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole })
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
-      // Update local state
-      setUsers(users.map(user => 
-        user.user_id === userId ? { ...user, role: newRole } : user
-      ));
-
-      toast({
-        title: "Erfolg",
-        description: "Benutzerrolle wurde aktualisiert.",
-      });
-    } catch (error) {
-      console.error('Error updating user role:', error);
-      toast({
-        title: "Fehler",
-        description: "Rolle konnte nicht aktualisiert werden.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const inviteUser = async () => {
-    if (!inviteEmail.trim()) return;
-
-    try {
-      const response = await fetch('https://npesnjmygznqqadgkcfw.supabase.co/functions/v1/invite-user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wZXNuam15Z3pucXFhZGdrY2Z3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY5Nzk3MTIsImV4cCI6MjA3MjU1NTcxMn0.4Ol4dwzsASb6cm7xlZClB8aM2CkFizMzrI5SxSYVeBg`,
-        },
-        body: JSON.stringify({ email: inviteEmail.trim() }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to invite user');
-      }
-
-      toast({
-        title: "Erfolg",
-        description: `Einladung wurde an ${inviteEmail} gesendet.`,
-      });
-
-      setInviteEmail('');
-      setInviteModalOpen(false);
-      // Refresh users list
-      setTimeout(() => fetchUsers(), 1000);
-    } catch (error) {
-      console.error('Error inviting user:', error);
-      toast({
-        title: "Fehler",
-        description: "Benutzer konnte nicht eingeladen werden.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Load users when tab becomes active
-  useEffect(() => {
-    if (activeTab === 'users') {
-      fetchUsers();
-    }
-  }, [activeTab]);
 
   const closeModals = () => {
     setContractTypeModalOpen(false);
@@ -589,8 +484,6 @@ export default function Admin() {
           </Card>
         </TabsContent>
 
-        {/* Benutzerverwaltung - REMOVED */}
-
         {/* Vertrags-Builder */}
         <TabsContent value="builder" className="space-y-6">
           <ContractBuilder
@@ -672,41 +565,6 @@ export default function Admin() {
         }}
         globalVariable={selectedGlobalVariable}
       />
-
-      {/* Benutzer Einladungs-Dialog */}
-      <AlertDialog open={inviteModalOpen} onOpenChange={setInviteModalOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Benutzer einladen</AlertDialogTitle>
-            <AlertDialogDescription>
-              Geben Sie die E-Mail-Adresse des Benutzers ein, den Sie einladen möchten.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="py-4">
-            <Input
-              type="email"
-              placeholder="benutzer@beispiel.de"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  inviteUser();
-                }
-              }}
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={inviteUser}
-              disabled={!inviteEmail.trim()}
-            >
-              Einladen
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
     </div>
   );
 }
