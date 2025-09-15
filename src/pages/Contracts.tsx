@@ -95,9 +95,7 @@ export default function Contracts() {
       setLoading(true);
     const { data, error } = await supabase
       .from('contracts')
-      .select(
-        '*, assigned_user:profiles!contracts_assigned_to_user_id_fkey(display_name), creator:profiles!contracts_created_by_fkey(display_name)'
-      )
+      .select('*, assigned_user:profiles(display_name), creator:profiles(display_name)')
       .order('updated_at', { ascending: false });
 
       if (error) throw error;
