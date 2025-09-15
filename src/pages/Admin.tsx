@@ -240,7 +240,7 @@ export default function Admin() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="types" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Vertragstypen
@@ -256,10 +256,6 @@ export default function Admin() {
           <TabsTrigger value="variables" className="flex items-center gap-2">
             <Variable className="h-4 w-4" />
             Variablen
-          </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Benutzerverwaltung
           </TabsTrigger>
           <TabsTrigger value="builder" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -587,94 +583,13 @@ export default function Admin() {
                       </AlertDialog>
                     </div>
                   </div>
-                ))}
+                 ))}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Benutzerverwaltung */}
-        <TabsContent value="users" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Benutzerverwaltung</CardTitle>
-                <CardDescription>
-                  Verwalten Sie Benutzer und deren Rollen im System.
-                </CardDescription>
-              </div>
-              <Button onClick={() => setInviteModalOpen(true)}>
-                <Mail className="h-4 w-4 mr-2" />
-                Benutzer einladen
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {usersLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Telefon</TableHead>
-                      <TableHead>Rolle</TableHead>
-                      <TableHead>Erstellt</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {user.avatar_url && (
-                              <img 
-                                src={user.avatar_url} 
-                                alt="Avatar" 
-                                className="h-8 w-8 rounded-full"
-                              />
-                            )}
-                            <div>
-                              <div className="font-medium">
-                                {user.display_name || 'Unbekannt'}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                ID: {user.user_id?.substring(0, 8)}...
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {user.phone_number || 'Nicht angegeben'}
-                        </TableCell>
-                        <TableCell>
-                          <Select
-                            value={user.role || 'ae'}
-                            onValueChange={(value: 'admin' | 'ae') => 
-                              updateUserRole(user.user_id, value)
-                            }
-                          >
-                            <SelectTrigger className="w-32">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="ae">AE</SelectItem>
-                              <SelectItem value="admin">Admin</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(user.created_at).toLocaleDateString('de-DE')}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* Benutzerverwaltung - REMOVED */}
 
         {/* Vertrags-Builder */}
         <TabsContent value="builder" className="space-y-6">

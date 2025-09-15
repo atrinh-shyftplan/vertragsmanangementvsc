@@ -44,6 +44,9 @@ interface Contract {
     email: string | null;
     phone_number: string | null;
   };
+  creator?: {
+    display_name: string | null;
+  };
   description: string;
   tags: string[];
   lastModified: string;
@@ -74,8 +77,9 @@ export default function Contracts() {
     value: dbContract.value,
     startDate: dbContract.start_date,
     endDate: dbContract.end_date,
-    assignedTo: dbContract.assigned_to || 'Unassigned',
+    assignedTo: dbContract.assigned_user?.display_name || dbContract.assigned_to || 'Unassigned',
     assignedUser: dbContract.assigned_user || undefined,
+    creator: dbContract.creator || undefined,
     description: dbContract.description || '',
     tags: dbContract.tags || [],
     lastModified: dbContract.updated_at,
@@ -89,17 +93,20 @@ export default function Contracts() {
   const loadContracts = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('contracts')
-        .select(`
-          *,
-          assigned_user:profiles!contracts_assigned_to_user_id_fkey(
-            display_name,
-            email,
-            phone_number
-          )
-        `)
-        .order('updated_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('contracts')
+      .select(`
+        *,
+        assigned_user:profiles!contracts_assigned_to_user_id_fkey(
+          display_name,
+          email,
+          phone_number
+        ),
+        creator:profiles!contracts_created_by_fkey(
+          display_name
+        )
+      `)
+      .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
@@ -298,6 +305,10 @@ export default function Contracts() {
                         Bearbeiten
                       </DropdownMenuItem>
                     )}
+                    <DropdownMenuItem onClick={() => handleEditContract(contract)}>
+                      <FileText className="mr-2 h-4 w-4" />
+                      PDF exportieren
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -325,9 +336,25 @@ export default function Contracts() {
                 </div>
               </div>
 
-              <div className="pt-2 border-t">
-                <p className="text-xs text-muted-foreground">Zugewiesen an</p>
-                <p className="text-sm font-medium">{contract.assignedTo}</p>
+              <div className="pt-2 border-t space-y-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">Zuständiger</p>
+                  <p className="text-sm font-medium">
+                    {contract.assignedUser?.display_name || contract.assignedTo || 'Nicht zugewiesen'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Erstellt von</p>
+                  <p className="text-sm font-medium">
+                    {contract.creator?.display_name || 'Unbekannt'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Zuletzt geändert</p>
+                  <p className="text-sm font-medium">
+                    {formatDate(contract.lastModified)}
+                  </p>
+                </div>
               </div>
 
               {contract.status !== 'active' && (

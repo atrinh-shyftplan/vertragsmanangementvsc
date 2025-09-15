@@ -35,6 +35,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<string[]>(['core']);
   const [users, setUsers] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   const handleTypeSelect = (typeKey: string) => {
     setSelectedType(typeKey);
@@ -551,10 +552,22 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                       id="gueltig_bis"
                       type="date"
                       value={variableValues.gueltig_bis || ''}
-                      onChange={(e) => setVariableValues(prev => ({
-                        ...prev,
-                        gueltig_bis: e.target.value
-                      }))}
+                     onChange={(e) => {
+                        const dateValue = e.target.value;
+                        // Format date as German date string for variable
+                        const formattedDate = dateValue ? 
+                          new Date(dateValue).toLocaleDateString('de-DE', {
+                            day: '2-digit',
+                            month: '2-digit', 
+                            year: 'numeric'
+                          }) : '';
+                        
+                        setVariableValues(prev => ({
+                          ...prev,
+                          gueltig_bis: dateValue,
+                          gueltig_bis_formatted: formattedDate // Update the variable value for contract content
+                        }));
+                      }}
                       placeholder="Gültigkeitsdatum"
                     />
                   </div>
@@ -571,10 +584,15 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                     <Label htmlFor="assigned_to_user_id">Zuständiger Ansprechpartner</Label>
                     <Select
                       value={variableValues.assigned_to_user_id || ''}
-                      onValueChange={(value) => setVariableValues(prev => ({
-                        ...prev,
-                        assigned_to_user_id: value
-                      }))}
+                     onValueChange={(value) => {
+                        setVariableValues(prev => ({
+                          ...prev,
+                          assigned_to_user_id: value
+                        }));
+                        // Find and set the selected user for preview
+                        const user = users.find(u => u.user_id === value);
+                        setSelectedUser(user || null);
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Ansprechpartner auswählen" />
@@ -673,12 +691,33 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
         {/* Preview Panel - larger width */}
         <div className="lg:col-span-3">
-          <Card className="h-full">
+          <Card>
             <CardHeader>
               <CardTitle>Live-Vorschau</CardTitle>
               <CardDescription>
                 Vorschau des generierten Vertrags - Variable Felder sind gelb markiert
               </CardDescription>
+              <div className="flex gap-2 mt-4">
+                <Button onClick={saveContract} className="flex items-center gap-2">
+                  <Save className="h-4 w-4" />
+                  Speichern
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    const previewElement = document.querySelector('.contract-preview') as HTMLElement;
+                    if (previewElement) {
+                      import('@/lib/pdf-export').then(({ exportToPdf }) => {
+                        exportToPdf(previewElement, `${variableValues.title || 'Vertrag'}.pdf`);
+                      });
+                    }
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  PDF Export
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
                 <div 
