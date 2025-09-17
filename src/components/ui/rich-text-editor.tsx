@@ -6,13 +6,34 @@ import { TextAlign } from '@tiptap/extension-text-align';
 import { ListKeymap } from '@tiptap/extension-list-keymap';
 import { TaskList } from '@tiptap/extension-task-list';
 import { TaskItem } from '@tiptap/extension-task-item';
-import { Image } from '@tiptap/extension-image';
-import { Button } from '@/components/ui/button';
+import Image from '@tiptap/extension-image'; // Import Image extension
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Bold, Italic, Underline, List, ListOrdered, Quote, CheckSquare, Indent as IndentIcon, Outdent as OutdentIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify, Variable, Search, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IndentExtension } from '@/lib/indent-extension';
 import { supabase } from '@/integrations/supabase/client';
+
+// NEU: Erweiterte Bild-Konfiguration
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+const CustomImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: '100%', // Standardmäßig volle Breite
+      },
+      'data-align': {
+        default: 'center', // Standardmäßig zentriert
+      },
+    };
+  },
+});
 
 interface RichTextEditorProps {
   content: string;
@@ -72,6 +93,17 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
     input.click();
   };
 
+  // NEUE Handler für Bildanpassung
+  const setImageSize = (size: string) => {
+    if (!editor) return;
+    editor.chain().focus().updateAttributes('image', { width: size }).run();
+  };
+
+  const setImageAlignment = (align: 'left' | 'center' | 'right') => {
+    if (!editor) return;
+    editor.chain().focus().updateAttributes('image', { 'data-align': align }).run();
+  };
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -114,7 +146,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
         minLevel: 0,
         maxLevel: 8,
       }),
-      Image.configure({
+      CustomImage.configure({
         HTMLAttributes: {
           class: 'prose-image max-w-full h-auto rounded-lg',
         },
@@ -156,259 +188,220 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
 
   return (
     <div className={cn("border rounded-md bg-background", className)}>
-      {/* Enhanced Toolbar */}
-      <div className="flex flex-wrap items-center gap-1 p-3 border-b bg-muted/30">
-        {/* Basic formatting */}
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            className={cn("h-8 w-8 p-0", editor.isActive('bold') && "bg-primary/20")}
-          >
-            <Bold className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={cn("h-8 w-8 p-0", editor.isActive('italic') && "bg-primary/20")}
-          >
-            <Italic className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-            className={cn("h-8 w-8 p-0", editor.isActive('strike') && "bg-primary/20")}
-          >
-            <Underline className="h-4 w-4" />
-          </Button>
-        </div>
+      <TooltipProvider delayDuration={0}>
+        <div className="flex flex-wrap items-center gap-1 p-3 border-b bg-muted/30">
+          {/* Basic formatting */}
+          <div className="flex items-center gap-1">
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleBold().run()} className={cn("h-8 w-8 p-0", editor.isActive('bold') && "bg-primary/20")}>
+              <Bold className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Fett</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleItalic().run()} className={cn("h-8 w-8 p-0", editor.isActive('italic') && "bg-primary/20")}>
+              <Italic className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Kursiv</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleStrike().run()} className={cn("h-8 w-8 p-0", editor.isActive('strike') && "bg-primary/20")}>
+              <Underline className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Durchgestrichen</p></TooltipContent></Tooltip>
+          </div>
 
-        <div className="w-px h-6 bg-border mx-1" />
+          <div className="w-px h-6 bg-border mx-1" />
 
-        {/* Headings */}
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().setHeading({ level: 1 }).run()}
-            className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 1 }) && "bg-primary/20")}
-          >
-            H1
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().setHeading({ level: 2 }).run()}
-            className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 2 }) && "bg-primary/20")}
-          >
-            H2
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().setHeading({ level: 3 }).run()}
-            className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 3 }) && "bg-primary/20")}
-          >
-            H3
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().setParagraph().run()}
-            className={cn("h-8 px-2 text-xs", !editor.isActive('heading') && !editor.isActive('blockquote') && "bg-primary/20")}
-          >
-            P
-          </Button>
-        </div>
+          {/* Headings */}
+          <div className="flex items-center gap-1">
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setHeading({ level: 1 }).run()} className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 1 }) && "bg-primary/20")}>
+              H1</Button></TooltipTrigger><TooltipContent><p>Überschrift 1</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setHeading({ level: 2 }).run()} className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 2 }) && "bg-primary/20")}>
+              H2</Button></TooltipTrigger><TooltipContent><p>Überschrift 2</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setHeading({ level: 3 }).run()} className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 3 }) && "bg-primary/20")}>
+              H3</Button></TooltipTrigger><TooltipContent><p>Überschrift 3</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setParagraph().run()} className={cn("h-8 px-2 text-xs", !editor.isActive('heading') && !editor.isActive('blockquote') && "bg-primary/20")}>
+              P</Button></TooltipTrigger><TooltipContent><p>Absatz</p></TooltipContent></Tooltip>
+          </div>
 
-        <div className="w-px h-6 bg-border mx-1" />
+          <div className="w-px h-6 bg-border mx-1" />
 
-        {/* Lists */}
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={cn("h-8 w-8 p-0", editor.isActive('bulletList') && "bg-primary/20")}
-          >
-            <List className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={cn("h-8 w-8 p-0", editor.isActive('orderedList') && "bg-primary/20")}
-          >
-            <ListOrdered className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleTaskList().run()}
-            className={cn("h-8 w-8 p-0", editor.isActive('taskList') && "bg-primary/20")}
-          >
-            <CheckSquare className="h-4 w-4" />
-          </Button>
-        </div>
+          {/* Lists */}
+          <div className="flex items-center gap-1">
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleBulletList().run()} className={cn("h-8 w-8 p-0", editor.isActive('bulletList') && "bg-primary/20")}>
+              <List className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Aufzählung</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={cn("h-8 w-8 p-0", editor.isActive('orderedList') && "bg-primary/20")}>
+              <ListOrdered className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Nummerierte Liste</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleTaskList().run()} className={cn("h-8 w-8 p-0", editor.isActive('taskList') && "bg-primary/20")}>
+              <CheckSquare className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Checkliste</p></TooltipContent></Tooltip>
+          </div>
 
-        <div className="w-px h-6 bg-border mx-1" />
+          <div className="w-px h-6 bg-border mx-1" />
 
-        {/* Indentation */}
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().outdent().run()}
-            className="h-8 w-8 p-0"
-            title="Ausrücken"
-          >
-            <OutdentIcon className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().indent().run()}
-            className="h-8 w-8 p-0"
-            title="Einrücken"
-          >
-            <IndentIcon className="h-4 w-4" />
-          </Button>
-        </div>
+          {/* Indentation */}
+          <div className="flex items-center gap-1">
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().outdent().run()} className="h-8 w-8 p-0">
+              <OutdentIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Ausrücken</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().indent().run()} className="h-8 w-8 p-0">
+              <IndentIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Einrücken</p></TooltipContent></Tooltip>
+          </div>
 
-        <div className="w-px h-6 bg-border mx-1" />
+          <div className="w-px h-6 bg-border mx-1" />
 
-        {/* Text Alignment */}
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().setTextAlign('left').run()}
-            className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'left' }) && "bg-primary/20")}
-          >
-            <AlignLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().setTextAlign('center').run()}
-            className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'center' }) && "bg-primary/20")}
-          >
-            <AlignCenter className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().setTextAlign('right').run()}
-            className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'right' }) && "bg-primary/20")}
-          >
-            <AlignRight className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-            className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'justify' }) && "bg-primary/20")}
-          >
-            <AlignJustify className="h-4 w-4" />
-          </Button>
-        </div>
+          {/* Text Alignment */}
+          <div className="flex items-center gap-1">
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setTextAlign('left').run()} className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'left' }) && "bg-primary/20")}>
+              <AlignLeft className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Linksbündig</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setTextAlign('center').run()} className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'center' }) && "bg-primary/20")}>
+              <AlignCenter className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zentriert</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setTextAlign('right').run()} className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'right' }) && "bg-primary/20")}>
+              <AlignRight className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Rechtsbündig</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setTextAlign('justify').run()} className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'justify' }) && "bg-primary/20")}>
+              <AlignJustify className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Blocksatz</p></TooltipContent></Tooltip>
+          </div>
 
-        <div className="w-px h-6 bg-border mx-1" />
+          <div className="w-px h-6 bg-border mx-1" />
 
-        {/* Quote */}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={cn("h-8 w-8 p-0", editor.isActive('blockquote') && "bg-primary/20")}
-        >
-          <Quote className="h-4 w-4" />
-        </Button>
+          {/* Quote */}
+          <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleBlockquote().run()} className={cn("h-8 w-8 p-0", editor.isActive('blockquote') && "bg-primary/20")}>
+            <Quote className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zitat</p></TooltipContent></Tooltip>
 
-        <div className="w-px h-6 bg-border mx-1" />
+          <div className="w-px h-6 bg-border mx-1" />
 
-        {/* Image Upload */}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleImageUpload}
-          className="h-8 w-8 p-0"
-          title="Bild hochladen"
-        >
-          <ImageIcon className="h-4 w-4" />
-        </Button>
+          {/* Image Upload */}
+          <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={handleImageUpload} className="h-8 w-8 p-0">
+            <ImageIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Bild hochladen</p></TooltipContent></Tooltip>
 
-        <div className="w-px h-6 bg-border mx-1" />
+          {/* NEU: Buttons sind nur sichtbar, wenn ein Bild aktiv ist */}
+          {editor.isActive('image') && (
+            <>
+              <div className="w-px h-6 bg-border mx-1" />
+              <Tooltip><TooltipTrigger asChild>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setImageAlignment('left')} className={cn("h-8 w-8 p-0", editor.isActive('image', { 'data-align': 'left' }) && "bg-primary/20")}>
+                  <AlignLeft className="h-4 w-4" />
+                </Button></TooltipTrigger><TooltipContent><p>Linksbündig</p></TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setImageAlignment('center')} className={cn("h-8 w-8 p-0", editor.isActive('image', { 'data-align': 'center' }) && "bg-primary/20")}>
+                  <AlignCenter className="h-4 w-4" />
+                </Button></TooltipTrigger><TooltipContent><p>Zentriert</p></TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setImageAlignment('right')} className={cn("h-8 w-8 p-0", editor.isActive('image', { 'data-align': 'right' }) && "bg-primary/20")}>
+                  <AlignRight className="h-4 w-4" />
+                </Button></TooltipTrigger><TooltipContent><p>Rechtsbündig</p></TooltipContent></Tooltip>
 
-        {/* Variables */}
-        {globalVariables.length > 0 && (
-          <Popover open={variablePopoverOpen} onOpenChange={setVariablePopoverOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 gap-1 text-xs"
-              >
-                <Variable className="h-3 w-3" />
-                <span>Variable</span>
-                <Search className="h-3 w-3 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-96 p-0 bg-popover border shadow-lg z-50" align="start">
-              {/* Search and Filter Controls */}
-              <div className="p-3 border-b space-y-2">
-                <input
-                  type="text"
-                  placeholder="Suche Variablen..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              <div className="w-px h-6 bg-border mx-1" />
+
+              <Tooltip><TooltipTrigger asChild>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('25%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '25%' }) && "bg-primary/20")}>
+                  <span className="font-bold text-xs">S</span>
+                </Button></TooltipTrigger><TooltipContent><p>Kleine Größe</p></TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('50%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '50%' }) && "bg-primary/20")}>
+                  <span className="font-bold text-xs">M</span>
+                </Button></TooltipTrigger><TooltipContent><p>Mittlere Größe</p></TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('100%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '100%' }) && "bg-primary/20")}>
+                  <span className="font-bold text-xs">L</span>
+                </Button></TooltipTrigger><TooltipContent><p>Volle Breite</p></TooltipContent></Tooltip>
+            </>
+          )}
+
+          <div className="w-px h-6 bg-border mx-1" />
+
+          {/* Variables */}
+          {globalVariables.length > 0 && (
+            <Popover open={variablePopoverOpen} onOpenChange={setVariablePopoverOpen}>
+              <Tooltip><TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 gap-1 text-xs"
                 >
-                  <option value="all">Alle Kategorien</option>
-                  {Array.from(new Set(globalVariables.map(v => v.category || 'general'))).map(category => (
-                    <option key={category} value={category}>
-                      {category === 'header' ? 'Header' : 
-                       category === 'vertragskonditionen' ? 'Vertragskonditionen' :
-                       category === 'general' ? 'Allgemein' : category}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <Variable className="h-3 w-3" />
+                  <span>Variable</span>
+                  <Search className="h-3 w-3 opacity-50" />
+                </Button>
+              </TooltipTrigger><TooltipContent><p>Variable einfügen</p></TooltipContent></Tooltip>
+              <PopoverContent className="w-96 p-0 bg-popover border shadow-lg z-50" align="start">
+                {/* Search and Filter Controls */}
+                <div className="p-3 border-b space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Suche Variablen..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-3 py-2 text-sm bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full px-3 py-2 text-sm bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="all">Alle Kategorien</option>
+                    {Array.from(new Set(globalVariables.map(v => v.category || 'general'))).map(category => (
+                      <option key={category} value={category}>
+                        {category === 'header' ? 'Header' : 
+                         category === 'vertragskonditionen' ? 'Vertragskonditionen' :
+                         category === 'general' ? 'Allgemein' : category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Variables List */}
-              <div className="max-h-80 overflow-y-auto">
-                {(() => {
-                  // Filter variables based on search and category
-                  const filteredVariables = globalVariables.filter(variable => {
+                {/* Variables List */}
+                <div className="max-h-80 overflow-y-auto">
+                  {(() => {
+                    // Filter variables based on search and category
+                    const filteredVariables = globalVariables.filter(variable => {
+                      const matchesSearch = searchTerm === '' ||
+                        variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+                      
+                      const matchesCategory = selectedCategory === 'all' || 
+                        (variable.category || 'general') === selectedCategory;
+                      
+                      return matchesSearch && matchesCategory;
+                    });
+
+                    // Group by category
+                    const groupedVariables = filteredVariables.reduce((acc, variable) => {
+                      const category = variable.category || 'general';
+                      if (!acc[category]) acc[category] = [];
+                      acc[category].push(variable);
+                      return acc;
+                    }, {} as Record<string, typeof globalVariables>);
+
+                    const categoryNames = {
+                      header: 'Header',
+                      vertragskonditionen: 'Vertragskonditionen', 
+                      general: 'Allgemein'
+                    };
+
+                    return Object.entries(groupedVariables).map(([category, variables]) => (
+                      <div key={category} className="p-2">
+                        <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b mb-2">
+                          {categoryNames[category as keyof typeof categoryNames] || category}
+                        </div>
+                        {variables.map(variable => (
+                          <div
+                            key={variable.key}
+                            onClick={() => {
+                              editor.chain().focus().insertContent(`{{${variable.key}}}`).run();
+                              setVariablePopoverOpen(false);
+                              setSearchTerm('');
+                              setSelectedCategory('all');
+                            }}
+                            className="flex flex-col gap-1 p-3 cursor-pointer hover:bg-accent rounded-md mx-1 mb-1"
+                          >
+                            <div className="flex w-full justify-between items-center">
+                              <span className="font-medium text-sm">{variable.name_de}</span>
+                              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded font-mono">
+                                {`{{${variable.key}}}`}
+                              </span>
+                            </div>
+                            {variable.description && (
+                              <span className="text-xs text-muted-foreground">{variable.description}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ));
+                  })()}
+                  
+                  {/* No results message */}
+                  {globalVariables.filter(variable => {
                     const matchesSearch = searchTerm === '' ||
                       variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -418,74 +411,17 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                       (variable.category || 'general') === selectedCategory;
                     
                     return matchesSearch && matchesCategory;
-                  });
-
-                  // Group by category
-                  const groupedVariables = filteredVariables.reduce((acc, variable) => {
-                    const category = variable.category || 'general';
-                    if (!acc[category]) acc[category] = [];
-                    acc[category].push(variable);
-                    return acc;
-                  }, {} as Record<string, typeof globalVariables>);
-
-                  const categoryNames = {
-                    header: 'Header',
-                    vertragskonditionen: 'Vertragskonditionen', 
-                    general: 'Allgemein'
-                  };
-
-                  return Object.entries(groupedVariables).map(([category, variables]) => (
-                    <div key={category} className="p-2">
-                      <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b mb-2">
-                        {categoryNames[category as keyof typeof categoryNames] || category}
-                      </div>
-                      {variables.map(variable => (
-                        <div
-                          key={variable.key}
-                          onClick={() => {
-                            editor.chain().focus().insertContent(`{{${variable.key}}}`).run();
-                            setVariablePopoverOpen(false);
-                            setSearchTerm('');
-                            setSelectedCategory('all');
-                          }}
-                          className="flex flex-col gap-1 p-3 cursor-pointer hover:bg-accent rounded-md mx-1 mb-1"
-                        >
-                          <div className="flex w-full justify-between items-center">
-                            <span className="font-medium text-sm">{variable.name_de}</span>
-                            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded font-mono">
-                              {`{{${variable.key}}}`}
-                            </span>
-                          </div>
-                          {variable.description && (
-                            <span className="text-xs text-muted-foreground">{variable.description}</span>
-                          )}
-                        </div>
-                      ))}
+                  }).length === 0 && (
+                    <div className="p-8 text-center text-muted-foreground text-sm">
+                      Keine Variablen gefunden.
                     </div>
-                  ));
-                })()}
-                
-                {/* No results message */}
-                {globalVariables.filter(variable => {
-                  const matchesSearch = searchTerm === '' ||
-                    variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase());
-                  
-                  const matchesCategory = selectedCategory === 'all' || 
-                    (variable.category || 'general') === selectedCategory;
-                  
-                  return matchesSearch && matchesCategory;
-                }).length === 0 && (
-                  <div className="p-8 text-center text-muted-foreground text-sm">
-                    Keine Variablen gefunden.
-                  </div>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
-        )}
-      </div>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
+      </TooltipProvider>
 
       {/* Editor Content */}
       <div className="relative">

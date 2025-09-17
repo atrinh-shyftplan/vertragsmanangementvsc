@@ -374,3 +374,23 @@
     text-align: inherit;
   }
 }
+
+/* NEU: CSS für Bildausrichtung im Editor */
+.prose img {
+  display: block; /* Wichtig, damit margin auto funktioniert */
+}
+
+.prose img[data-align="left"] {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.prose img[data-align="center"] {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.prose img[data-align="right"] {
+  margin-left: auto;
+  margin-right: 0;
+}
