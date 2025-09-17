@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { TextAlign } from '@tiptap/extension-text-align';
@@ -21,6 +21,23 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+// NEU: Komponente, die das Bild im Editor rendert
+const ImageView = ({ node, selected }) => {
+  return (
+    <NodeViewWrapper className="image-wrapper inline-block" data-drag-handle>
+      <img
+        {...node.attrs}
+        className={cn(
+          "max-w-full h-auto rounded-lg",
+          selected ? "ring-2 ring-primary ring-offset-2" : ""
+        )}
+        style={{ width: node.attrs.width }}
+        data-align={node.attrs["data-align"]}
+      />
+    </NodeViewWrapper>
+  );
+};
 const CustomImage = Image.extend({
   addAttributes() {
     return {
@@ -32,6 +49,10 @@ const CustomImage = Image.extend({
         default: 'center', // Standardmäßig zentriert
       },
     };
+  },
+  // NEU: Diese Zeile macht das Bild im Editor zu einer React-Komponente
+  addNodeView() {
+    return ReactNodeViewRenderer(ImageView);
   },
 });
 
@@ -147,9 +168,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
         maxLevel: 8,
       }),
       CustomImage.configure({
-        HTMLAttributes: {
-          class: 'prose-image max-w-full h-auto rounded-lg',
-        },
+        // HTMLAttributes are now handled by the NodeView
       }),
       ListKeymap,
       TaskList.configure({
@@ -281,18 +300,19 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
 
               <div className="w-px h-6 bg-border mx-1" />
 
-              <Tooltip><TooltipTrigger asChild>
-                <Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('25%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '25%' }) && "bg-primary/20")}>
+              <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('25%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '25%' }) && "bg-primary/20")}>
                   <span className="font-bold text-xs">S</span>
-                </Button></TooltipTrigger><TooltipContent><p>Kleine Größe</p></TooltipContent></Tooltip>
-              <Tooltip><TooltipTrigger asChild>
-                <Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('50%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '50%' }) && "bg-primary/20")}>
+                </Button></TooltipTrigger><TooltipContent><p>Kleine Größe (25%)</p></TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('50%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '50%' }) && "bg-primary/20")}>
                   <span className="font-bold text-xs">M</span>
-                </Button></TooltipTrigger><TooltipContent><p>Mittlere Größe</p></TooltipContent></Tooltip>
-              <Tooltip><TooltipTrigger asChild>
-                <Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('100%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '100%' }) && "bg-primary/20")}>
+                </Button></TooltipTrigger><TooltipContent><p>Mittlere Größe (50%)</p></TooltipContent></Tooltip>
+              {/* *** ANGEPASST: L ist jetzt 75% und XL ist 100% *** */}
+              <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('75%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '75%' }) && "bg-primary/20")}>
                   <span className="font-bold text-xs">L</span>
-                </Button></TooltipTrigger><TooltipContent><p>Volle Breite</p></TooltipContent></Tooltip>
+                </Button></TooltipTrigger><TooltipContent><p>Große Größe (75%)</p></TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('100%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '100%' }) && "bg-primary/20")}>
+                  <span className="font-bold text-xs">XL</span>
+                </Button></TooltipTrigger><TooltipContent><p>Volle Breite (100%)</p></TooltipContent></Tooltip>
             </>
           )}
 

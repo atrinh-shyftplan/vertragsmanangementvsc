@@ -394,3 +394,8 @@
   margin-left: auto;
   margin-right: 0;
 }
+
+/* Sorgt für konsistente Abstände von Paragraphen in der Vorschau */
+.prose p:not(:last-child) {
+  margin-bottom: 1em;
+}
