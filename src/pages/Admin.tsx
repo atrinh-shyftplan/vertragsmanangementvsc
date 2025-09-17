@@ -22,6 +22,7 @@ export default function Admin() {
   const {
     contractTypes,
     contractModules, 
+    setContractModules,
     contractCategories,
     globalVariables,
     contractCompositions,
@@ -97,6 +98,14 @@ export default function Admin() {
   const handleEditGlobalVariable = (globalVariable: any) => {
     setSelectedGlobalVariable(globalVariable);
     setGlobalVariableModalOpen(true);
+  };
+
+  const handleModuleUpdate = (updatedModule: any) => {
+    setContractModules(currentModules =>
+      currentModules.map(m =>
+        m.id === updatedModule.id ? { ...m, ...updatedModule } : m
+      )
+    );
   };
 
   const closeModals = () => {
@@ -536,6 +545,7 @@ export default function Admin() {
         contractCategories={contractCategories}
         globalVariables={globalVariables}
         availableProductTags={productTags}
+        onUpdate={handleModuleUpdate}
       />
 
       <ContractCategoryModal

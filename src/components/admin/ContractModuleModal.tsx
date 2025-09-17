@@ -17,6 +17,7 @@ interface ContractModuleModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (data: ContractModuleInsert) => void;
+  onUpdate?: (data: Partial<ContractModule>) => void;
   contractModule?: ContractModule | null;
   contractCategories: ContractCategory[];
   globalVariables?: Array<{key: string; name_de: string; description?: string}>;
@@ -25,7 +26,7 @@ interface ContractModuleModalProps {
 
 type ContractCategory = Database['public']['Tables']['contract_categories']['Row'];
 
-export function ContractModuleModal({ open, onOpenChange, onSave, contractModule, contractCategories, globalVariables = [], availableProductTags = ['core', 'shyftplanner', 'shyftskills'] }: ContractModuleModalProps) {
+export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, contractModule, contractCategories, globalVariables = [], availableProductTags = ['core', 'shyftplanner', 'shyftskills'] }: ContractModuleModalProps) {
   const [formData, setFormData] = useState<ContractModuleInsert>({
     key: '',
     title_de: '',
@@ -71,6 +72,14 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
     onOpenChange(false);
   };
 
+  const handleChange = (field: keyof ContractModuleInsert, value: any) => {
+    const newFormData = { ...formData, [field]: value };
+    setFormData(newFormData);
+    if (onUpdate && contractModule) {
+      onUpdate({ id: contractModule.id, ...newFormData });
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[90vw] lg:max-w-[80vw] max-h-[90vh] overflow-y-auto">
@@ -91,7 +100,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
             <Input
               id="key"
               value={formData.key}
-              onChange={(e) => setFormData({ ...formData, key: e.target.value })}
+              onChange={(e) => handleChange('key', e.target.value)}
               className="col-span-3"
               placeholder="z.B. data_protection"
             />
@@ -104,7 +113,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
             <Input
               id="title_de"
               value={formData.title_de}
-              onChange={(e) => setFormData({ ...formData, title_de: e.target.value })}
+              onChange={(e) => handleChange('title_de', e.target.value)}
               className="col-span-3"
               placeholder="Datenschutz"
             />
@@ -117,7 +126,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
             <Input
               id="title_en"
               value={formData.title_en}
-              onChange={(e) => setFormData({ ...formData, title_en: e.target.value })}
+              onChange={(e) => handleChange('title_en', e.target.value)}
               className="col-span-3"
               placeholder="Data Protection"
             />
@@ -130,7 +139,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
             <div className="col-span-3">
               <RichTextEditor
                 content={formData.content_de}
-                onChange={(content) => setFormData({ ...formData, content_de: content })}
+                onChange={(content) => handleChange('content_de', content)}
                 placeholder="Deutscher Modulinhalt..."
                 className="min-h-[400px]"
                 globalVariables={globalVariables}
@@ -145,7 +154,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
             <div className="col-span-3">
               <RichTextEditor
                 content={formData.content_en}
-                onChange={(content) => setFormData({ ...formData, content_en: content })}
+                onChange={(content) => handleChange('content_en', content)}
                 placeholder="English module content..."
                 className="min-h-[400px]"
                 globalVariables={globalVariables}
@@ -157,7 +166,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
             <Label htmlFor="category" className="text-right">
               Tag
             </Label>
-            <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+            <Select value={formData.category} onValueChange={(value) => handleChange('category', value)}>
               <SelectTrigger className="col-span-3">
                 <SelectValue />
               </SelectTrigger>
@@ -179,7 +188,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
               id="sort_order"
               type="number"
               value={formData.sort_order}
-              onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
+              onChange={(e) => handleChange('sort_order', parseInt(e.target.value) || 0)}
               className="col-span-3"
             />
           </div>
@@ -199,17 +208,10 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
                     checked={formData.product_tags?.includes(tag) || false}
                     onCheckedChange={(checked) => {
                       const currentTags = formData.product_tags || [];
-                      if (checked) {
-                        setFormData({ 
-                          ...formData, 
-                          product_tags: [...currentTags.filter(t => t !== tag), tag] 
-                        });
-                      } else {
-                        setFormData({ 
-                          ...formData, 
-                          product_tags: currentTags.filter(t => t !== tag) 
-                        });
-                      }
+                      const newTags = checked
+                        ? [...currentTags.filter(t => t !== tag), tag]
+                        : currentTags.filter(t => t !== tag);
+                      handleChange('product_tags', newTags);
                     }}
                   />
                   <Label htmlFor={`product-${tag}`} className="text-sm">
@@ -227,7 +229,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, contractModule
             <Switch
               id="is_active"
               checked={formData.is_active}
-              onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              onCheckedChange={(checked) => handleChange('is_active', checked)}
             />
           </div>
         </div>

@@ -611,6 +611,7 @@ export function useAdminData() {
     // Data
     contractTypes,
     contractModules,
+    setContractModules, // Export setter for live updates
     contractCategories,
     globalVariables,
     contractCompositions,
