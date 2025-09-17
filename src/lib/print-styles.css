@@ -16,3 +16,13 @@
   background-color: transparent !important;
   color: inherit !important;
 }
+
+.pdf-render-container {
+  background-color: white !important;
+}
+
+.pdf-render-container .bg-yellow-200 {
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}

@@ -125,7 +125,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     // Replace global variables with highlighted spans
     globalVariables.forEach((variable) => {
       const variableName = variable.key;
-      const value = variableValues[variableName] || variableName;
+      const value = variableValues[variableName] || '';
       const regex = new RegExp(`{{${variableName}}}`, 'g');
       processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 border-2 border-yellow-400 px-1 rounded">${value}</span>`);
     });
@@ -140,7 +140,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     moduleVariables.forEach((variable) => {
       const variableName = (variable.name || variable.key);
       if (!variableName) return;
-      const value = variableValues[variableName] || variableName;
+      const value = variableValues[variableName] || '';
       const regex = new RegExp(`{{${variableName}}}`, 'g');
       processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 border-2 border-yellow-400 px-1 rounded">${value}</span>`);
     });
