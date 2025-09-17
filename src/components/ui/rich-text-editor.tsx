@@ -68,6 +68,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
   const [variablePopoverOpen, setVariablePopoverOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [, setForceUpdate] = useState(0);
 
   // Image upload function
   const uploadImage = async (file: File): Promise<string> => {
@@ -186,6 +187,9 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
     content,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
+    },
+    onSelectionUpdate: () => {
+      setForceUpdate(val => val + 1);
     },
     editorProps: {
       attributes: {
