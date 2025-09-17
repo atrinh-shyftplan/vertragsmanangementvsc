@@ -946,7 +946,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
               onClick={async () => {
                 const previewElement = previewRef.current;
                 if (previewElement && pdfFilename) {
-                  const { exportToPdf } = await import('@/lib/pdf-export');
+                  const { generatePdf: exportToPdf } = await import('@/lib/pdf-export');
                   await exportToPdf(previewElement, pdfFilename);
                 }
               }}
