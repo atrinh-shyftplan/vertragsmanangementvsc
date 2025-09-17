@@ -52,7 +52,7 @@ export const generatePdf = async (element: HTMLElement, fileName: string): Promi
       logging: true,
       scrollY: -window.scrollY,
       windowWidth: clonedElement.scrollWidth,
-      windowHeight: clone.scrollHeight,
+      windowHeight: clonedElement.scrollHeight,
     });
 
     // 4. PDF-Dokument erstellen (wie bisher)

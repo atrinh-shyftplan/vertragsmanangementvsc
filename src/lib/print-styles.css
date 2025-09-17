@@ -7,7 +7,7 @@
   position: absolute;
   left: -9999px; /* Aus dem sichtbaren Bereich schieben */
   top: 0;
-  background: white;
+  background: white !important;
   padding: 15mm; /* Ränder für die A4-Seite */
   width: 210mm; /* A4-Breite */
 }
@@ -15,20 +15,6 @@
 .pdf-render-container .unfilled-variable {
   background-color: transparent !important;
   color: inherit !important;
-}
-
-.pdf-render-container {
-  background-color: white !important;
-}
-
-.pdf-render-container .bg-yellow-200 {
-  background-color: transparent !important;
-  border: none !important;
-  padding: 0 !important;
-}
-
-.pdf-render-container {
-  background-color: white !important;
 }
 
 .pdf-render-container .bg-yellow-200 {
