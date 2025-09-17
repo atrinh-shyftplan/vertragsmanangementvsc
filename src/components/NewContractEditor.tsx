@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -39,6 +39,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const [isPdfDialogOpen, setIsPdfDialogOpen] = useState(false);
   const [pdfFilename, setPdfFilename] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
 
   const handleTypeSelect = (typeKey: string) => {
     setSelectedType(typeKey);
@@ -716,6 +717,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             </CardHeader>
             <CardContent>
                 <div 
+                ref={previewRef}
                 className="prose prose-sm sm:prose-base max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
                 style={{ 
                   fontSize: '12px', 
@@ -942,16 +944,10 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             <AlertDialogCancel>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
-                const previewElement = document.querySelector('.contract-preview') as HTMLElement;
+                const previewElement = previewRef.current;
                 if (previewElement && pdfFilename) {
-                  const body = document.body;
-                  body.classList.add('pdf-export-mode');
-                  try {
-                    const { exportToPdf } = await import('@/lib/pdf-export');
-                    await exportToPdf(previewElement, pdfFilename);
-                  } finally {
-                    body.classList.remove('pdf-export-mode');
-                  }
+                  const { exportToPdf } = await import('@/lib/pdf-export');
+                  await exportToPdf(previewElement, pdfFilename);
                 }
               }}
             >
