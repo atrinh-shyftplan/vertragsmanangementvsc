@@ -1,24 +1,31 @@
-@media print {
-  /* Stile für den Druck, falls wir sie später brauchen */
-}
-
-/* Diese Klassen nutzen wir für den unsichtbaren Klon */
+/* Diese Klassen nutzen wir für den unsichtbaren Klon während des Exports */
 .pdf-render-container {
-  position: absolute;
-  left: -9999px; /* Aus dem sichtbaren Bereich schieben */
-  top: 0;
+  position: absolute !important;
+  left: -9999px !important; /* Aus dem sichtbaren Bereich schieben */
+  top: 0 !important;
   background: white !important;
-  padding: 15mm; /* Ränder für die A4-Seite */
-  width: 210mm; /* A4-Breite */
+  font-size: 10pt !important; /* Sorgt für eine konsistente Basis-Schriftgröße */
+  width: 180mm !important; /* Druckbreite einer A4-Seite (210mm - 15mm Rand links/rechts) */
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 .pdf-render-container .unfilled-variable {
   background-color: transparent !important;
   color: inherit !important;
+  border-bottom: 1px dotted #cccccc; /* Optional: Leere Felder dezent andeuten */
 }
 
 .pdf-render-container .bg-yellow-200 {
   background-color: transparent !important;
   border: none !important;
   padding: 0 !important;
+}
+
+/* Sorgt dafür, dass Bilder sich an die Seitenbreite anpassen */
+.pdf-render-container img {
+  max-width: 100% !important;
+  height: auto !important;
 }
