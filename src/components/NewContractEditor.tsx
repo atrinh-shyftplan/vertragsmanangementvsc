@@ -288,21 +288,21 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     
     if (hasGermanContent && hasEnglishContent) {
       moduleHtml += `<div class="grid grid-cols-2 gap-8 side-by-side-table">`;
-      moduleHtml += `<div class="prose max-w-none" dangerouslySetInnerHTML={{ __html: processContent(module.content_de, moduleVariables) }} />`;
-      moduleHtml += `<div class="prose max-w-none" dangerouslySetInnerHTML={{ __html: processContent(module.content_en, moduleVariables) }} />`;
+      moduleHtml += `<div>${processContent(module.content_de, moduleVariables)}</div>`;
+      moduleHtml += `<div>${processContent(module.content_en, moduleVariables)}</div>`;
       moduleHtml += `</div>`;
     } else if (hasGermanContent) {
       if (!isHeaderModule) {
         const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
         moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
       }
-      moduleHtml += `<div class="prose max-w-none" dangerouslySetInnerHTML={{ __html: processContent(module.content_de, moduleVariables) }} />`;
+      moduleHtml += `<div>${processContent(module.content_de, moduleVariables)}</div>`;
     } else if (hasEnglishContent) {
       if (!isHeaderModule) {
         const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
         moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
       }
-      moduleHtml += `<div class="prose max-w-none" dangerouslySetInnerHTML={{ __html: processContent(module.content_en, moduleVariables) }} />`;
+      moduleHtml += `<div>${processContent(module.content_en, moduleVariables)}</div>`;
     }
     
     if (isHeaderModule) {

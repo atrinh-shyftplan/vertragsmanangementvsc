@@ -400,7 +400,27 @@
   margin-bottom: 1em;
 }
 
-/* Sorgt für konsistente Abstände von Paragraphen in der Vorschau */
-.prose p:not(:last-child) {
-  margin-bottom: 1em;
+/*
+ * Gezielte Styling-Regeln für die Live-Vorschau (.contract-preview),
+ * um die Abstände aus dem "prose"-Editor zu simulieren, ohne Konflikte zu erzeugen.
+*/
+.contract-preview p {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}
+
+.contract-preview img {
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+/* Verhindert doppelte Abstände, wenn Elemente direkt aufeinander folgen */
+.contract-preview p:first-child,
+.contract-preview img:first-child {
+  margin-top: 0;
+}
+
+.contract-preview p:last-child,
+.contract-preview img:last-child {
+  margin-bottom: 0;
 }
