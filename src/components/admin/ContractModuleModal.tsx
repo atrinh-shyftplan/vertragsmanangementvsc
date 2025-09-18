@@ -37,7 +37,8 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
     category: 'general',
     is_active: true,
     sort_order: 0,
-    product_tags: ['core']
+    product_tags: ['core'],
+    variables: null
   });
 
   const generateKey = useCallback((name: string) => {
@@ -64,7 +65,8 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
         category: contractModule.category || 'general',
         is_active: contractModule.is_active,
         sort_order: contractModule.sort_order || 0,
-        product_tags: contractModule.product_tags || ['core']
+        product_tags: contractModule.product_tags || ['core'],
+        variables: contractModule.variables
       });
     } else {
       setFormData({
@@ -77,7 +79,8 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
         category: 'general',
         is_active: true,
         sort_order: 0,
-        product_tags: ['core']
+        product_tags: ['core'],
+        variables: null
       });
     }
   }, [contractModule, open]);
