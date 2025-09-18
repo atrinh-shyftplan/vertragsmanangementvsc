@@ -12,6 +12,8 @@ import type { Database } from '@/integrations/supabase/types';
 
 type ContractModule = Database['public']['Tables']['contract_modules']['Row'];
 type ContractModuleInsert = Database['public']['Tables']['contract_modules']['Insert'];
+type ContractCategory = Database['public']['Tables']['contract_categories']['Row'];
+type GlobalVariable = Database['public']['Tables']['global_variables']['Row'];
 
 interface ContractModuleModalProps {
   open: boolean;
@@ -20,11 +22,9 @@ interface ContractModuleModalProps {
   onUpdate?: (data: Partial<ContractModule>) => void;
   contractModule?: ContractModule | null;
   contractCategories: ContractCategory[];
-  globalVariables?: Array<{key: string; name_de: string; description?: string}>;
+  globalVariables?: GlobalVariable[];
   availableProductTags?: string[];
 }
-
-type ContractCategory = Database['public']['Tables']['contract_categories']['Row'];
 
 export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, contractModule, contractCategories, globalVariables = [], availableProductTags = ['core', 'shyftplanner', 'shyftskills'] }: ContractModuleModalProps) {
   const [formData, setFormData] = useState<ContractModuleInsert>({
@@ -142,7 +142,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
                 onChange={(content) => handleChange('content_de', content)}
                 placeholder="Deutscher Modulinhalt..."
                 className="min-h-[400px]"
-                globalVariables={globalVariables}
+                globalVariables={globalVariables.map(v => ({ ...v, category: v.category || 'general' }))}
               />
             </div>
           </div>
@@ -157,7 +157,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
                 onChange={(content) => handleChange('content_en', content)}
                 placeholder="English module content..."
                 className="min-h-[400px]"
-                globalVariables={globalVariables}
+                globalVariables={globalVariables.map(v => ({ ...v, category: v.category || 'general' }))}
               />
             </div>
           </div>
