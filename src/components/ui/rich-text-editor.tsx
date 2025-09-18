@@ -323,7 +323,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
 
           {/* Variables */}
           {globalVariables.length > 0 && (
-            <Popover open={variablePopoverOpen} onOpenChange={setVariablePopoverOpen}>
+            <Popover open={variablePopoverOpen} onOpenChange={setVariablePopoverOpen} modal={true}>
               <PopoverTrigger asChild>
                 <Button
                   type="button"
@@ -337,7 +337,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                   <Search className="h-3 w-3 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-96 p-0 bg-popover border shadow-lg z-50" align="start">
+              <PopoverContent className="w-96 p-0 bg-popover border shadow-lg" align="start">
                 {/* Search and Filter Controls */}
                 <div className="p-3 border-b">
                   <select
