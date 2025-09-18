@@ -309,21 +309,6 @@ export function ContractBuilder({
         </CardContent>
       </Card>
 
-      {/* Debug Info */}
-      {selectedContractType && (
-        <Card className="border-dashed">
-          <CardContent className="pt-4">
-            <div className="text-sm text-muted-foreground">
-              <div>Vertragstyp: {selectedContractType}</div>
-              <div>Ausgewählte Module: {getSelectedModulesInOrder().length}</div>
-              <div className="mt-2">
-                Module: {getSelectedModulesInOrder().map(m => m.key).join(', ')}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {selectedContractType && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Module Selection */}
@@ -361,13 +346,7 @@ export function ContractBuilder({
                               onCheckedChange={() => toggleModule(module.key)}
                             />
                             <div className="flex-1">
-                              <div className="font-medium">{module.title_de}</div>
-                              <div 
-                                className="text-sm text-muted-foreground line-clamp-2"
-                                dangerouslySetInnerHTML={{ 
-                                  __html: module.content_de.substring(0, 100) + '...' 
-                                }}
-                              />
+                              <div className="font-medium">{module.name || module.title_de}</div>
                             </div>
                           </div>
                         );
@@ -393,10 +372,7 @@ export function ContractBuilder({
                       <div className="flex items-center space-x-3">
                         <Badge variant="outline">{index + 1}</Badge>
                         <div>
-                          <div className="font-medium">{module.title_de}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {module.category}
-                          </div>
+                          <div className="font-medium">{module.name || module.title_de}</div>
                         </div>
                       </div>
                       <div className="flex space-x-1">

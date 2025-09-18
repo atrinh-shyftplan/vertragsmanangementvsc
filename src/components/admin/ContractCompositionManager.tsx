@@ -198,7 +198,7 @@ export function ContractCompositionManager({
                 <SelectContent>
                   {contractModules.filter(module => module.key && module.key.trim() !== '').map(module => (
                     <SelectItem key={module.key} value={module.key}>
-                      {module.title_de}
+                      {module.name || module.title_de}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -254,7 +254,7 @@ export function ContractCompositionManager({
                          <div className="flex items-center space-x-3">
                            <Badge variant="outline">{index + 1}</Badge>
                            <div>
-                             <div className="font-medium">{module?.title_de || composition.module_key}</div>
+                           <div className="font-medium">{module?.name || module?.title_de || composition.module_key}</div>
                              <div className="text-sm text-muted-foreground">
                                Kategorie: {module?.category || 'general'}
                              </div>

@@ -261,21 +261,19 @@ export default function Admin() {
                   const category = contractCategories.find(cat => cat.key === module.category);
                   return (
                     <div key={module.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium">{module.title_de}</h3>
-                          <Badge 
-                            variant="outline" 
-                            style={{ backgroundColor: category?.color + '20', borderColor: category?.color }}
-                          >
-                            {category?.name_de || module.category}
-                          </Badge>
+                      <div>
+                        <h3 className="font-medium">{module.name || module.title_de}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          {category && (
+                            <Badge 
+                              variant="outline" 
+                              style={{ backgroundColor: category.color + '20', borderColor: category.color }}
+                            >
+                              {category.name_de}
+                            </Badge>
+                          )}
                           {!module.is_active && <Badge variant="secondary">Inaktiv</Badge>}
                         </div>
-                        <p className="text-sm text-muted-foreground">Key: {module.key}</p>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {module.content_de.substring(0, 100)}...
-                        </p>
                       </div>
                       <div className="flex gap-2">
                         <Button

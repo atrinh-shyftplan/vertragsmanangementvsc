@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,7 @@ interface ContractModuleModalProps {
 export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, contractModule, contractCategories, globalVariables = [], availableProductTags = ['core', 'shyftplanner', 'shyftskills'] }: ContractModuleModalProps) {
   const [formData, setFormData] = useState<ContractModuleInsert>({
     key: '',
+    name: '',
     title_de: '',
     title_en: '',
     content_de: '',
@@ -39,10 +40,23 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
     product_tags: ['core']
   });
 
+  const generateKey = useCallback((name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/ä/g, 'ae')
+      .replace(/ö/g, 'oe')
+      .replace(/ü/g, 'ue')
+      .replace(/ß/g, 'ss')
+      .replace(/[^a-z0-9\s]/gi, '')
+      .trim()
+      .replace(/\s+/g, '_');
+  }, []);
+
   useEffect(() => {
     if (contractModule) {
       setFormData({
         key: contractModule.key,
+        name: contractModule.name || contractModule.title_de || '',
         title_de: contractModule.title_de,
         title_en: contractModule.title_en || '',
         content_de: contractModule.content_de,
@@ -55,6 +69,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
     } else {
       setFormData({
         key: '',
+        name: '',
         title_de: '',
         title_en: '',
         content_de: '',
@@ -66,6 +81,15 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
       });
     }
   }, [contractModule, open]);
+
+  useEffect(() => {
+    // Auto-generate key from name for new modules only
+    if (!contractModule && formData.name) {
+      const newKey = generateKey(formData.name);
+      // Directly update formData to avoid triggering onUpdate in handleChange
+      setFormData(prev => ({ ...prev, key: newKey }));
+    }
+  }, [formData.name, contractModule, generateKey]);
 
   const handleSave = () => {
     onSave(formData);
@@ -94,16 +118,31 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
         
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="key" className="text-right">
-              Schlüssel
+            <Label htmlFor="name" className="text-right">
+              Name des Moduls
             </Label>
             <Input
-              id="key"
-              value={formData.key}
-              onChange={(e) => handleChange('key', e.target.value)}
+              id="name"
+              value={formData.name}
+              onChange={(e) => handleChange('name', e.target.value)}
               className="col-span-3"
-              placeholder="z.B. data_protection"
+              placeholder="z.B. Datenschutz"
             />
+          </div>
+
+          {/* Hidden key field to keep it in form state */}
+          <div className="hidden">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="key" className="text-right">
+                Schlüssel
+              </Label>
+              <Input
+                id="key"
+                value={formData.key}
+                readOnly
+                className="col-span-3"
+              />
+            </div>
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">

@@ -424,3 +424,10 @@
 .contract-preview img:last-child {
   margin-bottom: 0;
 }
+.variable-highlight {
+  background-color: #fef08a;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9em;
+}

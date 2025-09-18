@@ -157,7 +157,7 @@ export function TemplateBuilder({
           return (
             <div key={composition.id} className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">{module.title_de}</h3>
+                <h3 className="text-lg font-semibold">{module.name || module.title_de}</h3>
                 <Badge variant="outline">{module.category}</Badge>
               </div>
               <div className="prose prose-sm max-w-none whitespace-pre-wrap bg-muted/50 p-4 rounded-lg">
@@ -349,7 +349,7 @@ export function TemplateBuilder({
                     <div className="flex items-center space-x-3">
                       <Badge variant="outline">{index + 1}</Badge>
                       <div>
-                        <div className="font-medium">{module.title_de}</div>
+                        <div className="font-medium">{module.name || module.title_de}</div>
                         <div className="text-sm text-muted-foreground">{module.category}</div>
                       </div>
                     </div>

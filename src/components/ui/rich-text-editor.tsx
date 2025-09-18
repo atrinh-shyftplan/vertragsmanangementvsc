@@ -13,6 +13,7 @@ import { Bold, Italic, Underline, List, ListOrdered, Quote, CheckSquare, Indent 
 import { cn } from '@/lib/utils';
 import { IndentExtension } from '@/lib/indent-extension';
 import { supabase } from '@/integrations/supabase/client';
+import { VariableHighlight } from '@/lib/variable-highlight-extension';
 
 // NEU: Erweiterte Bild-Konfiguration
 import {
@@ -66,6 +67,7 @@ interface RichTextEditorProps {
 
 export function RichTextEditor({ content, onChange, placeholder, className, globalVariables = [] }: RichTextEditorProps) {
   const [variablePopoverOpen, setVariablePopoverOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [, setForceUpdate] = useState(0);
 
@@ -182,6 +184,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
           class: 'prose-task-item',
         },
       }),
+      VariableHighlight,
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -337,9 +340,16 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                   <Search className="h-3 w-3 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-96 p-0 bg-popover border shadow-lg" align="start">
+              <PopoverContent className="w-96 p-0 bg-popover border shadow-lg flex flex-col max-h-96" align="start">
                 {/* Search and Filter Controls */}
-                <div className="p-3 border-b">
+                <div className="p-3 border-b space-y-2 flex-shrink-0">
+                  <input
+                    type="text"
+                    placeholder="Suche Variablen..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-3 py-2 text-sm bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
@@ -357,13 +367,19 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                 </div>
 
                 {/* Variables List */}
-                <div className="overflow-y-auto max-h-80">
+                <div className="overflow-y-auto flex-1">
                   {(() => {
                     // Filter variables based on search and category
-                    const filteredVariables = globalVariables.filter(variable => {                      
+                    const filteredVariables = globalVariables.filter(variable => {
+                      const matchesSearch = searchTerm === '' ||
+                        variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+                      
                       const matchesCategory = selectedCategory === 'all' || 
                         (variable.category || 'general') === selectedCategory;
-                      return matchesCategory;
+                      
+                      return matchesSearch && matchesCategory;
                     });
 
                     // Group by category
@@ -391,6 +407,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                             onClick={() => {
                               editor.chain().focus().insertContent(`{{${variable.key}}}`).run();
                               setVariablePopoverOpen(false);
+                              setSearchTerm('');
                               setSelectedCategory('all');
                             }}
                             className="flex flex-col gap-1 p-3 cursor-pointer hover:bg-accent rounded-md mx-1 mb-1"
@@ -411,9 +428,15 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                   })()}
                   
                   {/* No results message */}
-                  {globalVariables.filter(variable => {                    
+                  {globalVariables.filter(variable => {
+                    const matchesSearch = searchTerm === '' ||
+                      variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+                    
                     const matchesCategory = selectedCategory === 'all' || 
                       (variable.category || 'general') === selectedCategory;
+                    return matchesSearch && matchesCategory;
                   }).length === 0 && (
                     <div className="p-8 text-center text-muted-foreground text-sm">
                       Keine Variablen gefunden.
