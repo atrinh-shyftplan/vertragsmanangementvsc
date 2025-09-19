@@ -453,7 +453,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
       <div className="relative">
         <EditorContent 
           editor={editor} 
-          className="min-h-[400px] max-h-[600px] overflow-y-auto"
+          className="prose max-w-none min-h-[400px] max-h-[600px] overflow-y-auto"
         />
       </div>
     </div>

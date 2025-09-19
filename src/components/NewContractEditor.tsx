@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { FileText, ArrowLeft, Save, X, PanelLeftClose, PanelRightClose, BookOpen, FileDown } from 'lucide-react';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useAdminData } from '@/hooks/useAdminData';
 import { toast } from 'sonner';
@@ -457,8 +458,8 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-muted/30">
-      <div className="flex items-center justify-between p-4 border-b bg-background flex-shrink-0">
+    <div className="flex flex-col h-screen bg-muted/30">
+      <header className="flex items-center justify-between p-4 border-b bg-background flex-shrink-0">
         <div>
           <h2 className="text-xl font-bold">Vertrag erstellen</h2>
           <p className="text-muted-foreground">
@@ -503,13 +504,21 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             </Button>
           )}
         </div>
-      </div>
+      </header>
 
-      <div className="flex flex-grow overflow-hidden">
+      <ResizablePanelGroup direction="horizontal" className="flex-grow overflow-hidden">
         {/* Input Fields - smaller width */}
-        <div className={`relative transition-all duration-300 ease-in-out h-full bg-background border-r ${isPanelVisible ? 'w-full lg:w-2/5 xl:w-1/3' : 'w-0'}`}>
+        <ResizablePanel
+          collapsible
+          collapsed={!isPanelVisible}
+          onCollapse={() => setIsPanelVisible(false)}
+          onExpand={() => setIsPanelVisible(true)}
+          defaultSize={33}
+          minSize={25}
+          className={`relative bg-background ${isPanelVisible ? 'min-w-[400px]' : 'min-w-[0px]'}`}
+        >
           <ScrollArea className="h-full">
-            <div className={!isPanelVisible ? 'hidden' : 'space-y-6 p-6'}>
+            <div className="space-y-6 p-6">
               {/* Basic Contract Fields with better structure */}
               <Card>
                 <CardHeader>
@@ -698,233 +707,237 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             variant="outline"
             size="icon"
             onClick={() => setIsPanelVisible(!isPanelVisible)}
-            className="absolute top-1/2 -translate-y-1/2 right-0 translate-x-1/2 z-10 rounded-full h-8 w-8 bg-background hover:bg-muted"
+            className="absolute top-1/2 -translate-y-1/2 right-0 translate-x-1/2 z-20 rounded-full h-8 w-8 bg-background hover:bg-muted border"
             title={isPanelVisible ? 'Bedienfeld ausblenden' : 'Bedienfeld anzeigen'}
           >
             {isPanelVisible ? <PanelLeftClose className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
           </Button>
-        </div>
+        </ResizablePanel>
+
+        <ResizableHandle withHandle />
 
         {/* Preview Panel - larger width */}
-        <div className="flex-1 h-full bg-muted/40 flex justify-center">
-          <ScrollArea className="h-full w-full">
-            <div className="w-full max-w-4xl mx-auto my-6">
-              <Card className="shadow-lg">
-                <CardHeader>
-                  <CardTitle>Live-Vorschau</CardTitle>
-                  <CardDescription>
-                    Vorschau des generierten Vertrags - Variable Felder sind gelb markiert
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div 
-                    ref={previewRef}
-                    className="prose prose-sm sm:prose-base max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
-                    style={{ 
-                      fontSize: '12px', 
-                      lineHeight: '1.6',
-                      fontFamily: 'Arial, sans-serif'
-                    }}
-                    dangerouslySetInnerHTML={{ 
-                      __html: `
-                      <style>
-                        /* Side-by-side table layout - prose-compatible */
-                        .contract-preview .side-by-side-table {
-                          width: 100%;
-                          border-collapse: separate;
-                          border-spacing: 0;
-                          margin: 1.5rem 0;
-                          table-layout: fixed;
-                        }
-                        
-                        .contract-preview .table-header-de,
-                        .contract-preview .table-header-en {
-                          width: 50%;
-                          padding: 0 1.5rem 1rem 0;
-                          vertical-align: top;
-                          border-right: 1px solid #e5e7eb;
-                          text-align: left;
-                          font-size: 1.125rem;
-                          font-weight: 700;
-                          color: #1f2937;
-                        }
-                        
-                        .contract-preview .table-header-en {
-                          border-right: none;
-                          padding-left: 1.5rem;
-                          padding-right: 0;
-                        }
-                        
-                        .contract-preview .table-content-de,
-                        .contract-preview .table-content-en {
-                          width: 50%;
-                          padding: 0 1.5rem 1rem 0;
-                          vertical-align: top;
-                          border-right: 1px solid #e5e7eb;
-                        }
-                        
-                        .contract-preview .table-content-en {
-                          border-right: none;
-                          padding-left: 1.5rem;
-                          padding-right: 0;
-                        }
-                        
-                        /* Ensure prose styles work within table cells */
-                        .contract-preview .table-content-de p,
-                        .contract-preview .table-content-en p {
-                          margin: 0.75rem 0;
-                        }
-                        
-                        .contract-preview .table-content-de ul,
-                        .contract-preview .table-content-en ul {
-                          margin: 0.75rem 0;
-                          padding-left: 1.5rem;
-                          list-style-type: disc;
-                        }
-                        
-                        .contract-preview .table-content-de ol,
-                        .contract-preview .table-content-en ol {
-                          margin: 0.75rem 0;
-                          padding-left: 1.5rem;
-                          list-style-type: decimal;
-                        }
-                        
-                        .contract-preview .table-content-de li,
-                        .contract-preview .table-content-en li {
-                          margin: 0.25rem 0;
-                        }
-                        /* Header content table styling - unchanged */
-                          width: 100%;
-                          border-collapse: collapse;
-                          margin: 10px 0;
-                        }
-                        .header-content table td {
-                          padding: 8px 12px;
-                          vertical-align: top;
-                          border: 1px solid #e5e7eb;
-                        }
-                        .header-content table td:first-child {
-                          font-weight: 600;
-                          background-color: #f9fafb;
-                          width: 40%;
-                        }
-                        .header-content .company-logo {
-                          font-size: 24px;
-                          font-weight: bold;
-                          color: #1f2937;
-                          margin-bottom: 30px;
-                        }
-                        .header-content .offer-info-block {
-                          margin: 25px 0;
-                          padding: 15px;
-                          background-color: white;
-                          border: 1px solid #d1d5db;
-                          border-radius: 6px;
-                        }
-                        .header-content .convenience-block {
-                          margin: 25px 0;
-                          padding: 15px;
-                          background-color: white;
-                          border: 1px solid #d1d5db;
-                          border-radius: 6px;
-                          border-style: dashed;
-                        }
-                        .header-content .company-section {
-                          margin: 30px 0;
-                          padding: 20px;
-                          background-color: white;
-                          border: 1px solid #e5e7eb;
-                          border-radius: 8px;
-                        }
-                        .header-content .company-divider {
-                          margin: 40px 0;
-                          height: 2px;
-                          background-color: #e5e7eb;
-                          border-radius: 1px;
-                        }
-                        .header-content .info-line {
-                          display: flex;
-                          justify-content: space-between;
-                          margin: 8px 0;
-                          padding: 6px 10px;
-                          background-color: #f8fafc;
-                          border-radius: 4px;
-                          border-left: 4px solid #3b82f6;
-                        }
-                        .header-content .info-label {
-                          font-weight: 600;
-                          color: #374151;
-                          min-width: 120px;
-                        }
-                        .header-content .info-value {
-                          color: #1f2937;
-                        }
-                        .header-content p {
-                          margin: 8px 0;
-                          line-height: 1.5;
-                        }
-                        .header-content strong {
-                          font-weight: 600;
-                        }
-                        .header-content .between-text {
-                          margin: 30px 0 20px 0;
-                          font-size: 14px;
-                          color: #6b7280;
-                          font-style: italic;
-                        }
-                        /* FORCE BLACK BULLETS AND TEXT IN PREVIEW */
-                        .contract-preview ul {
-                          list-style-type: disc !important;
-                          padding-left: 1.5rem !important;
-                          margin: 0.5rem 0 !important;
-                          color: #000000 !important;
-                        }
-                        .contract-preview ul li {
-                          color: #000000 !important;
-                          margin: 0.25rem 0 !important;
-                        }
-                        .contract-preview ul li::marker {
-                          color: #000000 !important;
-                          content: "●" !important;
-                        }
-                        .contract-preview ol {
-                          padding-left: 1.5rem !important;
-                          margin: 0.5rem 0 !important;
-                          color: #000000 !important;
-                        }
-                        .contract-preview ol li {
-                          color: #000000 !important;
-                          margin: 0.25rem 0 !important;
-                        }
-                        .contract-preview p {
-                          color: #000000 !important;
-                          margin: 0.5rem 0 !important;
-                        }
-                        /* Force all content to be black */
-                        .contract-preview * {
-                          color: #000000 !important;
-                        }
-                        /* Override any white or transparent colors */
-                        .contract-preview li::before {
-                          color: #000000 !important;
-                        }
-                        /* Specific override for list markers */
-                        .contract-preview ul > li::marker,
-                        .contract-preview ol > li::marker {
-                          color: #000000 !important;
-                          font-weight: bold !important;
-                        }
-                      </style>
-                      ${generatePreview()}
-                      ` 
-                    }}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          </ScrollArea>
-        </div>
-      </div>
+        <ResizablePanel defaultSize={67}>
+          <main className="flex-1 h-full bg-muted/40 flex justify-center">
+            <ScrollArea className="h-full w-full">
+              <div className="w-full max-w-4xl mx-auto my-6">
+                <Card className="shadow-lg">
+                  <CardHeader>
+                    <CardTitle>Live-Vorschau</CardTitle>
+                    <CardDescription>
+                      Vorschau des generierten Vertrags - Variable Felder sind gelb markiert
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                      <div 
+                      ref={previewRef}
+                      className="prose prose-sm sm:prose-base max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
+                      style={{ 
+                        fontSize: '12px', 
+                        lineHeight: '1.6',
+                        fontFamily: 'Arial, sans-serif'
+                      }}
+                      dangerouslySetInnerHTML={{ 
+                        __html: `
+                        <style>
+                          /* Side-by-side table layout - prose-compatible */
+                          .contract-preview .side-by-side-table {
+                            width: 100%;
+                            border-collapse: separate;
+                            border-spacing: 0;
+                            margin: 1.5rem 0;
+                            table-layout: fixed;
+                          }
+                          
+                          .contract-preview .table-header-de,
+                          .contract-preview .table-header-en {
+                            width: 50%;
+                            padding: 0 1.5rem 1rem 0;
+                            vertical-align: top;
+                            border-right: 1px solid #e5e7eb;
+                            text-align: left;
+                            font-size: 1.125rem;
+                            font-weight: 700;
+                            color: #1f2937;
+                          }
+                          
+                          .contract-preview .table-header-en {
+                            border-right: none;
+                            padding-left: 1.5rem;
+                            padding-right: 0;
+                          }
+                          
+                          .contract-preview .table-content-de,
+                          .contract-preview .table-content-en {
+                            width: 50%;
+                            padding: 0 1.5rem 1rem 0;
+                            vertical-align: top;
+                            border-right: 1px solid #e5e7eb;
+                          }
+                          
+                          .contract-preview .table-content-en {
+                            border-right: none;
+                            padding-left: 1.5rem;
+                            padding-right: 0;
+                          }
+                          
+                          /* Ensure prose styles work within table cells */
+                          .contract-preview .table-content-de p,
+                          .contract-preview .table-content-en p {
+                            margin: 0.75rem 0;
+                          }
+                          
+                          .contract-preview .table-content-de ul,
+                          .contract-preview .table-content-en ul {
+                            margin: 0.75rem 0;
+                            padding-left: 1.5rem;
+                            list-style-type: disc;
+                          }
+                          
+                          .contract-preview .table-content-de ol,
+                          .contract-preview .table-content-en ol {
+                            margin: 0.75rem 0;
+                            padding-left: 1.5rem;
+                            list-style-type: decimal;
+                          }
+                          
+                          .contract-preview .table-content-de li,
+                          .contract-preview .table-content-en li {
+                            margin: 0.25rem 0;
+                          }
+                          /* Header content table styling - unchanged */
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin: 10px 0;
+                          }
+                          .header-content table td {
+                            padding: 8px 12px;
+                            vertical-align: top;
+                            border: 1px solid #e5e7eb;
+                          }
+                          .header-content table td:first-child {
+                            font-weight: 600;
+                            background-color: #f9fafb;
+                            width: 40%;
+                          }
+                          .header-content .company-logo {
+                            font-size: 24px;
+                            font-weight: bold;
+                            color: #1f2937;
+                            margin-bottom: 30px;
+                          }
+                          .header-content .offer-info-block {
+                            margin: 25px 0;
+                            padding: 15px;
+                            background-color: white;
+                            border: 1px solid #d1d5db;
+                            border-radius: 6px;
+                          }
+                          .header-content .convenience-block {
+                            margin: 25px 0;
+                            padding: 15px;
+                            background-color: white;
+                            border: 1px solid #d1d5db;
+                            border-radius: 6px;
+                            border-style: dashed;
+                          }
+                          .header-content .company-section {
+                            margin: 30px 0;
+                            padding: 20px;
+                            background-color: white;
+                            border: 1px solid #e5e7eb;
+                            border-radius: 8px;
+                          }
+                          .header-content .company-divider {
+                            margin: 40px 0;
+                            height: 2px;
+                            background-color: #e5e7eb;
+                            border-radius: 1px;
+                          }
+                          .header-content .info-line {
+                            display: flex;
+                            justify-content: space-between;
+                            margin: 8px 0;
+                            padding: 6px 10px;
+                            background-color: #f8fafc;
+                            border-radius: 4px;
+                            border-left: 4px solid #3b82f6;
+                          }
+                          .header-content .info-label {
+                            font-weight: 600;
+                            color: #374151;
+                            min-width: 120px;
+                          }
+                          .header-content .info-value {
+                            color: #1f2937;
+                          }
+                          .header-content p {
+                            margin: 8px 0;
+                            line-height: 1.5;
+                          }
+                          .header-content strong {
+                            font-weight: 600;
+                          }
+                          .header-content .between-text {
+                            margin: 30px 0 20px 0;
+                            font-size: 14px;
+                            color: #6b7280;
+                            font-style: italic;
+                          }
+                          /* FORCE BLACK BULLETS AND TEXT IN PREVIEW */
+                          .contract-preview ul {
+                            list-style-type: disc !important;
+                            padding-left: 1.5rem !important;
+                            margin: 0.5rem 0 !important;
+                            color: #000000 !important;
+                          }
+                          .contract-preview ul li {
+                            color: #000000 !important;
+                            margin: 0.25rem 0 !important;
+                          }
+                          .contract-preview ul li::marker {
+                            color: #000000 !important;
+                            content: "●" !important;
+                          }
+                          .contract-preview ol {
+                            padding-left: 1.5rem !important;
+                            margin: 0.5rem 0 !important;
+                            color: #000000 !important;
+                          }
+                          .contract-preview ol li {
+                            color: #000000 !important;
+                            margin: 0.25rem 0 !important;
+                          }
+                          .contract-preview p {
+                            color: #000000 !important;
+                            margin: 0.5rem 0 !important;
+                          }
+                          /* Force all content to be black */
+                          .contract-preview * {
+                            color: #000000 !important;
+                          }
+                          /* Override any white or transparent colors */
+                          .contract-preview li::before {
+                            color: #000000 !important;
+                          }
+                          /* Specific override for list markers */
+                          .contract-preview ul > li::marker,
+                          .contract-preview ol > li::marker {
+                            color: #000000 !important;
+                            font-weight: bold !important;
+                          }
+                        </style>
+                        ${generatePreview()}
+                        ` 
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </ScrollArea>
+          </main>
+        </ResizablePanel>
+      </ResizablePanelGroup>
 
       <AlertDialog open={isPdfDialogOpen} onOpenChange={setIsPdfDialogOpen}>
         <AlertDialogContent>
