@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,11 @@ import { Switch } from '@/components/ui/switch';
 import { Eye, Save, Download, FileText, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { MoreHorizontal } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+
 import type { Database } from '@/integrations/supabase/types';
 
 type ContractType = Database['public']['Tables']['contract_types']['Row'];
@@ -20,6 +25,7 @@ type GlobalVariable = Database['public']['Tables']['global_variables']['Row'];
 interface TemplateBuilderProps {
   contractTypes: ContractType[];
   contractModules: ContractModule[];
+  getModuleByKey: (key: string) => ContractModule | undefined;
   contractCompositions: ContractComposition[];
   globalVariables: GlobalVariable[];
   onUpdate: () => void;
@@ -27,7 +33,8 @@ interface TemplateBuilderProps {
 
 export function TemplateBuilder({ 
   contractTypes, 
-  contractModules, 
+  contractModules,
+  getModuleByKey,
   contractCompositions,
   globalVariables,
   onUpdate 
@@ -36,6 +43,8 @@ export function TemplateBuilder({
   const [templateName, setTemplateName] = useState('');
   const [isDefault, setIsDefault] = useState(false);
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
+  const [isOutlineOpen, setIsOutlineOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
   const [currentCompositions, setCurrentCompositions] = useState<ContractComposition[]>([]);
   const { toast } = useToast();
@@ -110,10 +119,6 @@ export function TemplateBuilder({
     }
   };
 
-  const getModuleByKey = (key: string) => {
-    return contractModules.find(m => m.key === key);
-  };
-
   const processContent = (content: string, moduleVariables: any[] = []) => {
     let processedContent = content;
     
@@ -141,7 +146,7 @@ export function TemplateBuilder({
     const contractType = contractTypes.find(t => t.key === selectedContractType);
 
     return (
-      <div className="space-y-6">
+      <ScrollArea className="h-full">
         <div className="text-center border-b pb-4">
           <h2 className="text-2xl font-bold">{contractType?.name_de}</h2>
           <p className="text-muted-foreground">Template Vorschau</p>
@@ -166,7 +171,7 @@ export function TemplateBuilder({
             </div>
           );
         })}
-      </div>
+      </ScrollArea>
     );
   };
 
@@ -301,11 +306,18 @@ export function TemplateBuilder({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="space-y-2">
+          <div className="space-y-2">
               <Label>Vertragstyp</Label>
-              <Select value={selectedContractType} onValueChange={setSelectedContractType}>
+              <Select value={selectedContractType} 
+                      onValueChange={(value) => {
+                        setSelectedContractType(value);
+                      }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Vertragstyp wählen" />
+                   <SelectValue placeholder="Vertragstyp wählen" >
+                    {contractTypes.find(type => type.key === selectedContractType)?.name_de ||
+                      "Vertragstyp wählen"}
+                  </SelectValue>
+
                 </SelectTrigger>
                 <SelectContent>
                   {contractTypes.filter(type => type.key && type.key.trim() !== '').map(type => (
@@ -325,6 +337,36 @@ export function TemplateBuilder({
                 placeholder="Template Name eingeben"
               />
             </div>
+
+        
+          </div>
+        </CardContent>
+           <CardFooter className="flex justify-between items-center">
+               {/* Buttons */}
+              <div className="flex items-center space-x-2">
+                 <Button variant="outline" onClick={() => setPreviewMode(!previewMode)} className="hover-scale">
+                    <Eye className="h-4 w-4 mr-2" />
+                       {previewMode ? 'Bearbeiten' : 'Vorschau'}
+                 </Button>
+                 <DropdownMenu>
+                   <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="px-4 hover:bg-accent hover:text-accent-foreground" >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                   </DropdownMenuTrigger>
+                   <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={exportTemplate} disabled={!selectedContractType}>
+                         <Download className="h-4 w-4 mr-2" />
+                            Exportieren
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setIsOutlineOpen(true)}>
+                         <FileText className="h-4 w-4 mr-2" />
+                            Gliederung anzeigen
+                      </DropdownMenuItem>
+                   </DropdownMenuContent>
+                 </DropdownMenu>
+              </div>
+              <Button onClick={saveTemplate} className="hover-scale"><Save className="h-4 w-4 mr-2" />Template speichern</Button>
           </div>
         </CardContent>
       </Card>
@@ -385,37 +427,35 @@ export function TemplateBuilder({
             </div>
           </CardContent>
         </Card>
-      )}
+)}
 
       {selectedContractType && (
         <Card>
-          <CardContent className="pt-6">
-            {renderVariableInputs()}
+       <CardContent className="pt-6">
+          {renderVariableInputs()}
+        </CardContent>
+      </Card>
+      )}
 
-            <div className="flex items-center space-x-2 mt-6">
-              <Switch
-                id="is-default"
-                checked={isDefault}
-                onCheckedChange={setIsDefault}
-              />
-              <Label htmlFor="is-default">Als Standard-Template markieren</Label>
-            </div>
-
-            <div className="flex space-x-2 mt-6">
-              <Button onClick={saveTemplate} className="hover-scale">
-                <Save className="h-4 w-4 mr-2" />
-                Template speichern
-              </Button>
-              <Button variant="outline" onClick={() => setPreviewMode(!previewMode)} className="hover-scale">
-                <Eye className="h-4 w-4 mr-2" />
-                {previewMode ? 'Bearbeiten' : 'Vorschau'}
-              </Button>
-              <Button variant="outline" onClick={exportTemplate} disabled={!selectedContractType} className="hover-scale">
-                <Download className="h-4 w-4 mr-2" />
-                Exportieren
-              </Button>
-            </div>
-          </CardContent>
+        <Sheet open={isOutlineOpen} onOpenChange={setIsOutlineOpen}>
+             <SheetContent className="sm:max-w-[400px]">
+               <SheetHeader>
+                 <SheetTitle>Gliederung</SheetTitle>
+                 <SheetDescription>
+                   Automatisch generierte Gliederung des Dokuments.
+                 </SheetDescription>
+               </SheetHeader>
+               <CardContent>
+                {currentCompositions.map((composition) => {
+                  const module = getModuleByKey(composition.module_key);
+                    if (!module) return null;
+                return(
+                    <div className="space-y-3">
+                    {module.name}
+                    </div>
+                    )})}
+               </CardContent>
+             </SheetContent>
         </Card>
       )}
 

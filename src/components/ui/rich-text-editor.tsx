@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
+import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer, NodeViewProps } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { TextAlign } from '@tiptap/extension-text-align';
@@ -9,11 +9,11 @@ import { TaskItem } from '@tiptap/extension-task-item';
 import Image from '@tiptap/extension-image'; // Import Image extension
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Bold, Italic, Underline, List, ListOrdered, Quote, CheckSquare, Indent as IndentIcon, Outdent as OutdentIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify, Variable, Search, ImageIcon } from 'lucide-react';
+import { Bold, Italic, Strikethrough, List, ListOrdered, Quote, CheckSquare, Indent as IndentIcon, Outdent as OutdentIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify, Variable, Search, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IndentExtension } from '@/lib/indent-extension';
 import { supabase } from '@/integrations/supabase/client';
-import { VariableHighlight } from '@/lib/variable-highlight-extension';
+import { VariableHighlight } from '../../lib/variable-highlight-extension';
 
 // NEU: Erweiterte Bild-Konfiguration
 import {
@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/tooltip";
 
 // NEU: Komponente, die das Bild im Editor rendert
-const ImageView = ({ node, selected }) => {
+const ImageView = ({ node, selected }: NodeViewProps) => {
   return (
     <NodeViewWrapper className="image-wrapper inline-block" data-drag-handle>
       <img
@@ -222,7 +222,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
             <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleItalic().run()} className={cn("h-8 w-8 p-0", editor.isActive('italic') && "bg-primary/20")}>
               <Italic className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Kursiv</p></TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleStrike().run()} className={cn("h-8 w-8 p-0", editor.isActive('strike') && "bg-primary/20")}>
-              <Underline className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Durchgestrichen</p></TooltipContent></Tooltip>
+              <Strikethrough className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Durchgestrichen</p></TooltipContent></Tooltip>
           </div>
 
           <div className="w-px h-6 bg-border mx-1" />
