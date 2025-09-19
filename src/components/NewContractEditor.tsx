@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { FileText, ArrowLeft, Save, X, PanelLeftClose, PanelRightClose, BookOpen, FileDown } from 'lucide-react';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import type { ImperativePanelHandle } from "react-resizable-panels";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useAdminData } from '@/hooks/useAdminData';
 import { toast } from 'sonner';
@@ -45,6 +46,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const [isOutlineSheetOpen, setIsOutlineSheetOpen] = useState(false);
   const [outline, setOutline] = useState<{ id: string; text: string; level: number }[]>([]);
   const previewRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<ImperativePanelHandle>(null);
 
   const handleTypeSelect = (typeKey: string) => {
     setSelectedType(typeKey);
@@ -126,7 +128,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
   useEffect(() => {
     if (previewRef.current && showDetails) {
-      const headings = previewRef.current.querySelectorAll('h3');
+      const headings = previewRef.current.querySelectorAll('.german-content h3');
       const newOutline = Array.from(headings).map((h, index) => {
         const id = `heading-outline-${index}`;
         h.id = id;
@@ -150,13 +152,14 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       const variableName = variable.key;
       const value = variableValues[variableName] || '';
       const regex = new RegExp(`{{${variableName}}}`, 'g');
-      processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 border-2 border-yellow-400 px-1 rounded">${value}</span>`);
+      processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 px-1 rounded">${value}</span>`);
     });
     
     // Also process the gueltig_bis variable specifically
     if (variableValues.gueltig_bis) {
+      const displayDate = variableValues.gueltig_bis_formatted || variableValues.gueltig_bis;
       const regex = new RegExp(`{{gueltig_bis}}`, 'g');
-      processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 border-2 border-yellow-400 px-1 rounded">${variableValues.gueltig_bis}</span>`);
+      processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 px-1 rounded">${displayDate}</span>`);
     }
     
     // Replace module-specific variables with highlighted spans
@@ -165,7 +168,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       if (!variableName) return;
       const value = variableValues[variableName] || '';
       const regex = new RegExp(`{{${variableName}}}`, 'g');
-      processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 border-2 border-yellow-400 px-1 rounded">${value}</span>`);
+      processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 px-1 rounded">${value}</span>`);
     });
     
     return processedContent;
@@ -293,10 +296,16 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       moduleVariables = [];
     }
     
-    // Check if content exists (not empty or just whitespace)
     const hasGermanContent = (module.content_de || '').trim().length > 0;
     const hasEnglishContent = (module.content_en || '').trim().length > 0;
+    const hasGermanTitle = (module.title_de || '').trim().length > 0;
+    const hasEnglishTitle = (module.title_en || '').trim().length > 0;
     
+    // A module is empty if it has no title and no content, unless it's the special header
+    if (module.key !== 'Header Sales' && !hasGermanTitle && !hasEnglishTitle && !hasGermanContent && !hasEnglishContent) {
+      return '';
+    }
+
     // Special handling for Header Sales module
     const isHeaderModule = module.key === 'Header Sales';
     
@@ -304,28 +313,63 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     
     if (isHeaderModule) {
       moduleHtml += `<div class="mb-8 not-prose flex justify-center">`;
-      moduleHtml += `<div class="header-content" style="text-align: center; margin: 0 auto; max-width: 800px; padding: 20px; border: 2px solid #e5e7eb; border-radius: 8px; background-color: white;">`;
+      moduleHtml += `<div class="header-content" style="text-align: center; margin: 0 auto; max-width: 800px; padding: 20px; border: 2px solid #e5e7eb; border-radius: 8px; background-color: white;">`; // Stile beibehalten
     } else {
       moduleHtml += `<div class="mb-8">`;
     }
     
-    if (hasGermanContent && hasEnglishContent) {
-      moduleHtml += `<div class="grid grid-cols-2 gap-8 side-by-side-table">`;
-      moduleHtml += `<div>${processContent(module.content_de, moduleVariables)}</div>`;
-      moduleHtml += `<div>${processContent(module.content_en, moduleVariables)}</div>`;
+    const isBilingual = (hasGermanContent || hasGermanTitle) && (hasEnglishContent || hasEnglishTitle);
+
+    if (isBilingual) {
+      moduleHtml += `<div class="grid grid-cols-2 side-by-side-table">`;
+      
+      // German column
+      let germanColumn = `<div class="german-content pr-4 border-r border-gray-200">`;
+      if (!isHeaderModule && hasGermanTitle) {
+        const displayTitleDe = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
+        germanColumn += `<h3>${displayTitleDe}</h3>`;
+      }
+      if (hasGermanContent) {
+        germanColumn += `<div>${processContent(module.content_de, moduleVariables)}</div>`;
+      }
+      germanColumn += `</div>`;
+      moduleHtml += germanColumn;
+
+      // English column
+      let englishColumn = `<div class="pl-4">`;
+      if (!isHeaderModule && hasEnglishTitle) {
+        const displayTitleEn = isAnnex ? `Annex ${annexNumber}: ${module.title_en}` : module.title_en;
+        englishColumn += `<h3>${displayTitleEn}</h3>`;
+      }
+      if (hasEnglishContent) {
+        englishColumn += `<div>${processContent(module.content_en, moduleVariables)}</div>`;
+      }
+      englishColumn += `</div>`;
+      moduleHtml += englishColumn;
+
       moduleHtml += `</div>`;
-    } else if (hasGermanContent) {
-      if (!isHeaderModule) {
+    } else if (hasGermanContent || hasGermanTitle) {
+      // German only
+      moduleHtml += `<div class="german-content">`;
+      if (!isHeaderModule && hasGermanTitle) {
         const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
-        moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
+        moduleHtml += `<h3>${displayTitle}</h3>`;
       }
-      moduleHtml += `<div>${processContent(module.content_de, moduleVariables)}</div>`;
-    } else if (hasEnglishContent) {
-      if (!isHeaderModule) {
-        const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en || module.title_de}` : (module.title_en || module.title_de);
-        moduleHtml += `<h3 class="text-lg font-bold text-gray-800 mb-4">${displayTitle}</h3>`;
+      if (hasGermanContent) {
+        moduleHtml += `<div>${processContent(module.content_de, moduleVariables)}</div>`;
       }
-      moduleHtml += `<div>${processContent(module.content_en, moduleVariables)}</div>`;
+      moduleHtml += `</div>`;
+    } else if (hasEnglishContent || hasEnglishTitle) {
+      // English only
+      moduleHtml += `<div>`;
+      if (!isHeaderModule && hasEnglishTitle) {
+        const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en}` : module.title_en;
+        moduleHtml += `<h3>${displayTitle}</h3>`;
+      }
+      if (hasEnglishContent) {
+        moduleHtml += `<div>${processContent(module.content_en, moduleVariables)}</div>`;
+      }
+      moduleHtml += `</div>`;
     }
     
     if (isHeaderModule) {
@@ -334,6 +378,17 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     moduleHtml += `</div>`;
     
     return moduleHtml;
+  };
+
+  const togglePanel = () => {
+    const panel = panelRef.current;
+    if (panel) {
+      if (panel.isCollapsed()) {
+        panel.expand();
+      } else {
+        panel.collapse();
+      }
+    }
   };
 
 
@@ -458,7 +513,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-muted/30">
+    <div className="flex flex-col h-full bg-muted/30 rounded-lg overflow-hidden">
       <header className="flex items-center justify-between p-4 border-b bg-background flex-shrink-0">
         <div>
           <h2 className="text-xl font-bold">Vertrag erstellen</h2>
@@ -466,6 +521,14 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             Typ: {contractTypes.find(t => t.key === selectedType)?.name_de}
           </p>
         </div>
+        <div className="flex-grow"></div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={togglePanel}
+        >
+          {isPanelVisible ? <PanelLeftClose className="h-5 w-5" /> : <PanelRightClose className="h-5 w-5" />}
+        </Button>
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -509,13 +572,13 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       <ResizablePanelGroup direction="horizontal" className="flex-grow overflow-hidden">
         {/* Input Fields - smaller width */}
         <ResizablePanel
+          ref={panelRef}
           collapsible
-          collapsed={!isPanelVisible}
           onCollapse={() => setIsPanelVisible(false)}
           onExpand={() => setIsPanelVisible(true)}
           defaultSize={33}
           minSize={25}
-          className={`relative bg-background ${isPanelVisible ? 'min-w-[400px]' : 'min-w-[0px]'}`}
+          className="relative bg-background"
         >
           <ScrollArea className="h-full">
             <div className="space-y-6 p-6">
@@ -703,15 +766,6 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
               />
             </div>
           </ScrollArea>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsPanelVisible(!isPanelVisible)}
-            className="absolute top-1/2 -translate-y-1/2 right-0 translate-x-1/2 z-20 rounded-full h-8 w-8 bg-background hover:bg-muted border"
-            title={isPanelVisible ? 'Bedienfeld ausblenden' : 'Bedienfeld anzeigen'}
-          >
-            {isPanelVisible ? <PanelLeftClose className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
-          </Button>
         </ResizablePanel>
 
         <ResizableHandle withHandle />
@@ -732,53 +786,34 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                       <div 
                       ref={previewRef}
                       className="prose prose-sm sm:prose-base max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
-                      style={{ 
-                        fontSize: '12px', 
-                        lineHeight: '1.6',
-                        fontFamily: 'Arial, sans-serif'
-                      }}
+                      style={{ lineHeight: '1.6', fontFamily: 'Arial, sans-serif' }}
                       dangerouslySetInnerHTML={{ 
                         __html: `
                         <style>
+                          /* Ensure consistent heading sizes with editor */
+                          .contract-preview h1 {
+                            font-size: 1.5rem !important; /* text-2xl */
+                          }
+                          .contract-preview h2 {
+                            font-size: 1.25rem !important; /* text-xl */
+                          }
+                          .contract-preview h3 {
+                            font-size: 1.125rem !important; /* text-lg */
+                            font-weight: 700 !important;
+                            color: #1f2937 !important;
+                            margin-top: 0 !important;
+                            margin-bottom: 0.75rem !important; /* mb-3 */
+                          }
+
                           /* Side-by-side table layout - prose-compatible */
                           .contract-preview .side-by-side-table {
                             width: 100%;
-                            border-collapse: separate;
-                            border-spacing: 0;
                             margin: 1.5rem 0;
-                            table-layout: fixed;
-                          }
-                          
-                          .contract-preview .table-header-de,
-                          .contract-preview .table-header-en {
-                            width: 50%;
-                            padding: 0 1.5rem 1rem 0;
-                            vertical-align: top;
-                            border-right: 1px solid #e5e7eb;
-                            text-align: left;
-                            font-size: 1.125rem;
-                            font-weight: 700;
-                            color: #1f2937;
-                          }
-                          
-                          .contract-preview .table-header-en {
-                            border-right: none;
-                            padding-left: 1.5rem;
-                            padding-right: 0;
                           }
                           
                           .contract-preview .table-content-de,
                           .contract-preview .table-content-en {
-                            width: 50%;
-                            padding: 0 1.5rem 1rem 0;
                             vertical-align: top;
-                            border-right: 1px solid #e5e7eb;
-                          }
-                          
-                          .contract-preview .table-content-en {
-                            border-right: none;
-                            padding-left: 1.5rem;
-                            padding-right: 0;
                           }
                           
                           /* Ensure prose styles work within table cells */
@@ -809,7 +844,6 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                             width: 100%;
                             border-collapse: collapse;
                             margin: 10px 0;
-                          }
                           .header-content table td {
                             padding: 8px 12px;
                             vertical-align: top;
