@@ -4,8 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { FileText, ArrowLeft, Save, X } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { FileText, ArrowLeft, Save, X, PanelLeft, MoreVertical, Download } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useAdminData } from '@/hooks/useAdminData';
 import { toast } from 'sonner';
@@ -39,6 +41,9 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const [isPdfDialogOpen, setIsPdfDialogOpen] = useState(false);
   const [pdfFilename, setPdfFilename] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [isPanelVisible, setIsPanelVisible] = useState(true);
+  const [isOutlineSheetOpen, setIsOutlineSheetOpen] = useState(false);
+  const [outline, setOutline] = useState<{ id: string; text: string; level: number }[]>([]);
   const previewRef = useRef<HTMLDivElement>(null);
 
   const handleTypeSelect = (typeKey: string) => {
@@ -118,6 +123,24 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       setSelectedModules(modules);
     }
   }, [selectedProducts, contractCompositions, contractModules, selectedType]);
+
+  useEffect(() => {
+    if (previewRef.current && showDetails) {
+      const headings = previewRef.current.querySelectorAll('h3');
+      const newOutline = Array.from(headings).map((h, index) => {
+        const id = `heading-outline-${index}`;
+        h.id = id;
+        return {
+          id,
+          text: h.textContent || `Abschnitt ${index + 1}`,
+          level: parseInt(h.tagName.substring(1), 10)
+        };
+      });
+      if (JSON.stringify(newOutline) !== JSON.stringify(outline)) {
+        setOutline(newOutline);
+      }
+    }
+  }, [variableValues, selectedModules, showDetails, outline]);
 
   const processContent = (content: string, moduleVariables: any[] = []) => {
     let processedContent = content;
@@ -435,10 +458,10 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   }
 
   return (
-    <div className="space-y-6 p-6 h-full overflow-auto">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full bg-muted/30">
+      <div className="flex items-center justify-between p-4 border-b bg-background flex-shrink-0">
         <div>
-          <h2 className="text-2xl font-bold">Vertrag bearbeiten</h2>
+          <h2 className="text-xl font-bold">Vertrag erstellen</h2>
           <p className="text-muted-foreground">
             Typ: {contractTypes.find(t => t.key === selectedType)?.name_de}
           </p>
@@ -456,6 +479,29 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Zurück
           </Button>
+          <Button variant="ghost" size="icon" onClick={() => setIsPanelVisible(!isPanelVisible)} title={isPanelVisible ? 'Bedienfeld ausblenden' : 'Bedienfeld anzeigen'}>
+            <PanelLeft className="h-5 w-5" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setIsOutlineSheetOpen(true)}>
+                <FileText className="mr-2 h-4 w-4" />
+                Gliederung
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                setPdfFilename(`${variableValues.title || 'Vertrag'}.pdf`);
+                setIsPdfDialogOpen(true);
+              }}>
+                <Download className="mr-2 h-4 w-4" />
+                PDF Export
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button onClick={saveContract}>
             <Save className="mr-2 h-4 w-4" />
             Speichern
@@ -469,420 +515,413 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-5">
+      <div className="flex flex-grow overflow-hidden">
         {/* Input Fields - smaller width */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* Basic Contract Fields with better structure */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Vertragsdaten</CardTitle>
-              <CardDescription>
-                Grundlegende Vertragsinformationen
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Grunddaten Section */}
-              <div className="space-y-4">
-                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide border-b pb-2">
-                  Grunddaten
-                </h4>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Titel <span className="text-destructive">*</span></Label>
-                    <Input
-                      id="title"
-                      value={variableValues.title || ''}
-                      onChange={(e) => setVariableValues(prev => ({
-                        ...prev,
-                        title: e.target.value
-                      }))}
-                      placeholder="Vertragstitel"
-                      required
-                    />
+        <div className={`transition-all duration-300 ease-in-out h-full bg-background border-r ${isPanelVisible ? 'w-full lg:w-2/5 xl:w-1/3' : 'w-0'}`}>
+          <ScrollArea className={`h-full ${isPanelVisible ? 'p-6' : 'p-0'}`}>
+            <div className={!isPanelVisible ? 'hidden' : 'space-y-6'}>
+              {/* Basic Contract Fields with better structure */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Vertragsdaten</CardTitle>
+                  <CardDescription>
+                    Grundlegende Vertragsinformationen
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Grunddaten Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide border-b pb-2">
+                      Grunddaten
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Titel <span className="text-destructive">*</span></Label>
+                        <Input
+                          id="title"
+                          value={variableValues.title || ''}
+                          onChange={(e) => setVariableValues(prev => ({
+                            ...prev,
+                            title: e.target.value
+                          }))}
+                          placeholder="Vertragstitel"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="start_date">Startdatum <span className="text-destructive">*</span></Label>
+                        <Input
+                          id="start_date"
+                          type="date"
+                          value={variableValues.start_date || ''}
+                          onChange={(e) => setVariableValues(prev => ({
+                            ...prev,
+                            start_date: e.target.value
+                          }))}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="gueltig_bis">Angebot gültig bis</Label>
+                        <Input
+                          id="gueltig_bis"
+                          type="date"
+                          value={variableValues.gueltig_bis || ''}
+                         onChange={(e) => {
+                            const dateValue = e.target.value;
+                            // Format date as German date string for variable
+                            const formattedDate = dateValue ? 
+                              new Date(dateValue).toLocaleDateString('de-DE', {
+                                day: '2-digit',
+                                month: '2-digit', 
+                                year: 'numeric'
+                              }) : '';
+                            
+                            setVariableValues(prev => ({
+                              ...prev,
+                              gueltig_bis: dateValue,
+                              gueltig_bis_formatted: formattedDate // Update the variable value for contract content
+                            }));
+                          }}
+                          placeholder="Gültigkeitsdatum"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="start_date">Startdatum <span className="text-destructive">*</span></Label>
-                    <Input
-                      id="start_date"
-                      type="date"
-                      value={variableValues.start_date || ''}
-                      onChange={(e) => setVariableValues(prev => ({
-                        ...prev,
-                        start_date: e.target.value
-                      }))}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="gueltig_bis">Angebot gültig bis</Label>
-                    <Input
-                      id="gueltig_bis"
-                      type="date"
-                      value={variableValues.gueltig_bis || ''}
-                     onChange={(e) => {
-                        const dateValue = e.target.value;
-                        // Format date as German date string for variable
-                        const formattedDate = dateValue ? 
-                          new Date(dateValue).toLocaleDateString('de-DE', {
-                            day: '2-digit',
-                            month: '2-digit', 
-                            year: 'numeric'
-                          }) : '';
-                        
-                        setVariableValues(prev => ({
-                          ...prev,
-                          gueltig_bis: dateValue,
-                          gueltig_bis_formatted: formattedDate // Update the variable value for contract content
-                        }));
-                      }}
-                      placeholder="Gültigkeitsdatum"
-                    />
-                  </div>
-                </div>
-              </div>
 
-              {/* Zuständigkeit Section */}
-              <div className="space-y-4">
-                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide border-b pb-2">
-                  Zuständigkeit
-                </h4>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="assigned_to_user_id">Zuständiger Ansprechpartner</Label>
-                    <Select
-                      value={variableValues.assigned_to_user_id || ''}
-                     onValueChange={(value) => {
-                        setVariableValues(prev => ({
-                          ...prev,
-                          assigned_to_user_id: value
-                        }));
-                        // Find and set the selected user for preview
-                        const user = users.find(u => u.user_id === value);
-                        setSelectedUser(user || null);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Ansprechpartner auswählen" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {users.map(user => (
-                          <SelectItem key={user.id} value={user.user_id}>
-                            {user.display_name || user.email || 'Unbekannter Benutzer'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  {/* Zuständigkeit Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide border-b pb-2">
+                      Zuständigkeit
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="assigned_to_user_id">Zuständiger Ansprechpartner</Label>
+                        <Select
+                          value={variableValues.assigned_to_user_id || ''}
+                         onValueChange={(value) => {
+                            setVariableValues(prev => ({
+                              ...prev,
+                              assigned_to_user_id: value
+                            }));
+                            // Find and set the selected user for preview
+                            const user = users.find(u => u.user_id === value);
+                            setSelectedUser(user || null);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Ansprechpartner auswählen" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {users.map(user => (
+                              <SelectItem key={user.id} value={user.user_id}>
+                                {user.display_name || user.email || 'Unbekannter Benutzer'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="assigned_to">Zugewiesen an</Label>
+                        <Input
+                          id="assigned_to"
+                          value={variableValues.assigned_to || ''}
+                          onChange={(e) => setVariableValues(prev => ({
+                            ...prev,
+                            assigned_to: e.target.value
+                          }))}
+                          placeholder="Name des Bearbeiters"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="status">Status</Label>
+                        <Select 
+                          value={variableValues.status || 'draft'} 
+                          onValueChange={(value) => setVariableValues(prev => ({
+                            ...prev,
+                            status: value
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Status auswählen" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="draft">Entwurf</SelectItem>
+                            <SelectItem value="ready_for_review">Bereit zur Prüfung</SelectItem>
+                            <SelectItem value="approved">Genehmigt</SelectItem>
+                            <SelectItem value="active">Aktiv</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="assigned_to">Zugewiesen an</Label>
-                    <Input
-                      id="assigned_to"
-                      value={variableValues.assigned_to || ''}
-                      onChange={(e) => setVariableValues(prev => ({
-                        ...prev,
-                        assigned_to: e.target.value
-                      }))}
-                      placeholder="Name des Bearbeiters"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
-                    <Select 
-                      value={variableValues.status || 'draft'} 
-                      onValueChange={(value) => setVariableValues(prev => ({
-                        ...prev,
-                        status: value
-                      }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Status auswählen" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="draft">Entwurf</SelectItem>
-                        <SelectItem value="ready_for_review">Bereit zur Prüfung</SelectItem>
-                        <SelectItem value="approved">Genehmigt</SelectItem>
-                        <SelectItem value="active">Aktiv</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
-          {/* Module Variables using VariableInputRenderer */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Produktauswahl</CardTitle>
-              <CardDescription>
-                Wählen Sie die Produkte aus, für die dieser Vertrag erstellt werden soll
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {['shyftplanner', 'shyftskills'].map((product) => (
-                  <div key={product} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`product-${product}`}
-                      checked={selectedProducts.includes(product)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedProducts(prev => [...prev.filter(p => p !== product), product]);
-                        } else {
-                          setSelectedProducts(prev => prev.filter(p => p !== product));
-                        }
-                      }}
-                    />
-                    <Label htmlFor={`product-${product}`}>
-                      {product === 'shyftplanner' ? 'shyftplanner' : 'shyftskills'}
-                    </Label>
+              {/* Module Variables using VariableInputRenderer */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Produktauswahl</CardTitle>
+                  <CardDescription>
+                    Wählen Sie die Produkte aus, für die dieser Vertrag erstellt werden soll
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {['shyftplanner', 'shyftskills'].map((product) => (
+                      <div key={product} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`product-${product}`}
+                          checked={selectedProducts.includes(product)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedProducts(prev => [...prev.filter(p => p !== product), product]);
+                            } else {
+                              setSelectedProducts(prev => prev.filter(p => p !== product));
+                            }
+                          }}
+                        />
+                        <Label htmlFor={`product-${product}`}>
+                          {product === 'shyftplanner' ? 'shyftplanner' : 'shyftskills'}
+                        </Label>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
-          <VariableInputRenderer
-            selectedModules={selectedModules.map(sm => {
-              const module = contractModules.find(m => m.key === sm.moduleKey);
-              return module;
-            }).filter(Boolean)}
-            globalVariables={globalVariables}
-            variableValues={variableValues}
-            onVariableChange={(key, value) => setVariableValues(prev => ({
-              ...prev,
-              [key]: value
-            }))}
-          />
+              <VariableInputRenderer
+                selectedModules={selectedModules.map(sm => {
+                  const module = contractModules.find(m => m.key === sm.moduleKey);
+                  return module;
+                }).filter(Boolean)}
+                globalVariables={globalVariables}
+                variableValues={variableValues}
+                onVariableChange={(key, value) => setVariableValues(prev => ({
+                  ...prev,
+                  [key]: value
+                }))}
+              />
+            </div>
+          </ScrollArea>
         </div>
 
         {/* Preview Panel - larger width */}
-        <div className="lg:col-span-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Live-Vorschau</CardTitle>
-              <CardDescription>
-                Vorschau des generierten Vertrags - Variable Felder sind gelb markiert
-              </CardDescription>
-              <div className="mt-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setPdfFilename(`${variableValues.title || 'Vertrag'}.pdf`);
-                    setIsPdfDialogOpen(true);
+        <div className="flex-1 h-full">
+          <ScrollArea className="h-full p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Live-Vorschau</CardTitle>
+                <CardDescription>
+                  Vorschau des generierten Vertrags - Variable Felder sind gelb markiert
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                  <div 
+                  ref={previewRef}
+                  className="prose prose-sm sm:prose-base max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
+                  style={{ 
+                    fontSize: '12px', 
+                    lineHeight: '1.6',
+                    fontFamily: 'Arial, sans-serif'
                   }}
-                  className="flex items-center gap-2"
-                >
-                  <FileText className="h-4 w-4" />
-                  PDF Export
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-                <div 
-                ref={previewRef}
-                className="prose prose-sm sm:prose-base max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
-                style={{ 
-                  fontSize: '12px', 
-                  lineHeight: '1.6',
-                  fontFamily: 'Arial, sans-serif'
-                }}
-                dangerouslySetInnerHTML={{ 
-                  __html: `
-                  <style>
-                    /* Side-by-side table layout - prose-compatible */
-                    .contract-preview .side-by-side-table {
-                      width: 100%;
-                      border-collapse: separate;
-                      border-spacing: 0;
-                      margin: 1.5rem 0;
-                      table-layout: fixed;
-                    }
-                    
-                    .contract-preview .table-header-de,
-                    .contract-preview .table-header-en {
-                      width: 50%;
-                      padding: 0 1.5rem 1rem 0;
-                      vertical-align: top;
-                      border-right: 1px solid #e5e7eb;
-                      text-align: left;
-                      font-size: 1.125rem;
-                      font-weight: 700;
-                      color: #1f2937;
-                    }
-                    
-                    .contract-preview .table-header-en {
-                      border-right: none;
-                      padding-left: 1.5rem;
-                      padding-right: 0;
-                    }
-                    
-                    .contract-preview .table-content-de,
-                    .contract-preview .table-content-en {
-                      width: 50%;
-                      padding: 0 1.5rem 1rem 0;
-                      vertical-align: top;
-                      border-right: 1px solid #e5e7eb;
-                    }
-                    
-                    .contract-preview .table-content-en {
-                      border-right: none;
-                      padding-left: 1.5rem;
-                      padding-right: 0;
-                    }
-                    
-                    /* Ensure prose styles work within table cells */
-                    .contract-preview .table-content-de p,
-                    .contract-preview .table-content-en p {
-                      margin: 0.75rem 0;
-                    }
-                    
-                    .contract-preview .table-content-de ul,
-                    .contract-preview .table-content-en ul {
-                      margin: 0.75rem 0;
-                      padding-left: 1.5rem;
-                      list-style-type: disc;
-                    }
-                    
-                    .contract-preview .table-content-de ol,
-                    .contract-preview .table-content-en ol {
-                      margin: 0.75rem 0;
-                      padding-left: 1.5rem;
-                      list-style-type: decimal;
-                    }
-                    
-                    .contract-preview .table-content-de li,
-                    .contract-preview .table-content-en li {
-                      margin: 0.25rem 0;
-                    }
-                    /* Header content table styling - unchanged */
-                      width: 100%;
-                      border-collapse: collapse;
-                      margin: 10px 0;
-                    }
-                    .header-content table td {
-                      padding: 8px 12px;
-                      vertical-align: top;
-                      border: 1px solid #e5e7eb;
-                    }
-                    .header-content table td:first-child {
-                      font-weight: 600;
-                      background-color: #f9fafb;
-                      width: 40%;
-                    }
-                    .header-content .company-logo {
-                      font-size: 24px;
-                      font-weight: bold;
-                      color: #1f2937;
-                      margin-bottom: 30px;
-                    }
-                    .header-content .offer-info-block {
-                      margin: 25px 0;
-                      padding: 15px;
-                      background-color: white;
-                      border: 1px solid #d1d5db;
-                      border-radius: 6px;
-                    }
-                    .header-content .convenience-block {
-                      margin: 25px 0;
-                      padding: 15px;
-                      background-color: white;
-                      border: 1px solid #d1d5db;
-                      border-radius: 6px;
-                      border-style: dashed;
-                    }
-                    .header-content .company-section {
-                      margin: 30px 0;
-                      padding: 20px;
-                      background-color: white;
-                      border: 1px solid #e5e7eb;
-                      border-radius: 8px;
-                    }
-                    .header-content .company-divider {
-                      margin: 40px 0;
-                      height: 2px;
-                      background-color: #e5e7eb;
-                      border-radius: 1px;
-                    }
-                    .header-content .info-line {
-                      display: flex;
-                      justify-content: space-between;
-                      margin: 8px 0;
-                      padding: 6px 10px;
-                      background-color: #f8fafc;
-                      border-radius: 4px;
-                      border-left: 4px solid #3b82f6;
-                    }
-                    .header-content .info-label {
-                      font-weight: 600;
-                      color: #374151;
-                      min-width: 120px;
-                    }
-                    .header-content .info-value {
-                      color: #1f2937;
-                    }
-                    .header-content p {
-                      margin: 8px 0;
-                      line-height: 1.5;
-                    }
-                    .header-content strong {
-                      font-weight: 600;
-                    }
-                    .header-content .between-text {
-                      margin: 30px 0 20px 0;
-                      font-size: 14px;
-                      color: #6b7280;
-                      font-style: italic;
-                    }
-                    /* FORCE BLACK BULLETS AND TEXT IN PREVIEW */
-                    .contract-preview ul {
-                      list-style-type: disc !important;
-                      padding-left: 1.5rem !important;
-                      margin: 0.5rem 0 !important;
-                      color: #000000 !important;
-                    }
-                    .contract-preview ul li {
-                      color: #000000 !important;
-                      margin: 0.25rem 0 !important;
-                    }
-                    .contract-preview ul li::marker {
-                      color: #000000 !important;
-                      content: "●" !important;
-                    }
-                    .contract-preview ol {
-                      padding-left: 1.5rem !important;
-                      margin: 0.5rem 0 !important;
-                      color: #000000 !important;
-                    }
-                    .contract-preview ol li {
-                      color: #000000 !important;
-                      margin: 0.25rem 0 !important;
-                    }
-                    .contract-preview p {
-                      color: #000000 !important;
-                      margin: 0.5rem 0 !important;
-                    }
-                    /* Force all content to be black */
-                    .contract-preview * {
-                      color: #000000 !important;
-                    }
-                    /* Override any white or transparent colors */
-                    .contract-preview li::before {
-                      color: #000000 !important;
-                    }
-                    /* Specific override for list markers */
-                    .contract-preview ul > li::marker,
-                    .contract-preview ol > li::marker {
-                      color: #000000 !important;
-                      font-weight: bold !important;
-                    }
-                  </style>
-                  ${generatePreview()}
-                  ` 
-                }}
-              />
-            </CardContent>
-          </Card>
+                  dangerouslySetInnerHTML={{ 
+                    __html: `
+                    <style>
+                      /* Side-by-side table layout - prose-compatible */
+                      .contract-preview .side-by-side-table {
+                        width: 100%;
+                        border-collapse: separate;
+                        border-spacing: 0;
+                        margin: 1.5rem 0;
+                        table-layout: fixed;
+                      }
+                      
+                      .contract-preview .table-header-de,
+                      .contract-preview .table-header-en {
+                        width: 50%;
+                        padding: 0 1.5rem 1rem 0;
+                        vertical-align: top;
+                        border-right: 1px solid #e5e7eb;
+                        text-align: left;
+                        font-size: 1.125rem;
+                        font-weight: 700;
+                        color: #1f2937;
+                      }
+                      
+                      .contract-preview .table-header-en {
+                        border-right: none;
+                        padding-left: 1.5rem;
+                        padding-right: 0;
+                      }
+                      
+                      .contract-preview .table-content-de,
+                      .contract-preview .table-content-en {
+                        width: 50%;
+                        padding: 0 1.5rem 1rem 0;
+                        vertical-align: top;
+                        border-right: 1px solid #e5e7eb;
+                      }
+                      
+                      .contract-preview .table-content-en {
+                        border-right: none;
+                        padding-left: 1.5rem;
+                        padding-right: 0;
+                      }
+                      
+                      /* Ensure prose styles work within table cells */
+                      .contract-preview .table-content-de p,
+                      .contract-preview .table-content-en p {
+                        margin: 0.75rem 0;
+                      }
+                      
+                      .contract-preview .table-content-de ul,
+                      .contract-preview .table-content-en ul {
+                        margin: 0.75rem 0;
+                        padding-left: 1.5rem;
+                        list-style-type: disc;
+                      }
+                      
+                      .contract-preview .table-content-de ol,
+                      .contract-preview .table-content-en ol {
+                        margin: 0.75rem 0;
+                        padding-left: 1.5rem;
+                        list-style-type: decimal;
+                      }
+                      
+                      .contract-preview .table-content-de li,
+                      .contract-preview .table-content-en li {
+                        margin: 0.25rem 0;
+                      }
+                      /* Header content table styling - unchanged */
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin: 10px 0;
+                      }
+                      .header-content table td {
+                        padding: 8px 12px;
+                        vertical-align: top;
+                        border: 1px solid #e5e7eb;
+                      }
+                      .header-content table td:first-child {
+                        font-weight: 600;
+                        background-color: #f9fafb;
+                        width: 40%;
+                      }
+                      .header-content .company-logo {
+                        font-size: 24px;
+                        font-weight: bold;
+                        color: #1f2937;
+                        margin-bottom: 30px;
+                      }
+                      .header-content .offer-info-block {
+                        margin: 25px 0;
+                        padding: 15px;
+                        background-color: white;
+                        border: 1px solid #d1d5db;
+                        border-radius: 6px;
+                      }
+                      .header-content .convenience-block {
+                        margin: 25px 0;
+                        padding: 15px;
+                        background-color: white;
+                        border: 1px solid #d1d5db;
+                        border-radius: 6px;
+                        border-style: dashed;
+                      }
+                      .header-content .company-section {
+                        margin: 30px 0;
+                        padding: 20px;
+                        background-color: white;
+                        border: 1px solid #e5e7eb;
+                        border-radius: 8px;
+                      }
+                      .header-content .company-divider {
+                        margin: 40px 0;
+                        height: 2px;
+                        background-color: #e5e7eb;
+                        border-radius: 1px;
+                      }
+                      .header-content .info-line {
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 8px 0;
+                        padding: 6px 10px;
+                        background-color: #f8fafc;
+                        border-radius: 4px;
+                        border-left: 4px solid #3b82f6;
+                      }
+                      .header-content .info-label {
+                        font-weight: 600;
+                        color: #374151;
+                        min-width: 120px;
+                      }
+                      .header-content .info-value {
+                        color: #1f2937;
+                      }
+                      .header-content p {
+                        margin: 8px 0;
+                        line-height: 1.5;
+                      }
+                      .header-content strong {
+                        font-weight: 600;
+                      }
+                      .header-content .between-text {
+                        margin: 30px 0 20px 0;
+                        font-size: 14px;
+                        color: #6b7280;
+                        font-style: italic;
+                      }
+                      /* FORCE BLACK BULLETS AND TEXT IN PREVIEW */
+                      .contract-preview ul {
+                        list-style-type: disc !important;
+                        padding-left: 1.5rem !important;
+                        margin: 0.5rem 0 !important;
+                        color: #000000 !important;
+                      }
+                      .contract-preview ul li {
+                        color: #000000 !important;
+                        margin: 0.25rem 0 !important;
+                      }
+                      .contract-preview ul li::marker {
+                        color: #000000 !important;
+                        content: "●" !important;
+                      }
+                      .contract-preview ol {
+                        padding-left: 1.5rem !important;
+                        margin: 0.5rem 0 !important;
+                        color: #000000 !important;
+                      }
+                      .contract-preview ol li {
+                        color: #000000 !important;
+                        margin: 0.25rem 0 !important;
+                      }
+                      .contract-preview p {
+                        color: #000000 !important;
+                        margin: 0.5rem 0 !important;
+                      }
+                      /* Force all content to be black */
+                      .contract-preview * {
+                        color: #000000 !important;
+                      }
+                      /* Override any white or transparent colors */
+                      .contract-preview li::before {
+                        color: #000000 !important;
+                      }
+                      /* Specific override for list markers */
+                      .contract-preview ul > li::marker,
+                      .contract-preview ol > li::marker {
+                        color: #000000 !important;
+                        font-weight: bold !important;
+                      }
+                    </style>
+                    ${generatePreview()}
+                    ` 
+                  }}
+                />
+              </CardContent>
+            </Card>
+          </ScrollArea>
         </div>
       </div>
 
@@ -919,6 +958,36 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Sheet open={isOutlineSheetOpen} onOpenChange={setIsOutlineSheetOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Gliederung</SheetTitle>
+            <SheetDescription>
+              Klicken Sie auf einen Abschnitt, um dorthin zu springen.
+            </SheetDescription>
+          </SheetHeader>
+          <ScrollArea className="h-[calc(100vh-8rem)]">
+            <ul className="py-4">
+              {outline.map(item => (
+                <li key={item.id}>
+                  <a
+                    href={`#${item.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      setIsOutlineSheetOpen(false);
+                    }}
+                    className="block p-2 text-sm hover:bg-accent rounded"
+                  >
+                    {item.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
