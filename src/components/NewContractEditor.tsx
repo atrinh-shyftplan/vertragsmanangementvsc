@@ -21,6 +21,14 @@ interface SelectedModule {
   order: number;
 }
 
+interface Attachment {
+  id: string;
+  name: string;
+  type: 'fest' | 'produkt' | 'zusatz';
+  description: string | null;
+  // Add other fields from your attachments table if needed
+}
+
 interface NewContractEditorProps {
   onClose?: () => void;
 }
@@ -36,7 +44,8 @@ const getValidationSchema = (
   status: string,
   modules: SelectedModule[],
   allContractModules: any[],
-  globalVars: any[]
+  globalVars: any[],
+  allAttachments: Attachment[]
 ) => {
   const isDraft = status === 'draft';
 
@@ -44,7 +53,16 @@ const getValidationSchema = (
     title: yup.string().required('Titel ist ein Pflichtfeld.'),
     assigned_to_user_id: yup.string().required('Zuständiger Ansprechpartner ist ein Pflichtfeld.'),
     status: yup.string().required('Status ist ein Pflichtfeld.'),
-    selectedProducts: yup.array().min(1, 'Mindestens ein Produkt muss ausgewählt werden.').required(),
+    selectedAttachmentIds: yup.array(yup.string())
+      .test(
+        'has-product',
+        'Mindestens ein Produkt muss ausgewählt werden.',
+        (ids) => {
+          if (!ids) return false;
+          const selectedAttachments = ids.map(id => allAttachments.find(a => a.id === id)).filter(Boolean);
+          return selectedAttachments.some(a => a.type === 'produkt');
+        }
+      ).required('Produktauswahl ist ein Pflichtfeld.'),
   });
 
   if (!isDraft) {
@@ -101,7 +119,6 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const [selectedModules, setSelectedModules] = useState<SelectedModule[]>([]);
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
   const [showDetails, setShowDetails] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<string[]>(['core']);
   const [users, setUsers] = useState<any[]>([]);
   const [isPdfDialogOpen, setIsPdfDialogOpen] = useState(false);
   const [requiredFields, setRequiredFields] = useState<string[]>([]);
@@ -112,6 +129,8 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const [outline, setOutline] = useState<{ id: string; text: string; level: number }[]>([]);
   const previewRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<ImperativePanelHandle>(null);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [selectedAttachmentIds, setSelectedAttachmentIds] = useState<string[]>([]);
 
   const handleTypeSelect = (typeKey: string) => {
     setSelectedType(typeKey);
@@ -125,16 +144,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       .filter(comp => comp.contract_type_key === typeKey)
       .sort((a, b) => a.sort_order - b.sort_order);
     
-    // Filter compositions based on selected products and set as selected modules
-    const filteredCompositions = compositions.filter(comp => {
-      const module = contractModules.find(m => m.key === comp.module_key);
-      if (!module || !module.is_active) return false;
-      
-      const moduleTags = module.product_tags || ['core'];
-      return moduleTags.some(tag => selectedProducts.includes(tag));
-    });
-    
-    const modules = filteredCompositions.map(comp => ({
+    const modules = compositions.map(comp => ({
       moduleKey: comp.module_key,
       order: comp.sort_order
     }));
@@ -152,13 +162,22 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     const loadData = async () => {
       try {
         const { supabase } = await import('@/integrations/supabase/client');
-        const { data: usersData, error: usersError } = await supabase
-          .from('profiles')
-          .select('*')
-          .order('display_name');
+        const [usersResult, attachmentsResult] = await Promise.all([
+          supabase.from('profiles').select('*').order('display_name'),
+          supabase.from('attachments').select('*').order('name')
+        ]);
         
-        if (usersError) throw usersError;
-        setUsers(usersData || []);
+        if (usersResult.error) throw usersResult.error;
+        setUsers(usersResult.data || []);
+
+        if (attachmentsResult.error) throw attachmentsResult.error;
+        const loadedAttachments = (attachmentsResult.data || []) as Attachment[];
+        setAttachments(loadedAttachments);
+
+        // Pre-select fixed attachments
+        const fixedAttachmentIds = loadedAttachments.filter(a => a.type === 'fest').map(a => a.id);
+        setSelectedAttachmentIds(fixedAttachmentIds);
+
       } catch (error) {
         console.error('Error loading initial data:', error);
       }
@@ -166,30 +185,6 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     
     loadData();
   }, []);
-
-  // Update modules when product selection changes
-  useEffect(() => {
-    if (selectedType) {
-      const compositions = contractCompositions
-        .filter(comp => comp.contract_type_key === selectedType)
-        .sort((a, b) => a.sort_order - b.sort_order);
-      
-      const filteredCompositions = compositions.filter(comp => {
-        const module = contractModules.find(m => m.key === comp.module_key);
-        if (!module || !module.is_active) return false;
-        
-        const moduleTags = module.product_tags || ['core'];
-        return moduleTags.some(tag => selectedProducts.includes(tag));
-      });
-      
-      const modules = filteredCompositions.map(comp => ({
-        moduleKey: comp.module_key,
-        order: comp.sort_order
-      }));
-      
-      setSelectedModules(modules);
-    }
-  }, [selectedProducts, contractCompositions, contractModules, selectedType]);
 
   useEffect(() => {
     if (previewRef.current && showDetails) {
@@ -211,10 +206,10 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
   useEffect(() => {
     const status = variableValues.status || 'draft';
-    const schema = getValidationSchema(status, selectedModules, contractModules, globalVariables);
+    const schema = getValidationSchema(status, selectedModules, contractModules, globalVariables, attachments);
     const description = schema.describe();
     setRequiredFields(Object.keys(description.fields));
-  }, [variableValues.status, selectedModules, contractModules, globalVariables]);
+  }, [variableValues.status, selectedModules, contractModules, globalVariables, attachments]);
 
 
   const processContent = (content: string, moduleVariables: any[] = []) => {
@@ -255,13 +250,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     const filteredSelectedModules = selectedModules
       .filter(selectedModule => {
         const module = contractModules.find(m => m.key === selectedModule.moduleKey);
-        if (!module) return false;
-        
-        // Core modules are always included
-        if (module.product_tags?.includes('core')) return true;
-        
-        // Check if any of the selected products match the module's product tags
-        return selectedProducts.some(product => module.product_tags?.includes(product));
+        return !!module;
       })
       .sort((a, b) => a.order - b.order);
     
@@ -470,19 +459,24 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       variableValues.status || 'draft',
       selectedModules,
       contractModules,
-      globalVariables
+      globalVariables,
+      attachments
     );
 
     try {
       await validationSchema.validate(
-        { ...variableValues, selectedProducts },
+        { ...variableValues, selectedAttachmentIds },
         { abortEarly: false } // Collect all errors
       );
     } catch (err) {
       if (err instanceof yup.ValidationError) {
-        const errorList = err.inner.map(e => `- ${e.message}`).join('\n');
         toast.error(
-          `Bitte füllen Sie alle Pflichtfelder aus:\n${errorList}`,
+          <div className="flex flex-col gap-2">
+            <p className="font-semibold">Bitte füllen Sie alle Pflichtfelder aus:</p>
+            <ol className="list-decimal list-inside text-sm">
+              {err.inner.map(e => <li key={e.path}>{e.message}</li>)}
+            </ol>
+          </div>,
           { duration: 8000 }
         );
       } else {
@@ -494,7 +488,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
 
-      // Prepare contract data
+      // 1. Prepare and insert main contract data
       const contractData = {
         title: variableValues.title,
         client: variableValues.client || 'TBD',
@@ -508,13 +502,12 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         progress: variableValues.status === 'draft' ? 0 : 25,
         contract_type_key: selectedType,
         assigned_to_user_id: variableValues.assigned_to_user_id || null,
-        template_variables: variableValues, // Products are now in a join table
+        template_variables: variableValues,
         global_variables: Object.fromEntries(
           globalVariables.map(gv => [gv.key, variableValues[gv.key] || ''])
         )
       };
 
-      // 1. Insert into contracts table
       const { data: newContract, error: contractError } = await supabase
         .from('contracts')
         .insert([contractData])
@@ -524,36 +517,21 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       if (contractError) throw contractError;
       if (!newContract) throw new Error('Contract creation failed, no contract returned.');
 
-      // 2. Fetch product IDs and insert into contract_products join table
-      if (selectedProducts.length > 0) {
-        const { data: productsData, error: productsError } = await supabase
-          .from('products')
-          .select('id, key')
-          .in('key', selectedProducts);
+      // 2. Prepare and insert attachment relations
+      if (selectedAttachmentIds.length > 0) {
+        const contractAttachmentsData = selectedAttachmentIds.map(attachmentId => ({
+          contract_id: newContract.id,
+          attachment_id: attachmentId,
+        }));
 
-        if (productsError) throw productsError;
+        const { error: joinTableError } = await supabase
+          .from('contract_attachments')
+          .insert(contractAttachmentsData);
 
-        if (productsData && productsData.length > 0) {
-          const contractProductsData = productsData.map(product => ({
-            contract_id: newContract.id,
-            product_id: product.id,
-          }));
-
-          const { error: joinTableError } = await supabase
-            .from('contract_products')
-            .insert(contractProductsData);
-
-          if (joinTableError) throw joinTableError;
-        }
+        if (joinTableError) throw joinTableError;
       }
 
       toast.success('Vertrag erfolgreich gespeichert');
-      
-      // Reset form
-      setSelectedType('');
-      setShowDetails(false);
-      setSelectedModules([]);
-      setVariableValues({});
       
       // Close modal if callback provided
       onClose?.();
@@ -821,31 +799,79 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
               {/* Module Variables using VariableInputRenderer */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Produktauswahl</CardTitle>
+                  <CardTitle>Vertragsbestandteile</CardTitle>
                   <CardDescription>
-                    Wählen Sie die Produkte aus, für die dieser Vertrag erstellt werden soll
+                    Stellen Sie die Komponenten des Vertrags zusammen.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {['shyftplanner', 'shyftskills'].map((product) => (
-                      <div key={product} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`product-${product}`}
-                          checked={selectedProducts.includes(product)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedProducts(prev => [...prev.filter(p => p !== product), product]);
-                            } else {
-                              setSelectedProducts(prev => prev.filter(p => p !== product));
-                            }
-                          }}
-                        />
-                        <Label htmlFor={`product-${product}`}>
-                          {product === 'shyftplanner' ? 'shyftplanner' : 'shyftskills'}
-                        </Label>
-                      </div>
-                    ))}
+                <CardContent className="space-y-6">
+                  {/* Feste Bestandteile */}
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Feste Bestandteile</h4>
+                    <div className="space-y-2">
+                      {attachments.filter(a => a.type === 'fest').map(attachment => (
+                        <div key={attachment.id} className="flex items-center space-x-2 opacity-70">
+                          <Checkbox
+                            id={`attachment-${attachment.id}`}
+                            checked={true}
+                            disabled={true}
+                          />
+                          <Label htmlFor={`attachment-${attachment.id}`} className="cursor-not-allowed">
+                            {attachment.name}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Produkte */}
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Produkte (mindestens eines auswählen)</h4>
+                    <div className="space-y-2">
+                      {attachments.filter(a => a.type === 'produkt').map(attachment => (
+                        <div key={attachment.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`attachment-${attachment.id}`}
+                            checked={selectedAttachmentIds.includes(attachment.id)}
+                            onCheckedChange={(checked) => {
+                              setSelectedAttachmentIds(prev => 
+                                checked 
+                                  ? [...prev, attachment.id] 
+                                  : prev.filter(id => id !== attachment.id)
+                              );
+                            }}
+                          />
+                          <Label htmlFor={`attachment-${attachment.id}`}>
+                            {attachment.name}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Optionale Zusatzleistungen */}
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Optionale Zusatzleistungen</h4>
+                    <div className="space-y-2">
+                      {attachments.filter(a => a.type === 'zusatz').map(attachment => (
+                        <div key={attachment.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`attachment-${attachment.id}`}
+                            checked={selectedAttachmentIds.includes(attachment.id)}
+                            onCheckedChange={(checked) => {
+                              setSelectedAttachmentIds(prev => 
+                                checked 
+                                  ? [...prev, attachment.id] 
+                                  : prev.filter(id => id !== attachment.id)
+                              );
+                            }}
+                          />
+                          <Label htmlFor={`attachment-${attachment.id}`}>
+                            {attachment.name}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
