@@ -48,7 +48,7 @@ const getValidationSchema = (
   });
 
   if (!isDraft) {
-    const requiredFieldsShape: yup.ObjectShape = {
+    const requiredFieldsShape: { [key: string]: yup.AnySchema } = {
       start_date: yup.string().required('Startdatum ist ein Pflichtfeld.'),
       end_date: yup.string().required('Enddatum ist ein Pflichtfeld.'),
       // Add other static fields that are required for non-drafts
@@ -75,7 +75,9 @@ const getValidationSchema = (
           }
         }
         moduleJsonVars.forEach((variable: any) => {
-          requiredFieldsShape[variable.key] = yup.string().required(`Das Feld "${variable.name_de}" ist erforderlich.`);
+          if (variable && typeof variable.key === 'string') {
+            requiredFieldsShape[variable.key] = yup.string().required(`Das Feld "${variable.name_de || variable.key}" ist erforderlich.`);
+          }
         });
 
         // Add variables found in the content

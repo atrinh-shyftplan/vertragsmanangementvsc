@@ -36,8 +36,8 @@ interface Contract {
   client: string;
   status: 'active' | 'pending' | 'expired' | 'draft' | 'ready_for_review' | 'approved';
   value: number;
-  startDate: string;
-  endDate: string;
+  startDate: string | null;
+  endDate: string | null;
   assignedTo: string;
   assignedUser?: {
     display_name: string | null;
@@ -75,8 +75,8 @@ export default function Contracts() {
     client: dbContract.client,
     status: dbContract.status as Contract['status'],
     value: dbContract.value,
-    startDate: dbContract.start_date,
-    endDate: dbContract.end_date,
+    startDate: dbContract.start_date || null,
+    endDate: dbContract.end_date || null,
     assignedTo: dbContract.assigned_user?.display_name || dbContract.assigned_to || 'Unassigned',
     assignedUser: dbContract.assigned_user || undefined,
     creator: dbContract.creator || undefined,
@@ -193,7 +193,7 @@ export default function Contracts() {
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('de-DE');
   };
