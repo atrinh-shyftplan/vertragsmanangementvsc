@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { AttachmentWithModule, ContractModule, AttachmentInsert } from '@/integrations/supabase/types';
+import type { Database, AttachmentWithModule } from '@/integrations/supabase/types';
+
+type AttachmentInsert = Database['public']['Tables']['attachments']['Insert'];
+type ContractModule = Database['public']['Tables']['contract_modules']['Row'];
 
 export function AttachmentManager() {
   const [attachments, setAttachments] = useState<AttachmentWithModule[]>([]);

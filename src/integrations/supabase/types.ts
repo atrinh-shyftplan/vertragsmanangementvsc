@@ -582,6 +582,7 @@ export type ContractModule = Database["public"]["Tables"]["contract_modules"]["R
 export type Attachment = Database["public"]["Tables"]["attachments"]["Row"];
 export type AttachmentInsert = Database["public"]["Tables"]["attachments"]["Insert"];
 
+// Definiert die kombinierte Struktur eines Anhangs mit seinem optional verknüpften Textmodul
 export interface AttachmentWithModule extends Attachment {
   contract_modules: ContractModule | null;
 }
