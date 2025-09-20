@@ -104,6 +104,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const [selectedProducts, setSelectedProducts] = useState<string[]>(['core']);
   const [users, setUsers] = useState<any[]>([]);
   const [isPdfDialogOpen, setIsPdfDialogOpen] = useState(false);
+  const [requiredFields, setRequiredFields] = useState<string[]>([]);
   const [pdfFilename, setPdfFilename] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isPanelVisible, setIsPanelVisible] = useState(true);
@@ -148,22 +149,22 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
   // Load users on component mount
   useEffect(() => {
-    const loadUsers = async () => {
+    const loadData = async () => {
       try {
         const { supabase } = await import('@/integrations/supabase/client');
-        const { data, error } = await supabase
+        const { data: usersData, error: usersError } = await supabase
           .from('profiles')
           .select('*')
           .order('display_name');
         
-        if (error) throw error;
-        setUsers(data || []);
+        if (usersError) throw usersError;
+        setUsers(usersData || []);
       } catch (error) {
-        console.error('Error loading users:', error);
+        console.error('Error loading initial data:', error);
       }
     };
     
-    loadUsers();
+    loadData();
   }, []);
 
   // Update modules when product selection changes
@@ -207,6 +208,14 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       }
     }
   }, [variableValues, selectedModules, showDetails, outline]);
+
+  useEffect(() => {
+    const status = variableValues.status || 'draft';
+    const schema = getValidationSchema(status, selectedModules, contractModules, globalVariables);
+    const description = schema.describe();
+    setRequiredFields(Object.keys(description.fields));
+  }, [variableValues.status, selectedModules, contractModules, globalVariables]);
+
 
   const processContent = (content: string, moduleVariables: any[] = []) => {
     let processedContent = content;
@@ -467,13 +476,15 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     try {
       await validationSchema.validate(
         { ...variableValues, selectedProducts },
-        { abortEarly: false }
+        { abortEarly: false } // Collect all errors
       );
     } catch (err) {
       if (err instanceof yup.ValidationError) {
-        err.inner.forEach(e => {
-          toast.error(e.message);
-        });
+        const errorList = err.inner.map(e => `- ${e.message}`).join('\n');
+        toast.error(
+          `Bitte füllen Sie alle Pflichtfelder aus:\n${errorList}`,
+          { duration: 8000 }
+        );
       } else {
         toast.error('Ein unerwarteter Validierungsfehler ist aufgetreten.');
       }
@@ -497,22 +508,44 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         progress: variableValues.status === 'draft' ? 0 : 25,
         contract_type_key: selectedType,
         assigned_to_user_id: variableValues.assigned_to_user_id || null,
-        template_variables: {
-          ...variableValues,
-          selectedProducts: selectedProducts
-        },
+        template_variables: variableValues, // Products are now in a join table
         global_variables: Object.fromEntries(
           globalVariables.map(gv => [gv.key, variableValues[gv.key] || ''])
         )
       };
 
-      const { data, error } = await supabase
+      // 1. Insert into contracts table
+      const { data: newContract, error: contractError } = await supabase
         .from('contracts')
         .insert([contractData])
-        .select()
+        .select('id')
         .single();
 
-      if (error) throw error;
+      if (contractError) throw contractError;
+      if (!newContract) throw new Error('Contract creation failed, no contract returned.');
+
+      // 2. Fetch product IDs and insert into contract_products join table
+      if (selectedProducts.length > 0) {
+        const { data: productsData, error: productsError } = await supabase
+          .from('products')
+          .select('id, key')
+          .in('key', selectedProducts);
+
+        if (productsError) throw productsError;
+
+        if (productsData && productsData.length > 0) {
+          const contractProductsData = productsData.map(product => ({
+            contract_id: newContract.id,
+            product_id: product.id,
+          }));
+
+          const { error: joinTableError } = await supabase
+            .from('contract_products')
+            .insert(contractProductsData);
+
+          if (joinTableError) throw joinTableError;
+        }
+      }
 
       toast.success('Vertrag erfolgreich gespeichert');
       
@@ -653,7 +686,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                     </h4>
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="title">Titel <span className="text-destructive">*</span></Label>
+                        <Label htmlFor="title">Titel {requiredFields.includes('title') && <span className="text-destructive">*</span>}</Label>
                         <Input
                           id="title"
                           value={variableValues.title || ''}
@@ -665,7 +698,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="start_date">Startdatum <span className="text-destructive">*</span></Label>
+                        <Label htmlFor="start_date">Startdatum {requiredFields.includes('start_date') && <span className="text-destructive">*</span>}</Label>
                         <Input
                           id="start_date"
                           type="date"
@@ -677,7 +710,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="end_date">Enddatum</Label>
+                        <Label htmlFor="end_date">Enddatum {requiredFields.includes('end_date') && <span className="text-destructive">*</span>}</Label>
                         <Input
                           id="end_date"
                           type="date"
@@ -723,7 +756,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                     </h4>
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="assigned_to_user_id">Zuständiger Ansprechpartner</Label>
+                        <Label htmlFor="assigned_to_user_id">Zuständiger Ansprechpartner {requiredFields.includes('assigned_to_user_id') && <span className="text-destructive">*</span>}</Label>
                         <Select
                           value={variableValues.assigned_to_user_id || ''}
                          onValueChange={(value) => {
@@ -761,7 +794,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="status">Status</Label>
+                        <Label htmlFor="status">Status {requiredFields.includes('status') && <span className="text-destructive">*</span>}</Label>
                         <Select 
                           value={variableValues.status || 'draft'} 
                           onValueChange={(value) => setVariableValues(prev => ({
@@ -774,9 +807,9 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="draft">Entwurf</SelectItem>
-                            <SelectItem value="ready_for_review">Bereit zur Prüfung</SelectItem>
-                            <SelectItem value="approved">Genehmigt</SelectItem>
+                            <SelectItem value="ready_for_review">Zur Prüfung</SelectItem>
                             <SelectItem value="active">Aktiv</SelectItem>
+                            <SelectItem value="archived">Archiviert</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
