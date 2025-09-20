@@ -26,6 +26,7 @@ interface Attachment {
   name: string;
   type: 'fest' | 'produkt' | 'zusatz';
   description: string | null;
+  sort_order: number | null;
   // Add other fields from your attachments table if needed
 }
 
@@ -45,7 +46,7 @@ const getValidationSchema = (
   modules: SelectedModule[],
   allContractModules: any[],
   globalVars: any[],
-  allAttachments: Attachment[]
+  allAttachments: (Attachment & { contract_modules: any })[]
 ) => {
   const isDraft = status === 'draft';
 
@@ -53,14 +54,14 @@ const getValidationSchema = (
     title: yup.string().required('Titel ist ein Pflichtfeld.'),
     assigned_to_user_id: yup.string().required('Zuständiger Ansprechpartner ist ein Pflichtfeld.'),
     status: yup.string().required('Status ist ein Pflichtfeld.'),
-    selectedAttachmentIds: yup.array(yup.string())
+    selectedAttachmentIds: yup.array().of(yup.string())
       .test(
         'has-product',
         'Mindestens ein Produkt muss ausgewählt werden.',
         (ids) => {
           if (!ids) return false;
-          const selectedAttachments = ids.map(id => allAttachments.find(a => a.id === id)).filter(Boolean);
-          return selectedAttachments.some(a => a.type === 'produkt');
+          const selected = ids.map(id => allAttachments.find(a => a.id === id)).filter(Boolean);
+          return selected.some(a => a!.type === 'produkt');
         }
       ).required('Produktauswahl ist ein Pflichtfeld.'),
   });
@@ -129,7 +130,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const [outline, setOutline] = useState<{ id: string; text: string; level: number }[]>([]);
   const previewRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<ImperativePanelHandle>(null);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [attachments, setAttachments] = useState<(Attachment & { contract_modules: any })[]>([]);
   const [selectedAttachmentIds, setSelectedAttachmentIds] = useState<string[]>([]);
 
   const handleTypeSelect = (typeKey: string) => {
@@ -138,23 +139,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     // Reset modules and variables when type changes
     setSelectedModules([]);
     setVariableValues({});
-    
-    // Get compositions for this type
-    const compositions = contractCompositions
-      .filter(comp => comp.contract_type_key === typeKey)
-      .sort((a, b) => a.sort_order - b.sort_order);
-    
-    const modules = compositions.map(comp => ({
-      moduleKey: comp.module_key,
-      order: comp.sort_order
-    }));
-    
-    setSelectedModules(modules);
     setShowDetails(true);
-    
-    console.log('Selected type:', typeKey);
-    console.log('Available compositions:', compositions);
-    console.log('Filtered modules:', modules);
   };
 
   // Load users on component mount
@@ -164,14 +149,14 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         const { supabase } = await import('@/integrations/supabase/client');
         const [usersResult, attachmentsResult] = await Promise.all([
           supabase.from('profiles').select('*').order('display_name'),
-          supabase.from('attachments').select('*').order('name')
+          supabase.from('attachments').select('*, contract_modules(*)').order('sort_order')
         ]);
         
         if (usersResult.error) throw usersResult.error;
         setUsers(usersResult.data || []);
 
         if (attachmentsResult.error) throw attachmentsResult.error;
-        const loadedAttachments = (attachmentsResult.data || []) as Attachment[];
+        const loadedAttachments = (attachmentsResult.data || []) as (Attachment & { contract_modules: any })[];
         setAttachments(loadedAttachments);
 
         // Pre-select fixed attachments
@@ -203,6 +188,29 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       }
     }
   }, [variableValues, selectedModules, showDetails, outline]);
+
+  useEffect(() => {
+    // Dynamically set the modules for the preview based on selected attachments
+    if (attachments.length === 0) return;
+
+    const selected = attachments
+      .filter(att => selectedAttachmentIds.includes(att.id))
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
+    const newSelectedModules = selected
+      .map(att => {
+        if (att.contract_modules) {
+          return {
+            moduleKey: att.contract_modules.key,
+            order: att.sort_order ?? 0,
+          };
+        }
+        return null;
+      })
+      .filter((m): m is SelectedModule => m !== null);
+
+    setSelectedModules(newSelectedModules);
+  }, [selectedAttachmentIds, attachments]);
 
   useEffect(() => {
     const status = variableValues.status || 'draft';
@@ -247,12 +255,8 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     let preview = '';
     
     // Filter modules based on selected products first, then sort
-    const filteredSelectedModules = selectedModules
-      .filter(selectedModule => {
-        const module = contractModules.find(m => m.key === selectedModule.moduleKey);
-        return !!module;
-      })
-      .sort((a, b) => a.order - b.order);
+    // The `selectedModules` state is now the single source of truth, already filtered and sorted.
+    const filteredSelectedModules = selectedModules;
     
     // Separate regular modules from annexes and count annexes for proper numbering
     const regularModules = [];
@@ -465,7 +469,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
     try {
       await validationSchema.validate(
-        { ...variableValues, selectedAttachmentIds },
+        { ...variableValues, selectedAttachmentIds: selectedAttachmentIds },
         { abortEarly: false } // Collect all errors
       );
     } catch (err) {
@@ -473,7 +477,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         toast.error(
           <div className="flex flex-col gap-2">
             <p className="font-semibold">Bitte füllen Sie alle Pflichtfelder aus:</p>
-            <ol className="list-decimal list-inside text-sm">
+            <ol className="list-decimal list-inside text-sm pl-4">
               {err.inner.map(e => <li key={e.path}>{e.message}</li>)}
             </ol>
           </div>,
@@ -502,7 +506,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         progress: variableValues.status === 'draft' ? 0 : 25,
         contract_type_key: selectedType,
         assigned_to_user_id: variableValues.assigned_to_user_id || null,
-        template_variables: variableValues,
+        template_variables: variableValues, // Products are now in a join table
         global_variables: Object.fromEntries(
           globalVariables.map(gv => [gv.key, variableValues[gv.key] || ''])
         )

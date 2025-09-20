@@ -14,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { AttachmentManager } from './AttachmentManager';
 
 import type { Database } from '@/integrations/supabase/types';
 
@@ -297,6 +298,7 @@ export function TemplateBuilder({
 
   return (
     <div className="space-y-6">
+      <AttachmentManager />
       <Card>
         <CardHeader>
           <CardTitle>Template Builder</CardTitle>
