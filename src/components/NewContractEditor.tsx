@@ -59,9 +59,21 @@ const getValidationSchema = (
       const module = allContractModules.find(m => m.key === sm.moduleKey);
       if (module) {
         // Add variables from the 'variables' JSON field
-        const moduleJsonVars = Array.isArray(module.variables)
-          ? module.variables
-          : (module.variables ? JSON.parse(module.variables as string) : []);
+        let moduleJsonVars: any[] = [];
+        if (module.variables) {
+          if (Array.isArray(module.variables)) {
+            moduleJsonVars = module.variables;
+          } else if (typeof module.variables === 'string' && module.variables.trim()) {
+            try {
+              const parsed = JSON.parse(module.variables);
+              if (Array.isArray(parsed)) {
+                moduleJsonVars = parsed;
+              }
+            } catch (e) {
+              console.error(`Failed to parse variables for module ${module.key}:`, e);
+            }
+          }
+        }
         moduleJsonVars.forEach((variable: any) => {
           requiredFieldsShape[variable.key] = yup.string().required(`Das Feld "${variable.name_de}" ist erforderlich.`);
         });

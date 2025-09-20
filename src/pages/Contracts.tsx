@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -194,6 +194,7 @@ export default function Contracts() {
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('de-DE');
   };
 
@@ -293,11 +294,18 @@ export default function Contracts() {
       {/* Contracts Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredContracts.map((contract) => {
-          const productNames = (contract.templateVariables?.selectedProducts || []).map((p: string) => {
-            if (p === 'shyftplanner') return 'Shyftplan';
-            if (p === 'shyftskills') return 'Shyftskills';
-            return p.charAt(0).toUpperCase() + p.slice(1);
-          });
+          const productsSource = contract.templateVariables?.selectedProducts;
+          let productNames: string[] = [];
+
+          // Handle product data safely, whether it's an array of strings or objects
+          if (Array.isArray(productsSource) && productsSource.length > 0) {
+            productNames = productsSource.map((p: any) => {
+              const name = typeof p === 'string' ? p : p?.name || '';
+              if (name === 'shyftplanner') return 'Shyftplan';
+              if (name === 'shyftskills') return 'Shyftskills';
+              return name ? name.charAt(0).toUpperCase() + name.slice(1) : '';
+            }).filter(Boolean); // Remove any empty strings from invalid entries
+          }
 
           return (
             <Card key={contract.id} className="flex flex-col hover:shadow-lg transition-shadow duration-200">
