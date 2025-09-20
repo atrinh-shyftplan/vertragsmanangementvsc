@@ -17,18 +17,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import * as yup from 'yup';
 import { AttachmentWithModule, ContractModule } from '@/integrations/supabase/types';
 
-
-interface NewContractEditorProps {
-  onClose?: () => void;
-}
-
-// Function to extract variables from module content
-const extractVariablesFromContent = (content: string) => {
-  if (!content) return [];
-  const matches = content.match(/\{\{([^}]+)\}\}/g);
-  return matches ? matches.map(match => match.replace(/\{\{|\}\}/g, '').trim()) : [];
-};
-
 const getValidationSchema = (
   status: string,
   modules: ContractModule[],
@@ -99,6 +87,17 @@ const getValidationSchema = (
   }
 
   return schema;
+};
+
+interface NewContractEditorProps {
+  onClose?: () => void;
+}
+
+// Function to extract variables from module content
+const extractVariablesFromContent = (content: string) => {
+  if (!content) return [];
+  const matches = content.match(/\{\{([^}]+)\}\}/g);
+  return matches ? matches.map(match => match.replace(/\{\{|\}\}/g, '').trim()) : [];
 };
 
 export default function NewContractEditor({ onClose }: NewContractEditorProps) {
@@ -324,7 +323,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   };
 
   // Simplified module rendering function with intelligent paragraph alignment
-  const renderSimpleModule = (module: any, isAnnex: boolean, annexNumber: number) => {
+  const renderSimpleModule = (module: ContractModule, isAnnex: boolean, annexNumber: number) => {
     let moduleVariables = [];
     try {
       moduleVariables = Array.isArray(module.variables) 
@@ -442,7 +441,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
     try {
       await validationSchema.validate(
-        { ...variableValues, selectedAttachmentIds },
+        { ...variableValues, selectedAttachmentIds: selectedAttachmentIds },
         { abortEarly: false } // Collect all errors
       );
     } catch (err) {
@@ -450,7 +449,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         toast.error(
           <div className="flex flex-col gap-2">
             <p className="font-semibold">Bitte füllen Sie alle Pflichtfelder aus:</p>
-            <ol className="list-decimal list-inside text-sm">
+            <ol className="list-decimal list-inside text-sm pl-4">
               {err.inner.map(e => <li key={e.path}>{e.message}</li>)}
             </ol>
           </div>,
@@ -479,7 +478,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         progress: variableValues.status === 'draft' ? 0 : 25,
         contract_type_key: selectedType,
         assigned_to_user_id: variableValues.assigned_to_user_id || null,
-        template_variables: variableValues,
+        template_variables: variableValues, // Products are now in a join table
         global_variables: Object.fromEntries(
           globalVariables.map(gv => [gv.key, variableValues[gv.key] || ''])
         )

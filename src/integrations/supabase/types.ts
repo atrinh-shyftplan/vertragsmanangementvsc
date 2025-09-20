@@ -578,8 +578,6 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
-// Custom types for relationships
 export type ContractModule = Database["public"]["Tables"]["contract_modules"]["Row"];
 export type Attachment = Database["public"]["Tables"]["attachments"]["Row"];
 export type AttachmentInsert = Database["public"]["Tables"]["attachments"]["Insert"];
