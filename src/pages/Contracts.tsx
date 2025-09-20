@@ -29,6 +29,12 @@ import ContractViewer from '@/components/ContractViewer';
 import NewContractEditor from '@/components/NewContractEditor';
 import { useToast } from '@/hooks/use-toast';
 
+// A more specific type for template variables
+interface TemplateVariables {
+  selectedProducts: (string | { id: number; name: string })[];
+  [key: string]: any;
+}
+
 // UI contract type (compatible with existing components)
 interface Contract {
   id: string;
@@ -41,8 +47,6 @@ interface Contract {
   assignedTo: string;
   assignedUser?: {
     display_name: string | null;
-    email: string | null;
-    phone_number: string | null;
   };
   creator?: {
     display_name: string | null;
@@ -52,7 +56,7 @@ interface Contract {
   lastModified: string;
   progress: number;
   contractType?: 'ep_standard' | 'ep_rollout';
-  templateVariables?: Record<string, any>;
+  templateVariables?: TemplateVariables;
   globalVariables?: Record<string, any>;
 }
 
@@ -85,7 +89,7 @@ export default function Contracts() {
     lastModified: dbContract.updated_at,
     progress: dbContract.progress || 0,
     contractType: dbContract.contract_type_key as 'ep_standard' | 'ep_rollout' | undefined,
-    templateVariables: dbContract.template_variables || undefined,
+    templateVariables: dbContract.template_variables as TemplateVariables | undefined,
     globalVariables: dbContract.global_variables || undefined,
   });
 
