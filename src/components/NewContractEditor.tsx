@@ -15,20 +15,8 @@ import { toast } from 'sonner';
 import { VariableInputRenderer } from '@/components/admin/VariableInputRenderer';
 import { Checkbox } from '@/components/ui/checkbox';
 import * as yup from 'yup';
+import { AttachmentWithModule, ContractModule } from '@/integrations/supabase/types';
 
-interface SelectedModule {
-  moduleKey: string;
-  order: number;
-}
-
-interface Attachment {
-  id: string;
-  name: string;
-  type: 'fest' | 'produkt' | 'zusatz';
-  description: string | null;
-  sort_order: number | null;
-  // Add other fields from your attachments table if needed
-}
 
 interface NewContractEditorProps {
   onClose?: () => void;
@@ -43,10 +31,10 @@ const extractVariablesFromContent = (content: string) => {
 
 const getValidationSchema = (
   status: string,
-  modules: SelectedModule[],
+  modules: ContractModule[],
   allContractModules: any[],
   globalVars: any[],
-  allAttachments: (Attachment & { contract_modules: any })[]
+  allAttachments: AttachmentWithModule[]
 ) => {
   const isDraft = status === 'draft';
 
@@ -74,8 +62,7 @@ const getValidationSchema = (
     };
 
     // Dynamically add all variables from modules as required
-    modules.forEach(sm => {
-      const module = allContractModules.find(m => m.key === sm.moduleKey);
+    modules.forEach(module => {
       if (module) {
         // Add variables from the 'variables' JSON field
         let moduleJsonVars: any[] = [];
@@ -117,7 +104,7 @@ const getValidationSchema = (
 export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const { contractTypes, contractModules, contractCompositions, globalVariables } = useAdminData();
   const [selectedType, setSelectedType] = useState<string>('');
-  const [selectedModules, setSelectedModules] = useState<SelectedModule[]>([]);
+  const [selectedModules, setSelectedModules] = useState<ContractModule[]>([]);
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
   const [showDetails, setShowDetails] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
@@ -130,7 +117,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const [outline, setOutline] = useState<{ id: string; text: string; level: number }[]>([]);
   const previewRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<ImperativePanelHandle>(null);
-  const [attachments, setAttachments] = useState<(Attachment & { contract_modules: any })[]>([]);
+  const [attachments, setAttachments] = useState<AttachmentWithModule[]>([]);
   const [selectedAttachmentIds, setSelectedAttachmentIds] = useState<string[]>([]);
 
   const handleTypeSelect = (typeKey: string) => {
@@ -156,7 +143,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         setUsers(usersResult.data || []);
 
         if (attachmentsResult.error) throw attachmentsResult.error;
-        const loadedAttachments = (attachmentsResult.data || []) as (Attachment & { contract_modules: any })[];
+        const loadedAttachments = (attachmentsResult.data || []) as AttachmentWithModule[];
         setAttachments(loadedAttachments);
 
         // Pre-select fixed attachments
@@ -194,20 +181,10 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     if (attachments.length === 0) return;
 
     const selected = attachments
-      .filter(att => selectedAttachmentIds.includes(att.id))
+      .filter(att => selectedAttachmentIds.includes(att.id) && att.contract_modules)
       .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
 
-    const newSelectedModules = selected
-      .map(att => {
-        if (att.contract_modules) {
-          return {
-            moduleKey: att.contract_modules.key,
-            order: att.sort_order ?? 0,
-          };
-        }
-        return null;
-      })
-      .filter((m): m is SelectedModule => m !== null);
+    const newSelectedModules = selected.map(att => att.contract_modules!);
 
     setSelectedModules(newSelectedModules);
   }, [selectedAttachmentIds, attachments]);
@@ -254,7 +231,6 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const generatePreview = () => {
     let preview = '';
     
-    // Filter modules based on selected products first, then sort
     // The `selectedModules` state is now the single source of truth, already filtered and sorted.
     const filteredSelectedModules = selectedModules;
     
@@ -263,23 +239,20 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     const annexModules = [];
     
     filteredSelectedModules.forEach((selectedModule) => {
-      const module = contractModules.find(m => m.key === selectedModule.moduleKey);
-      if (module) {
-        if (module.category === 'anhang') {
-          annexModules.push({ selectedModule, module });
-        } else {
-          regularModules.push({ selectedModule, module });
-        }
+      if (selectedModule.category === 'anhang') {
+        annexModules.push(selectedModule);
+      } else {
+        regularModules.push(selectedModule);
       }
     });
     
     // Process regular modules first
-    regularModules.forEach(({ selectedModule, module }) => {
+    regularModules.forEach((module) => {
       preview += renderSimpleModule(module, false, 0);
     });
     
     // Process annex modules with proper numbering
-    annexModules.forEach(({ selectedModule, module }, index) => {
+    annexModules.forEach((module, index) => {
       const annexNumber = index + 1;
       preview += renderSimpleModule(module, true, annexNumber);
     });
@@ -469,7 +442,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
     try {
       await validationSchema.validate(
-        { ...variableValues, selectedAttachmentIds: selectedAttachmentIds },
+        { ...variableValues, selectedAttachmentIds },
         { abortEarly: false } // Collect all errors
       );
     } catch (err) {
@@ -477,7 +450,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         toast.error(
           <div className="flex flex-col gap-2">
             <p className="font-semibold">Bitte füllen Sie alle Pflichtfelder aus:</p>
-            <ol className="list-decimal list-inside text-sm pl-4">
+            <ol className="list-decimal list-inside text-sm">
               {err.inner.map(e => <li key={e.path}>{e.message}</li>)}
             </ol>
           </div>,
@@ -506,7 +479,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         progress: variableValues.status === 'draft' ? 0 : 25,
         contract_type_key: selectedType,
         assigned_to_user_id: variableValues.assigned_to_user_id || null,
-        template_variables: variableValues, // Products are now in a join table
+        template_variables: variableValues,
         global_variables: Object.fromEntries(
           globalVariables.map(gv => [gv.key, variableValues[gv.key] || ''])
         )
@@ -881,10 +854,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
               </Card>
 
               <VariableInputRenderer
-                selectedModules={selectedModules.map(sm => {
-                  const module = contractModules.find(m => m.key === sm.moduleKey);
-                  return module;
-                }).filter(Boolean)}
+                selectedModules={selectedModules}
                 globalVariables={globalVariables}
                 variableValues={variableValues}
                 onVariableChange={(key, value) => setVariableValues(prev => ({

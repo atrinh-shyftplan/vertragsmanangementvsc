@@ -14,6 +14,58 @@ export type Database = {
   }
   public: {
     Tables: {
+      attachments: {
+        Row: {
+          id: string
+          created_at: string
+          name: string
+          type: "fest" | "produkt" | "zusatz"
+          description: string | null
+          module_id: string | null
+          sort_order: number | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          name: string
+          type: "fest" | "produkt" | "zusatz"
+          description?: string | null
+          module_id: string | null
+          sort_order?: number | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          name?: string
+          type?: "fest" | "produkt" | "zusatz"
+          description?: string | null
+          module_id?: string | null
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "contract_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_attachments: {
+        Row: {
+          contract_id: string
+          attachment_id: string
+          created_at: string
+        }
+        Insert: {
+          contract_id: string
+          attachment_id: string
+          created_at?: string
+        }
+        Update: {}
+        Relationships: []
+      }
       contract_categories: {
         Row: {
           color: string | null
@@ -224,6 +276,7 @@ export type Database = {
         Row: {
           assigned_to: string | null
           client: string
+          assigned_to_user_id: string | null
           contract_type_key: string | null
           created_at: string
           created_by: string | null
@@ -243,6 +296,7 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           client: string
+          assigned_to_user_id?: string | null
           contract_type_key?: string | null
           created_at?: string
           created_by?: string | null
@@ -262,6 +316,7 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           client?: string
+          assigned_to_user_id?: string | null
           contract_type_key?: string | null
           created_at?: string
           created_by?: string | null
@@ -523,3 +578,12 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
+// Custom types for relationships
+export type ContractModule = Database["public"]["Tables"]["contract_modules"]["Row"];
+export type Attachment = Database["public"]["Tables"]["attachments"]["Row"];
+export type AttachmentInsert = Database["public"]["Tables"]["attachments"]["Insert"];
+
+export interface AttachmentWithModule extends Attachment {
+  contract_modules: ContractModule | null;
+}
