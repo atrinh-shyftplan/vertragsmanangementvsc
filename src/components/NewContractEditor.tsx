@@ -14,6 +14,7 @@ import { useAdminData } from '@/hooks/useAdminData';
 import { toast } from 'sonner';
 import { VariableInputRenderer } from '@/components/admin/VariableInputRenderer';
 import { Checkbox } from '@/components/ui/checkbox';
+import * as yup from 'yup';
 
 interface SelectedModule {
   moduleKey: string;
@@ -29,6 +30,55 @@ const extractVariablesFromContent = (content: string) => {
   if (!content) return [];
   const matches = content.match(/\{\{([^}]+)\}\}/g);
   return matches ? matches.map(match => match.replace(/\{\{|\}\}/g, '').trim()) : [];
+};
+
+const getValidationSchema = (
+  status: string,
+  modules: SelectedModule[],
+  allContractModules: any[],
+  globalVars: any[]
+) => {
+  const isDraft = status === 'draft';
+
+  let schema = yup.object({
+    title: yup.string().required('Titel ist ein Pflichtfeld.'),
+    assigned_to_user_id: yup.string().required('Zuständiger Ansprechpartner ist ein Pflichtfeld.'),
+    status: yup.string().required('Status ist ein Pflichtfeld.'),
+    selectedProducts: yup.array().min(1, 'Mindestens ein Produkt muss ausgewählt werden.').required(),
+  });
+
+  if (!isDraft) {
+    const requiredFieldsShape: yup.ObjectShape = {
+      start_date: yup.string().required('Startdatum ist ein Pflichtfeld.'),
+      end_date: yup.string().required('Enddatum ist ein Pflichtfeld.'),
+      // Add other static fields that are required for non-drafts
+    };
+
+    // Dynamically add all variables from modules as required
+    modules.forEach(sm => {
+      const module = allContractModules.find(m => m.key === sm.moduleKey);
+      if (module) {
+        // Add variables from the 'variables' JSON field
+        const moduleJsonVars = Array.isArray(module.variables)
+          ? module.variables
+          : (module.variables ? JSON.parse(module.variables as string) : []);
+        moduleJsonVars.forEach((variable: any) => {
+          requiredFieldsShape[variable.key] = yup.string().required(`Das Feld "${variable.name_de}" ist erforderlich.`);
+        });
+
+        // Add variables found in the content
+        const contentVariables = extractVariablesFromContent(module.content_de || '');
+        contentVariables.forEach(variableKey => {
+          if (!requiredFieldsShape[variableKey]) {
+            requiredFieldsShape[variableKey] = yup.string().required(`Die Variable "${variableKey}" ist ein Pflichtfeld.`);
+          }
+        });
+      }
+    });
+    schema = schema.concat(yup.object(requiredFieldsShape));
+  }
+
+  return schema;
 };
 
 export default function NewContractEditor({ onClose }: NewContractEditorProps) {
@@ -393,43 +443,31 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
 
   const saveContract = async () => {
+    const validationSchema = getValidationSchema(
+      variableValues.status || 'draft',
+      selectedModules,
+      contractModules,
+      globalVariables
+    );
+
+    try {
+      await validationSchema.validate(
+        { ...variableValues, selectedProducts },
+        { abortEarly: false }
+      );
+    } catch (err) {
+      if (err instanceof yup.ValidationError) {
+        err.inner.forEach(e => {
+          toast.error(e.message);
+        });
+      } else {
+        toast.error('Ein unerwarteter Validierungsfehler ist aufgetreten.');
+      }
+      return;
+    }
+
     try {
       const { supabase } = await import('@/integrations/supabase/client');
-      
-      // Validate required fields - check if all module variables are filled if status is not draft
-      const isDraft = variableValues.status === 'draft';
-      const hasRequiredFields = variableValues.title && variableValues.start_date;
-      
-      if (!hasRequiredFields) {
-        toast.error('Bitte füllen Sie alle Pflichtfelder aus');
-        return;
-      }
-      
-      // If not draft, check if all required module variables are filled
-      if (!isDraft) {
-        const requiredVariables = [];
-        selectedModules.forEach(sm => {
-          const module = contractModules.find(m => m.key === sm.moduleKey);
-          if (module) {
-            const moduleVariables = Array.isArray(module.variables) 
-              ? module.variables 
-              : (module.variables ? JSON.parse(module.variables as string) : []);
-            
-            // Extract variables from content
-            const contentVariables = extractVariablesFromContent(module.content_de || '');
-            contentVariables.forEach(variable => {
-              if (!variableValues[variable]) {
-                requiredVariables.push(variable);
-              }
-            });
-          }
-        });
-        
-        if (requiredVariables.length > 0) {
-          toast.error(`Folgende Felder müssen ausgefüllt werden: ${requiredVariables.join(', ')}`);
-          return;
-        }
-      }
 
       // Prepare contract data
       const contractData = {
@@ -437,15 +475,18 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         client: variableValues.client || 'TBD',
         status: (variableValues.status || 'draft'),
         value: parseFloat(variableValues.value) || 0,
-        start_date: variableValues.start_date,
-        end_date: variableValues.end_date || variableValues.start_date,
+        start_date: variableValues.start_date || null,
+        end_date: variableValues.end_date || null,
         assigned_to: variableValues.assigned_to || 'Unassigned',
         description: `${contractTypes.find(t => t.key === selectedType)?.name_de || 'Vertrag'}`,
         tags: [contractTypes.find(t => t.key === selectedType)?.name_de || 'Vertrag'],
         progress: variableValues.status === 'draft' ? 0 : 25,
         contract_type_key: selectedType,
         assigned_to_user_id: variableValues.assigned_to_user_id || null,
-        template_variables: variableValues,
+        template_variables: {
+          ...variableValues,
+          selectedProducts: selectedProducts
+        },
         global_variables: Object.fromEntries(
           globalVariables.map(gv => [gv.key, variableValues[gv.key] || ''])
         )
@@ -607,7 +648,6 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                             title: e.target.value
                           }))}
                           placeholder="Vertragstitel"
-                          required
                         />
                       </div>
                       <div className="space-y-2">
@@ -620,7 +660,18 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                             ...prev,
                             start_date: e.target.value
                           }))}
-                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="end_date">Enddatum</Label>
+                        <Input
+                          id="end_date"
+                          type="date"
+                          value={variableValues.end_date || ''}
+                          onChange={(e) => setVariableValues(prev => ({
+                            ...prev,
+                            end_date: e.target.value
+                          }))}
                         />
                       </div>
                       <div className="space-y-2">
@@ -662,12 +713,12 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                         <Select
                           value={variableValues.assigned_to_user_id || ''}
                          onValueChange={(value) => {
+                            const user = users.find(u => u.user_id === value);
                             setVariableValues(prev => ({
                               ...prev,
-                              assigned_to_user_id: value
+                              assigned_to_user_id: value,
+                              assigned_to: user?.display_name || prev.assigned_to || ''
                             }));
-                            // Find and set the selected user for preview
-                            const user = users.find(u => u.user_id === value);
                             setSelectedUser(user || null);
                           }}
                         >

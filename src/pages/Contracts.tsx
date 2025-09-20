@@ -34,7 +34,7 @@ interface Contract {
   id: string;
   title: string;
   client: string;
-  status: 'active' | 'pending' | 'expired' | 'draft';
+  status: 'active' | 'pending' | 'expired' | 'draft' | 'ready_for_review' | 'approved';
   value: number;
   startDate: string;
   endDate: string;
@@ -73,7 +73,7 @@ export default function Contracts() {
     id: dbContract.id,
     title: dbContract.title,
     client: dbContract.client,
-    status: dbContract.status as 'active' | 'pending' | 'expired' | 'draft',
+    status: dbContract.status as Contract['status'],
     value: dbContract.value,
     startDate: dbContract.start_date,
     endDate: dbContract.end_date,
@@ -180,6 +180,8 @@ export default function Contracts() {
       case 'pending': return 'text-status-pending border-status-pending/20 bg-status-pending/10';
       case 'expired': return 'text-status-expired border-status-expired/20 bg-status-expired/10';
       case 'draft': return 'text-status-draft border-status-draft/20 bg-status-draft/10';
+      case 'ready_for_review': return 'text-blue-600 border-blue-600/20 bg-blue-600/10';
+      case 'approved': return 'text-teal-600 border-teal-600/20 bg-teal-600/10';
       default: return 'text-muted-foreground';
     }
   };
@@ -199,7 +201,9 @@ export default function Contracts() {
     active: 'Final/Aktiv',
     pending: 'Ausstehend',
     expired: 'Abgelaufen',
-    draft: 'Entwurf'
+    draft: 'Entwurf',
+    ready_for_review: 'Zur Prüfung',
+    approved: 'Genehmigt'
   };
 
   return (
@@ -267,6 +271,20 @@ export default function Contracts() {
               >
                 Entwurf
               </Button>
+              <Button
+                variant={filterStatus === 'ready_for_review' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterStatus('ready_for_review')}
+              >
+                Zur Prüfung
+              </Button>
+              <Button
+                variant={filterStatus === 'approved' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterStatus('approved')}
+              >
+                Genehmigt
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -274,93 +292,50 @@ export default function Contracts() {
 
       {/* Contracts Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredContracts.map((contract) => (
-          <Card key={contract.id} className="hover:shadow-md transition-all duration-200">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1 flex-1">
-                  <CardTitle className="text-lg leading-tight line-clamp-2">
-                    {contract.title}
-                  </CardTitle>
-                  <CardDescription className="flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    {contract.client}
-                  </CardDescription>
+        {filteredContracts.map((contract) => {
+          const productNames = (contract.templateVariables?.selectedProducts || []).map((p: string) => {
+            if (p === 'shyftplanner') return 'Shyftplan';
+            if (p === 'shyftskills') return 'Shyftskills';
+            return p.charAt(0).toUpperCase() + p.slice(1);
+          });
+
+          return (
+            <Card key={contract.id} className="flex flex-col hover:shadow-lg transition-shadow duration-200">
+              <CardHeader>
+                <div className="flex justify-between items-start gap-2">
+                  <CardTitle className="text-lg line-clamp-2 pr-2">{contract.title}</CardTitle>
+                  <Badge className={getStatusColor(contract.status)} variant="outline">
+                    {statusLabels[contract.status as keyof typeof statusLabels]}
+                  </Badge>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {contract.status !== 'active' && (
-                      <DropdownMenuItem onClick={() => handleEditContract(contract)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Bearbeiten
-                      </DropdownMenuItem>
+              </CardHeader>
+              <CardContent className="space-y-4 flex-grow">
+                <div>
+                  <p className="text-xs text-muted-foreground">Zugewiesen an</p>
+                  <p className="text-sm font-medium">{contract.assignedTo}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Produkte</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {productNames.length > 0 ? (
+                      productNames.map((name) => (
+                        <Badge key={name} variant="secondary">{name}</Badge>
+                      ))
+                    ) : (
+                      <Badge variant="outline">Keine</Badge>
                     )}
-                    <DropdownMenuItem onClick={() => handleEditContract(contract)}>
-                      <FileText className="mr-2 h-4 w-4" />
-                      PDF exportieren
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Badge className={getStatusColor(contract.status)}>
-                  {statusLabels[contract.status as keyof typeof statusLabels]}
-                </Badge>
-                <span className="text-sm font-medium text-foreground">
-                  {formatCurrency(contract.value)}
-                </span>
-              </div>
-
-
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Start</p>
-                  <p className="font-medium">{formatDate(contract.startDate)}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Ende</p>
-                  <p className="font-medium">{formatDate(contract.endDate)}</p>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t space-y-2">
-                <div>
-                  <p className="text-xs text-muted-foreground">Zuständiger</p>
-                  <p className="text-sm font-medium">
-                    {contract.assignedUser?.display_name || contract.assignedTo || 'Nicht zugewiesen'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Erstellt von</p>
-                  <p className="text-sm font-medium">
-                    {contract.creator?.display_name || 'Unbekannt'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Zuletzt geändert</p>
-                  <p className="text-sm font-medium">
-                    {formatDate(contract.lastModified)}
-                  </p>
-                </div>
-              </div>
-
-              {contract.status !== 'active' && (
-                <Button size="sm" className="w-full" onClick={() => handleEditContract(contract)}>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" onClick={() => handleEditContract(contract)}>
                   <Edit className="mr-2 h-3 w-3" />
                   Bearbeiten
                 </Button>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
 
       {filteredContracts.length === 0 && (
