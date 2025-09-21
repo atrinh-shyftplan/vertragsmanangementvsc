@@ -206,7 +206,8 @@ export function useAdminData() {
         content_en: originalModule.content_en || '',
         category: originalModule.category || 'general',
         is_active: originalModule.is_active,
-        sort_order: originalModule.sort_order || 0
+        sort_order: originalModule.sort_order || 0,
+        name: ''
       };
 
       const { error } = await supabase

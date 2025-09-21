@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { AttachmentWithModule } from '@/integrations/supabase/types';
 import { ContractEditModal } from '@/components/ContractEditModal';
 import ContractViewer from '@/components/ContractViewer';
 import NewContractEditor from '@/components/NewContractEditor';
@@ -31,7 +32,6 @@ import { useToast } from '@/hooks/use-toast';
 
 // A more specific type for template variables
 interface TemplateVariables {
-  selectedProducts: (string | { id: number; name: string })[];
   [key: string]: any;
 }
 
@@ -58,6 +58,9 @@ interface Contract {
   contractType?: 'ep_standard' | 'ep_rollout';
   templateVariables?: TemplateVariables;
   globalVariables?: Record<string, any>;
+  contract_attachments: {
+    attachments: AttachmentWithModule | null;
+  }[];
 }
 
 export default function Contracts() {
@@ -91,6 +94,7 @@ export default function Contracts() {
     contractType: dbContract.contract_type_key as 'ep_standard' | 'ep_rollout' | undefined,
     templateVariables: dbContract.template_variables as TemplateVariables | undefined,
     globalVariables: dbContract.global_variables || undefined,
+    contract_attachments: dbContract.contract_attachments || [],
   });
 
   // Load contracts from database with assigned user data
@@ -99,7 +103,7 @@ export default function Contracts() {
       setLoading(true);
     const { data, error } = await supabase
       .from('contracts')
-      .select('*, assigned_user:profiles(display_name), creator:profiles(display_name)')
+      .select('*, assigned_user:profiles(display_name), creator:profiles(display_name), contract_attachments(attachments(*, contract_modules(*)))')
       .order('updated_at', { ascending: false });
 
       if (error) throw error;
@@ -298,18 +302,10 @@ export default function Contracts() {
       {/* Contracts Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredContracts.map((contract) => {
-          const productsSource = contract.templateVariables?.selectedProducts;
-          let productNames: string[] = [];
-
-          // Handle product data safely, whether it's an array of strings or objects
-          if (Array.isArray(productsSource) && productsSource.length > 0) {
-            productNames = productsSource.map((p: any) => {
-              const name = typeof p === 'string' ? p : p?.name || '';
-              if (name === 'shyftplanner') return 'Shyftplan';
-              if (name === 'shyftskills') return 'Shyftskills';
-              return name ? name.charAt(0).toUpperCase() + name.slice(1) : '';
-            }).filter(Boolean); // Remove any empty strings from invalid entries
-          }
+          const productAttachments = contract.contract_attachments
+            .map(ca => ca.attachments)
+            .filter((att): att is AttachmentWithModule => !!att && att.type === 'produkt');
+          const productNames: string[] = productAttachments.map(att => att.name).filter(Boolean);
 
           return (
             <Card key={contract.id} className="flex flex-col hover:shadow-lg transition-shadow duration-200">

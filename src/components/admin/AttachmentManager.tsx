@@ -225,7 +225,7 @@ export function AttachmentManager() {
               }}>
                 <SelectTrigger><SelectValue placeholder="Modul auswählen..." /></SelectTrigger>
                 <SelectContent>
-                  {contractModules.map(module => <SelectItem key={module.id} value={module.id}>{module.title_de}</SelectItem>)}
+                  {contractModules.map(module => <SelectItem key={module.id} value={module.id}>{module.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

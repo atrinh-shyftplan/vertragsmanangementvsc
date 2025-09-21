@@ -131,31 +131,41 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   // Load users on component mount
   useEffect(() => {
     const loadData = async () => {
-      try {
-        const { supabase } = await import('@/integrations/supabase/client');
-        const [usersResult, attachmentsResult] = await Promise.all([
-          supabase.from('profiles').select('*').order('display_name'),
-          supabase.from('attachments').select('*, contract_modules(*)').order('sort_order')
-        ]);
-        
-        if (usersResult.error) throw usersResult.error;
-        setUsers(usersResult.data || []);
-
-        if (attachmentsResult.error) throw attachmentsResult.error;
-        const loadedAttachments = (attachmentsResult.data || []) as AttachmentWithModule[];
-        setAttachments(loadedAttachments);
-
-        // Pre-select fixed attachments
-        const fixedAttachmentIds = loadedAttachments.filter(a => a.type === 'fest').map(a => a.id);
-        setSelectedAttachmentIds(fixedAttachmentIds);
-
-      } catch (error) {
-        console.error('Error loading initial data:', error);
-      }
+      const loadUsers = async () => {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data, error } = await supabase.from('profiles').select('*').order('display_name');
+          if (error) throw error;
+          setUsers(data || []);
+        } catch (error) {
+          console.error('Error loading users:', error);
+        }
+      };
+      loadUsers();
     };
     
     loadData();
   }, []);
+
+  useEffect(() => {
+    const loadAttachments = async () => {
+      if (!selectedType) return;
+      const type = contractTypes.find(t => t.key === selectedType);
+      if (!type) return;
+
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase.from('attachments').select('*, contract_modules(*)').eq('contract_type_id', type.id).order('sort_order');
+      if (error) {
+        toast.error('Fehler beim Laden der Vertragsbestandteile.');
+        return;
+      }
+      const loadedAttachments = (data || []) as AttachmentWithModule[];
+      setAttachments(loadedAttachments);
+      const fixedAttachmentIds = loadedAttachments.filter(a => a.type === 'fest').map(a => a.id);
+      setSelectedAttachmentIds(fixedAttachmentIds);
+    };
+    loadAttachments();
+  }, [selectedType, contractTypes]);
 
   useEffect(() => {
     if (previewRef.current && showDetails) {
