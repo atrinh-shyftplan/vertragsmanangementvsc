@@ -11,7 +11,7 @@ import { ContractModuleModal } from '@/components/admin/ContractModuleModal';
 import { ContractCategoryModal } from '@/components/admin/ContractCategoryModal';
 import { GlobalVariableModal } from '@/components/admin/GlobalVariableModal';
 import { AttachmentManager } from '@/components/admin/AttachmentManager';
-import { ContractBuilder } from '@/components/admin/ContractBuilder';
+import { TemplateBuilder } from '@/components/admin/TemplateBuilder';
 import { Plus, Edit2, Trash2, Copy, Settings, Database, FileText, Blocks, Variable, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -132,13 +132,13 @@ export default function Admin() {
             <Variable className="h-4 w-4" />
             Variablen
           </TabsTrigger>
-          <TabsTrigger value="builder" className="flex items-center gap-2">
+          <TabsTrigger value="structure" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Vertrags-Builder
+            Vertragsstruktur
           </TabsTrigger>
           <TabsTrigger value="composition" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
-            Template-Editor
+            Wählbare Anhänge
           </TabsTrigger>
         </TabsList>
 
@@ -364,18 +364,17 @@ export default function Admin() {
           </Card>
         </TabsContent>
 
-        {/* Vertrags-Builder */}
-        <TabsContent value="builder" className="space-y-6">
-          <ContractBuilder
+        {/* Vertragsstruktur */}
+        <TabsContent value="structure" className="space-y-6">
+          <TemplateBuilder
             contractTypes={contractTypes}
             contractModules={contractModules}
             contractCompositions={contractCompositions}
-            globalVariables={globalVariables}
             onUpdate={fetchData}
           />
         </TabsContent>
 
-        {/* Vertragszusammensetzung */}
+        {/* Wählbare Anhänge */}
         <TabsContent value="composition" className="space-y-6">
           <AttachmentManager />
         </TabsContent>
