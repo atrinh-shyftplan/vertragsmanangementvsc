@@ -11,9 +11,10 @@ import { useAdminData } from '@/hooks/useAdminData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import type { Database, Attachment, ContractModule, ContractComposition } from '@/integrations/supabase/types';
+import type { Database, Attachment, ContractModule } from '@/integrations/supabase/types';
 
 // Combined type for the editor list
+type ContractComposition = Database['public']['Tables']['contract_compositions']['Row'];
 type CompositionWithDetails = {
   composition: ContractComposition;
   module: ContractModule | undefined;
@@ -184,7 +185,19 @@ export function UnifiedTemplateEditor() {
     if (module.variables) {
       try {
         const moduleVars = Array.isArray(module.variables) ? module.variables : JSON.parse(module.variables as string);
-        moduleVars.forEach((v: any) => allVars.push({ key: v.key, name_de: v.name_de }));
+        moduleVars.forEach((v: any) => allVars.push({
+            key: v.key, name_de: v.name_de,
+            category: '',
+            created_at: '',
+            created_by: '',
+            default_value: '',
+            description: '',
+            id: '',
+            is_active: false,
+            is_required: false,
+            name_en: '',
+            updated_at: ''
+        }));
       } catch (e) { /* ignore */ }
     }
 

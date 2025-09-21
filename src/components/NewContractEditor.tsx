@@ -15,7 +15,9 @@ import { toast } from 'sonner';
 import { VariableInputRenderer } from '@/components/admin/VariableInputRenderer';
 import { Checkbox } from '@/components/ui/checkbox';
 import * as yup from 'yup';
-import { Attachment, ContractModule, ContractComposition } from '@/integrations/supabase/types';
+import { Attachment, ContractModule, Database } from '@/integrations/supabase/types';
+
+type ContractComposition = Database['public']['Tables']['contract_compositions']['Row'];
 
 const getValidationSchema = (
   status: string,
@@ -604,7 +606,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             onClick={() => {
               setSelectedType('');
               setShowDetails(false);
-              setSelectedModules([]);
+              setSelectedUser([]);
               setVariableValues({});
             }}
           >
