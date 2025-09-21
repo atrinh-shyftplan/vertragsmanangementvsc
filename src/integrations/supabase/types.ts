@@ -23,6 +23,7 @@ export type Database = {
           description: string | null
           module_id: string | null
           sort_order: number | null
+          contract_type_id: string
         }
         Insert: {
           id?: string
@@ -32,6 +33,7 @@ export type Database = {
           description?: string | null
           module_id: string | null
           sort_order?: number | null
+          contract_type_id: string
         }
         Update: {
           id?: string
@@ -41,6 +43,7 @@ export type Database = {
           description?: string | null
           module_id?: string | null
           sort_order?: number | null
+          contract_type_id?: string
         }
         Relationships: [
           {
@@ -48,6 +51,13 @@ export type Database = {
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "contract_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attachments_contract_type_id_fkey"
+            columns: ["contract_type_id"]
+            isOneToOne: false
+            referencedRelation: "contract_types"
             referencedColumns: ["id"]
           },
         ]
