@@ -82,8 +82,8 @@ export function AttachmentManager() {
   };
 
   const handleSave = async () => {
-    if (!editingAttachment || !editingAttachment.name || !editingAttachment.type) {
-      toast({ title: 'Fehler', description: 'Bitte alle Felder ausfüllen.', variant: 'destructive' });
+    if (!editingAttachment || !editingAttachment.module_id || !editingAttachment.type) {
+      toast({ title: 'Fehler', description: 'Bitte wählen Sie ein Textmodul und einen Typ aus.', variant: 'destructive' });
       return;
     }
     if (!selectedContractTypeId) {
@@ -236,10 +236,6 @@ export function AttachmentManager() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Anhang-Name</Label>
-              <Input id="name" value={editingAttachment?.name || ''} onChange={(e) => setEditingAttachment(p => ({ ...p, name: e.target.value }))} />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="type">Typ</Label>
               <Select value={editingAttachment?.type || 'produkt'} onValueChange={(value) => setEditingAttachment(p => ({ ...p, type: value as any }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -252,7 +248,10 @@ export function AttachmentManager() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="module_id">Zugehöriges Textmodul</Label>
-              <Select value={editingAttachment?.module_id || ''} onValueChange={(value) => setEditingAttachment(p => ({ ...p, module_id: value }))}>
+              <Select value={editingAttachment?.module_id || ''} onValueChange={(value) => {
+                const selectedModule = modules.find(m => m.id === value);
+                setEditingAttachment(p => ({ ...p, module_id: value, name: selectedModule?.title_de || '' }));
+              }}>
                 <SelectTrigger><SelectValue placeholder="Modul auswählen..." /></SelectTrigger>
                 <SelectContent>
                   {modules.map(module => <SelectItem key={module.id} value={module.id}>{module.title_de}</SelectItem>)}
