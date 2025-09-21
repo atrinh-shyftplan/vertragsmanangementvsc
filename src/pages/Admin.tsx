@@ -9,9 +9,8 @@ import { useAdminData } from '@/hooks/useAdminData';
 import { ContractTypeModal } from '@/components/admin/ContractTypeModal';
 import { ContractModuleModal } from '@/components/admin/ContractModuleModal';
 import { ContractCategoryModal } from '@/components/admin/ContractCategoryModal';
-import { GlobalVariableModal } from '@/components/admin/GlobalVariableModal'; 
+import { GlobalVariableModal } from '@/components/admin/GlobalVariableModal';
 import { AttachmentManager } from '@/components/admin/AttachmentManager';
-import { ProductTagManager } from '@/components/admin/ProductTagManager';
 import { ContractBuilder } from '@/components/admin/ContractBuilder';
 import { Plus, Edit2, Trash2, Copy, Settings, Database, FileText, Blocks, Variable, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -55,30 +54,6 @@ export default function Admin() {
   const [selectedGlobalVariable, setSelectedGlobalVariable] = useState<any>(null);
   
   const [activeTab, setActiveTab] = useState("types");
-
-  // Product Tags State
-  const [productTags, setProductTags] = useState<string[]>(() => {
-    const stored = localStorage.getItem('productTags');
-    const storedTags = stored ? JSON.parse(stored) : [];
-    // Merge with existing tags from modules
-    const existingProductTags = Array.from(new Set(
-      contractModules.flatMap(module => module.product_tags || [])
-    ));
-    const allTags = Array.from(new Set([...storedTags, ...existingProductTags]));
-    // Ensure system tags are always present
-    const systemTags = ['core', 'shyftplanner', 'shyftskills'];
-    systemTags.forEach(tag => {
-      if (!allTags.includes(tag)) {
-        allTags.push(tag);
-      }
-    });
-    return allTags.sort();
-  });
-
-  const handleProductTagsChange = (newTags: string[]) => {
-    setProductTags(newTags);
-    localStorage.setItem('productTags', JSON.stringify(newTags));
-  };
 
   const handleEditContractType = (contractType: any) => {
     setSelectedContractType(contractType);
@@ -144,7 +119,7 @@ export default function Admin() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="types" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Vertragstypen
@@ -152,10 +127,6 @@ export default function Admin() {
           <TabsTrigger value="modules" className="flex items-center gap-2">
             <Blocks className="h-4 w-4" />
             Module
-          </TabsTrigger>
-          <TabsTrigger value="categories" className="flex items-center gap-2">
-            <Tag className="h-4 w-4" />
-            Tags
           </TabsTrigger>
           <TabsTrigger value="variables" className="flex items-center gap-2">
             <Variable className="h-4 w-4" />
@@ -320,104 +291,6 @@ export default function Admin() {
           </Card>
         </TabsContent>
 
-        {/* Tags */}
-        <TabsContent value="categories" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Modul Tags</CardTitle>
-                <CardDescription>
-                  Verwalten Sie die Tags für Vertragsmodule. Tags helfen bei der Organisation und Strukturierung Ihrer Vertragsbausteine.
-                </CardDescription>
-              </div>
-              <Button onClick={() => {
-                setSelectedContractCategory(null);
-                setContractCategoryModalOpen(true);
-              }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Neuer Tag
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                {contractCategories
-                  .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-                  .map((category) => {
-                    const moduleCount = contractModules.filter(m => m.category === category.key).length;
-                    return (
-                      <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-3">
-                            <div 
-                              className="w-4 h-4 rounded-full border-2" 
-                              style={{ backgroundColor: category.color, borderColor: category.color }}
-                            />
-                            <h3 className="font-medium">{category.name_de}</h3>
-                            <Badge variant="outline">{moduleCount} Module</Badge>
-                            {!category.is_active && <Badge variant="secondary">Inaktiv</Badge>}
-                          </div>
-                          <p className="text-sm text-muted-foreground">Key: {category.key}</p>
-                          {category.description && (
-                            <p className="text-sm text-muted-foreground">{category.description}</p>
-                          )}
-                          {category.name_en && (
-                            <p className="text-xs text-muted-foreground">EN: {category.name_en}</p>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditContractCategory(category)}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                disabled={moduleCount > 0}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Tag löschen</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Sind Sie sicher, dass Sie den Tag "{category.name_de}" löschen möchten?
-                                  {moduleCount > 0 && (
-                                    <span className="block mt-2 text-destructive">
-                                      Dieser Tag kann nicht gelöscht werden, da er noch {moduleCount} Module enthält.
-                                    </span>
-                                  )}
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                                {moduleCount === 0 && (
-                                  <AlertDialogAction onClick={() => deleteContractCategory(category.id)}>
-                                    Löschen
-                                  </AlertDialogAction>
-                                )}
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </CardContent>
-          </Card>
-
-          <ProductTagManager 
-            productTags={productTags}
-            onProductTagsChange={handleProductTagsChange}
-          />
-        </TabsContent>
-
         {/* Variablen */}
         <TabsContent value="variables" className="space-y-6">
           <Card>
@@ -537,7 +410,6 @@ export default function Admin() {
         contractModule={selectedContractModule}
         contractCategories={contractCategories}
         globalVariables={globalVariables}
-        availableProductTags={productTags}
         onUpdate={handleModuleUpdate}
       />
 

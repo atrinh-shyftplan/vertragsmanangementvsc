@@ -159,7 +159,6 @@ export type Database = {
           is_active: boolean | null
           key: string
           name: string
-          product_tags: string[] | null
           sort_order: number | null
           title_de: string
           title_en: string | null
@@ -176,7 +175,6 @@ export type Database = {
           is_active?: boolean | null
           key: string
           name: string
-          product_tags?: string[] | null
           sort_order?: number | null
           title_de: string
           title_en?: string | null
@@ -193,7 +191,6 @@ export type Database = {
           is_active?: boolean | null
           key?: string
           name?: string
-          product_tags?: string[] | null
           sort_order?: number | null
           title_de?: string
           title_en?: string | null

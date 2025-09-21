@@ -23,10 +23,9 @@ interface ContractModuleModalProps {
   contractModule?: ContractModule | null;
   contractCategories: ContractCategory[];
   globalVariables?: GlobalVariable[];
-  availableProductTags?: string[];
 }
 
-export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, contractModule, contractCategories, globalVariables = [], availableProductTags = ['core', 'shyftplanner', 'shyftskills'] }: ContractModuleModalProps) {
+export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, contractModule, contractCategories, globalVariables = [] }: ContractModuleModalProps) {
   const [formData, setFormData] = useState<ContractModuleInsert>({
     key: '',
     name: '',
@@ -37,7 +36,6 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
     category: 'general',
     is_active: true,
     sort_order: 0,
-    product_tags: ['core'],
     variables: null
   });
 
@@ -65,7 +63,6 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
         category: contractModule.category || 'general',
         is_active: contractModule.is_active,
         sort_order: contractModule.sort_order || 0,
-        product_tags: contractModule.product_tags || ['core'],
         variables: contractModule.variables
       });
     } else {
@@ -79,7 +76,6 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
         category: 'general',
         is_active: true,
         sort_order: 0,
-        product_tags: ['core'],
         variables: null
       });
     }
@@ -233,35 +229,6 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
               onChange={(e) => handleChange('sort_order', parseInt(e.target.value) || 0)}
               className="col-span-3"
             />
-          </div>
-          
-          <div className="grid grid-cols-4 items-start gap-4">
-            <Label className="text-right pt-2">
-              Produkt-Tags
-            </Label>
-            <div className="col-span-3 space-y-2">
-              <div className="text-sm text-muted-foreground mb-2">
-                Wählen Sie die Produkte aus, für die dieses Modul relevant ist:
-              </div>
-              {availableProductTags.map((tag) => (
-                <div key={tag} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`product-${tag}`}
-                    checked={formData.product_tags?.includes(tag) || false}
-                    onCheckedChange={(checked) => {
-                      const currentTags = formData.product_tags || [];
-                      const newTags = checked
-                        ? [...currentTags.filter(t => t !== tag), tag]
-                        : currentTags.filter(t => t !== tag);
-                      handleChange('product_tags', newTags);
-                    }}
-                  />
-                  <Label htmlFor={`product-${tag}`} className="text-sm">
-                    {tag === 'core' ? 'Immer enthalten (Core)' : tag}
-                  </Label>
-                </div>
-              ))}
-            </div>
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">

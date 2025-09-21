@@ -13,20 +13,16 @@ import { useAdminData } from '@/hooks/useAdminData';
 import { Badge } from '@/components/ui/badge';
 
 type AttachmentInsert = Database['public']['Tables']['attachments']['Insert'];
-type ContractModule = Database['public']['Tables']['contract_modules']['Row'];
-
-type ModuleOption = Pick<ContractModule, 'id' | 'title_de'>;
 
 export function AttachmentManager() {
   const [attachments, setAttachments] = useState<AttachmentWithModule[]>([]);
-  const [modules, setModules] = useState<ModuleOption[]>([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingAttachment, setEditingAttachment] = useState<Partial<AttachmentWithModule> | null>(null);
   const { toast } = useToast();
 
-  const { contractTypes, loading: contractTypesLoading, getModuleByKey } = useAdminData();
+  const { contractTypes, contractModules, loading: contractTypesLoading } = useAdminData();
   const [selectedContractTypeId, setSelectedContractTypeId] = useState<string>('');
 
   const fetchAttachments = async (contractTypeId: string) => {
@@ -55,20 +51,6 @@ export function AttachmentManager() {
       setLoadingAttachments(false);
     }
   };
-
-  useEffect(() => {
-    const fetchModules = async () => {
-      try {
-        const { data, error } = await supabase.from('contract_modules').select('id, title_de').order('title_de');
-        if (error) throw error;
-        setModules(data || []);
-      } catch (error) {
-        console.error('Error fetching modules:', error);
-        toast({ title: 'Fehler', description: 'Textmodule konnten nicht geladen werden.', variant: 'destructive' });
-      }
-    };
-    fetchModules();
-  }, []);
 
   useEffect(() => {
     if (selectedContractTypeId) {
@@ -236,6 +218,18 @@ export function AttachmentManager() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
+              <Label htmlFor="module_id">Textbaustein auswählen</Label>
+              <Select value={editingAttachment?.module_id || ''} onValueChange={(value) => {
+                const selectedModule = contractModules.find(m => m.id === value);
+                setEditingAttachment(p => ({ ...p, module_id: value, name: selectedModule?.name || '' }));
+              }}>
+                <SelectTrigger><SelectValue placeholder="Modul auswählen..." /></SelectTrigger>
+                <SelectContent>
+                  {contractModules.map(module => <SelectItem key={module.id} value={module.id}>{module.title_de}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="type">Typ</Label>
               <Select value={editingAttachment?.type || 'produkt'} onValueChange={(value) => setEditingAttachment(p => ({ ...p, type: value as any }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -243,18 +237,6 @@ export function AttachmentManager() {
                   <SelectItem value="fest">Fester Bestandteil</SelectItem>
                   <SelectItem value="produkt">Produkt</SelectItem>
                   <SelectItem value="zusatz">Zusatzleistung</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="module_id">Zugehöriges Textmodul</Label>
-              <Select value={editingAttachment?.module_id || ''} onValueChange={(value) => {
-                const selectedModule = modules.find(m => m.id === value);
-                setEditingAttachment(p => ({ ...p, module_id: value, name: selectedModule?.title_de || '' }));
-              }}>
-                <SelectTrigger><SelectValue placeholder="Modul auswählen..." /></SelectTrigger>
-                <SelectContent>
-                  {modules.map(module => <SelectItem key={module.id} value={module.id}>{module.title_de}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
