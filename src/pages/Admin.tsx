@@ -9,9 +9,8 @@ import { useAdminData } from '@/hooks/useAdminData';
 import { ContractTypeModal } from '@/components/admin/ContractTypeModal';
 import { ContractModuleModal } from '@/components/admin/ContractModuleModal';
 import { ContractCategoryModal } from '@/components/admin/ContractCategoryModal';
-import { GlobalVariableModal } from '@/components/admin/GlobalVariableModal';
-import { AttachmentManager } from '@/components/admin/AttachmentManager';
-import { TemplateBuilder } from '@/components/admin/TemplateBuilder';
+import { GlobalVariableModal } from '@/components/admin/GlobalVariableModal'; 
+import { UnifiedTemplateEditor } from '@/components/admin/UnifiedTemplateEditor';
 import { Plus, Edit2, Trash2, Copy, Settings, Database, FileText, Blocks, Variable, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -119,7 +118,7 @@ export default function Admin() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="types" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Vertragstypen
@@ -132,13 +131,9 @@ export default function Admin() {
             <Variable className="h-4 w-4" />
             Variablen
           </TabsTrigger>
-          <TabsTrigger value="structure" className="flex items-center gap-2">
+          <TabsTrigger value="template-editor" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Vertragsstruktur
-          </TabsTrigger>
-          <TabsTrigger value="composition" className="flex items-center gap-2">
-            <Database className="h-4 w-4" />
-            Wählbare Anhänge
+            Template Editor
           </TabsTrigger>
         </TabsList>
 
@@ -364,19 +359,9 @@ export default function Admin() {
           </Card>
         </TabsContent>
 
-        {/* Vertragsstruktur */}
-        <TabsContent value="structure" className="space-y-6">
-          <TemplateBuilder
-            contractTypes={contractTypes}
-            contractModules={contractModules}
-            contractCompositions={contractCompositions}
-            onUpdate={fetchData}
-          />
-        </TabsContent>
-
-        {/* Wählbare Anhänge */}
-        <TabsContent value="composition" className="space-y-6">
-          <AttachmentManager />
+        {/* Unified Template Editor */}
+        <TabsContent value="template-editor" className="space-y-6">
+          <UnifiedTemplateEditor />
         </TabsContent>
       </Tabs>
 
