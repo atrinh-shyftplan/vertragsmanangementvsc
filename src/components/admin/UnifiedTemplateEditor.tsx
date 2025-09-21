@@ -11,20 +11,15 @@ import { useAdminData } from '@/hooks/useAdminData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import type { Database, Attachment, ContractModule } from '@/integrations/supabase/types';
+import type { Database, Attachment, ContractModule, CompositionWithModuleAndAttachment } from '@/integrations/supabase/types';
 
 // Combined type for the editor list
 type ContractComposition = Database['public']['Tables']['contract_compositions']['Row'];
-type CompositionWithDetails = {
-  composition: ContractComposition;
-  module: ContractModule | undefined;
-  attachment: Attachment | undefined;
-};
 
 export function UnifiedTemplateEditor() {
   const { contractTypes, contractModules, contractCompositions, globalVariables, loading: adminDataLoading, fetchData } = useAdminData();
   const [selectedContractTypeKey, setSelectedContractTypeKey] = useState<string>('');
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [compositions, setCompositions] = useState<CompositionWithModuleAndAttachment[]>([]);
   const [loading, setLoading] = useState(false);
   const [isAddModuleOpen, setAddModuleOpen] = useState(false);
   const [modulesToAdd, setModulesToAdd] = useState<string[]>([]);
@@ -33,54 +28,56 @@ export function UnifiedTemplateEditor() {
 
   const selectedContractType = contractTypes.find(t => t.key === selectedContractTypeKey);
 
-  const fetchAttachmentsForType = async (contractTypeId: string) => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('attachments')
-        .select('*')
-        .eq('contract_type_id', contractTypeId);
-      if (error) throw error;
-      setAttachments(data || []);
-    } catch (error) {
-      console.error('Error fetching attachments:', error);
-      toast({ title: 'Fehler', description: 'Anhänge konnten nicht geladen werden.', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Fetch attachments when contract type changes
   useEffect(() => {
     if (selectedContractType) {
-      fetchAttachmentsForType(selectedContractType.id);
-    } else {
-      setAttachments([]);
-    }
-  }, [selectedContractType]);
+      const fetchCompositionsForType = async () => {
+        setLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from('contract_compositions')
+            .select(`
+              id,
+              contract_type_id,
+              module_id,
+              sort_order,
+              contract_modules (*),
+              attachments (*)
+            `)
+            .eq('contract_type_id', selectedContractType.id)
+            .order('sort_order');
 
-  // Memoized list of compositions with all details for rendering
-  const compositionsWithDetails = useMemo((): CompositionWithDetails[] => {
-    if (!selectedContractTypeKey) return [];
-    return contractCompositions
-      .filter(c => c.contract_type_key === selectedContractTypeKey)
-      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-      .map(composition => {
-        const module = contractModules.find(m => m.key === composition.module_key);
-        const attachment = attachments.find(a => a.module_id === module?.id);
-        return { composition, module, attachment };
-      });
-  }, [selectedContractTypeKey, contractCompositions, contractModules, attachments]);
+          if (error) throw error;
+
+          const transformedData = data.map(item => ({
+            ...item,
+            attachments: Array.isArray(item.attachments) ? item.attachments[0] || null : item.attachments,
+          })) as CompositionWithModuleAndAttachment[];
+
+          setCompositions(transformedData);
+
+        } catch (error) {
+          console.error('Error fetching compositions:', error);
+          toast({ title: 'Fehler', description: 'Vertragsstruktur konnte nicht geladen werden.', variant: 'destructive' });
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchCompositionsForType();
+    } else {
+      setCompositions([]);
+    }
+  }, [selectedContractType, toast]);
 
   const handleMove = async (index: number, direction: 'up' | 'down') => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= compositionsWithDetails.length) return;
+    if (newIndex < 0 || newIndex >= compositions.length) return;
 
-    const reorderedCompositions = [...compositionsWithDetails];
+    const reorderedCompositions = [...compositions];
     [reorderedCompositions[index], reorderedCompositions[newIndex]] = [reorderedCompositions[newIndex], reorderedCompositions[index]];
 
     const updates = reorderedCompositions.map((item, idx) => ({
-      id: item.composition.id,
+      id: item.id,
       sort_order: idx,
     }));
 
@@ -98,10 +95,11 @@ export function UnifiedTemplateEditor() {
   const handleAttachmentTypeChange = async (moduleId: string, newType: 'fest' | 'produkt' | 'zusatz' | 'none') => {
     if (!selectedContractType) return;
 
-    const module = contractModules.find(m => m.id === moduleId);
-    if (!module) return;
+    const composition = compositions.find(c => c.module_id === moduleId);
+    if (!composition || !composition.contract_modules) return;
 
-    const existingAttachment = attachments.find(a => a.module_id === moduleId);
+    const module = composition.contract_modules;
+    const existingAttachment = composition.attachments;
 
     if (newType === 'none') {
       if (existingAttachment) {
@@ -110,7 +108,7 @@ export function UnifiedTemplateEditor() {
           toast({ title: 'Fehler', description: 'Anhang konnte nicht entfernt werden.', variant: 'destructive' });
         } else {
           toast({ title: 'Erfolg', description: 'Anhang-Eigenschaft entfernt.' });
-          fetchAttachmentsForType(selectedContractType.id);
+          fetchData();
         }
       }
     } else {
@@ -127,7 +125,7 @@ export function UnifiedTemplateEditor() {
         toast({ title: 'Fehler', description: 'Anhang-Typ konnte nicht gespeichert werden.', variant: 'destructive' });
       } else {
         toast({ title: 'Erfolg', description: 'Anhang-Typ gespeichert.' });
-        fetchAttachmentsForType(selectedContractType.id);
+        fetchData();
       }
     }
   };
@@ -138,7 +136,7 @@ export function UnifiedTemplateEditor() {
       return;
     }
 
-    const currentCompositions = compositionsWithDetails.map(c => c.composition);
+    const currentCompositions = compositions;
     let nextSortOrder = currentCompositions.length > 0 ? Math.max(...currentCompositions.map(c => c.sort_order || 0)) + 1 : 0;
 
     const newCompositions = modulesToAdd.map((moduleKey, index) => ({
@@ -174,8 +172,8 @@ export function UnifiedTemplateEditor() {
   };
 
   const availableModulesToAdd = useMemo(() => {
-    return contractModules.filter(m => !compositionsWithDetails.some(c => c.module?.key === m.key));
-  }, [contractModules, compositionsWithDetails]);
+    return contractModules.filter(m => !compositions.some(c => c.contract_modules?.key === m.key));
+  }, [contractModules, compositions]);
 
   const processPreviewContent = (content: string, module: ContractModule | undefined) => {
     if (!content || !module) return '';
@@ -211,7 +209,7 @@ export function UnifiedTemplateEditor() {
 
   const renderFullPreview = () => {
     if (!selectedContractTypeKey) return '';
-    return compositionsWithDetails.map(({ module }) => {
+    return compositions.map(({ contract_modules: module }) => {
       if (!module) return `<div class="py-4 my-2 border-b border-dashed border-destructive text-destructive"><em>Modul nicht gefunden.</em></div>`;
 
       const germanContent = processPreviewContent(module.content_de, module);
@@ -263,23 +261,23 @@ export function UnifiedTemplateEditor() {
 
         {selectedContractTypeKey && !loading && !adminDataLoading && (
           <div className="space-y-3">
-            {compositionsWithDetails.length === 0 ? (
+            {compositions.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">Keine Module für diesen Vertragstyp konfiguriert.</p>
             ) : (
-              compositionsWithDetails.map((item, index) => (
-                <div key={item.composition.id} className="flex items-center justify-between p-3 border rounded-lg gap-4">
+              compositions.map((composition, index) => (
+                <div key={composition.id} className="flex items-center justify-between p-3 border rounded-lg gap-4">
                   <div className="flex items-center space-x-3 flex-grow">
                     <Badge variant="outline" className="text-lg">{index + 1}</Badge>
                     <div>
-                      <div className="font-medium">{item.module?.name || item.module?.title_de || item.composition.module_key}</div>
-                      <div className="text-sm text-muted-foreground">Kategorie: {item.module?.category || 'N/A'}</div>
+                      <div className="font-medium">{composition.contract_modules?.name || composition.contract_modules?.title_de || 'Unbekanntes Modul'}</div>
+                      <div className="text-sm text-muted-foreground">Kategorie: {composition.contract_modules?.category || 'N/A'}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {item.module?.category === 'anhaenge' && (
+                    {composition.contract_modules?.category === 'anhaenge' && (
                       <Select
-                        value={item.attachment?.type || 'none'}
-                        onValueChange={(value) => handleAttachmentTypeChange(item.module!.id, value as any)}
+                        value={composition.attachments?.type || 'none'}
+                        onValueChange={(value) => handleAttachmentTypeChange(composition.module_id, value as any)}
                       >
                         <SelectTrigger className="w-[180px]">
                           <SelectValue placeholder="Anhang-Typ..." />
@@ -293,8 +291,8 @@ export function UnifiedTemplateEditor() {
                       </Select>
                     )}
                     <Button variant="ghost" size="sm" onClick={() => handleMove(index, 'up')} disabled={index === 0}><ChevronUp className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleMove(index, 'down')} disabled={index === compositionsWithDetails.length - 1}><ChevronDown className="h-4 w-4" /></Button>
-                    <Button variant="outline" size="sm" onClick={() => removeModuleFromComposition(item.composition.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleMove(index, 'down')} disabled={index === compositions.length - 1}><ChevronDown className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="sm" onClick={() => removeModuleFromComposition(composition.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </div>
                 </div>
               ))
