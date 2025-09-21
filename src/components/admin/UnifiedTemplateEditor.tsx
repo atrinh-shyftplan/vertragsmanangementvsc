@@ -276,7 +276,7 @@ export function UnifiedTemplateEditor() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {item.module?.category === 'anhang' && (
+                    {item.module?.category === 'anhaenge' && (
                       <Select
                         value={item.attachment?.type || 'none'}
                         onValueChange={(value) => handleAttachmentTypeChange(item.module!.id, value as any)}
