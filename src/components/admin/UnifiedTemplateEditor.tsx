@@ -24,6 +24,7 @@ export function UnifiedTemplateEditor() {
   const [isAddModuleOpen, setAddModuleOpen] = useState(false);
   const [modulesToAdd, setModulesToAdd] = useState<string[]>([]);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const selectedContractType = contractTypes.find(t => t.key === selectedContractTypeKey);
@@ -31,43 +32,50 @@ export function UnifiedTemplateEditor() {
   // Fetch attachments when contract type changes
   useEffect(() => {
     if (selectedContractType) {
-      const fetchCompositionsForType = async () => {
+      const fetchCompositions = async (typeId: string) => {
         setLoading(true);
+        setError(null);
         try {
-          const { data, error } = await supabase
+          // Schritt 1: Hole die geordnete Liste der Module für diesen Vertragstyp
+          const { data: compositionsData, error: compositionsError } = await supabase
             .from('contract_compositions')
-            .select(`
-              id,
-              contract_type_id,
-              module_id,
-              sort_order,
-              contract_modules (*),
-              attachments (*)
-            `)
-            .eq('contract_type_id', selectedContractType.id)
+            .select('*, contract_modules(*)')
+            .eq('contract_type_id', typeId)
             .order('sort_order');
 
-          if (error) throw error;
+          if (compositionsError) throw compositionsError;
 
-          const transformedData = data.map(item => ({
-            ...item,
-            attachments: Array.isArray(item.attachments) ? item.attachments[0] || null : item.attachments,
-          })) as CompositionWithModuleAndAttachment[];
+          // Schritt 2: Hole alle zugehörigen Anhänge für diesen Vertragstyp
+          const { data: attachmentsData, error: attachmentsError } = await supabase
+            .from('attachments')
+            .select('*')
+            .eq('contract_type_id', typeId);
 
-          setCompositions(transformedData);
+          if (attachmentsError) throw attachmentsError;
 
-        } catch (error) {
-          console.error('Error fetching compositions:', error);
-          toast({ title: 'Fehler', description: 'Vertragsstruktur konnte nicht geladen werden.', variant: 'destructive' });
+          // Schritt 3: Verknüpfe die Daten im Code
+          const attachmentsMap = new Map(
+            attachmentsData.map((att) => [att.module_id, att])
+          );
+
+          const combinedData = compositionsData.map((comp) => ({
+            ...comp,
+            attachments: attachmentsMap.get(comp.module_id) || null,
+          }));
+
+          setCompositions(combinedData as CompositionWithModuleAndAttachment[]);
+        } catch (err) {
+          console.error('Fehler beim Laden der Vertragsstruktur:', err);
+          setError('Vertragsstruktur konnte nicht geladen werden.');
         } finally {
           setLoading(false);
         }
       };
-      fetchCompositionsForType();
+      fetchCompositions(selectedContractType.id);
     } else {
       setCompositions([]);
     }
-  }, [selectedContractType, toast]);
+  }, [selectedContractType]);
 
   const handleMove = async (index: number, direction: 'up' | 'down') => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
@@ -108,7 +116,7 @@ export function UnifiedTemplateEditor() {
           toast({ title: 'Fehler', description: 'Anhang konnte nicht entfernt werden.', variant: 'destructive' });
         } else {
           toast({ title: 'Erfolg', description: 'Anhang-Eigenschaft entfernt.' });
-          fetchData();
+          if (selectedContractType) fetchData();
         }
       }
     } else {
@@ -125,7 +133,7 @@ export function UnifiedTemplateEditor() {
         toast({ title: 'Fehler', description: 'Anhang-Typ konnte nicht gespeichert werden.', variant: 'destructive' });
       } else {
         toast({ title: 'Erfolg', description: 'Anhang-Typ gespeichert.' });
-        fetchData();
+        if (selectedContractType) fetchData();
       }
     }
   };
@@ -139,11 +147,17 @@ export function UnifiedTemplateEditor() {
     const currentCompositions = compositions;
     let nextSortOrder = currentCompositions.length > 0 ? Math.max(...currentCompositions.map(c => c.sort_order || 0)) + 1 : 0;
 
-    const newCompositions = modulesToAdd.map((moduleKey, index) => ({
-      contract_type_key: selectedContractTypeKey,
-      module_key: moduleKey,
-      sort_order: nextSortOrder + index,
-    }));
+    const newCompositions = modulesToAdd.map((moduleKey, index) => {
+      const module = contractModules.find(m => m.key === moduleKey);
+      if (!module || !selectedContractType) return null;
+      return {
+        contract_type_id: selectedContractType.id,
+        module_id: module.id,
+        sort_order: nextSortOrder + index,
+        contract_type_key: selectedContractType.key, // Beibehaltung für Kompatibilität, falls noch benötigt
+        module_key: module.key, // Beibehaltung für Kompatibilität, falls noch benötigt
+      };
+    }).filter(Boolean);
 
     try {
       const { error } = await supabase.from('contract_compositions').insert(newCompositions);
@@ -257,7 +271,9 @@ export function UnifiedTemplateEditor() {
           </div>
         </div>
 
-        {selectedContractTypeKey && (loading || adminDataLoading) && <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
+        {selectedContractTypeKey && (loading || adminDataLoading) && <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>
+        }
+        {error && <p className="text-destructive text-center py-4">{error}</p>}
 
         {selectedContractTypeKey && !loading && !adminDataLoading && (
           <div className="space-y-3">
