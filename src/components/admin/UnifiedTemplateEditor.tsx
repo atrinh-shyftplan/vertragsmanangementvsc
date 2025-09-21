@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -29,53 +29,54 @@ export function UnifiedTemplateEditor() {
 
   const selectedContractType = contractTypes.find(t => t.key === selectedContractTypeKey);
 
+  const fetchCompositions = useCallback(async (typeId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Schritt 1: Hole die geordnete Liste der Module für diesen Vertragstyp
+      const { data: compositionsData, error: compositionsError } = await supabase
+        .from('contract_compositions')
+        .select('*, contract_modules(*)')
+        .eq('contract_type_id', typeId)
+        .order('sort_order');
+
+      if (compositionsError) throw compositionsError;
+
+      // Schritt 2: Hole alle zugehörigen Anhänge für diesen Vertragstyp
+      const { data: attachmentsData, error: attachmentsError } = await supabase
+        .from('attachments')
+        .select('*')
+        .eq('contract_type_id', typeId);
+
+      if (attachmentsError) throw attachmentsError;
+
+      // Schritt 3: Verknüpfe die Daten im Code
+      const attachmentsMap = new Map(
+        attachmentsData.map((att) => [att.module_id, att])
+      );
+
+      const combinedData = compositionsData.map((comp) => ({
+        ...comp,
+        attachments: attachmentsMap.get(comp.module_id) || null,
+      }));
+
+      setCompositions(combinedData);
+    } catch (err) {
+      console.error('Fehler beim Laden der Vertragsstruktur:', err);
+      setError('Vertragsstruktur konnte nicht geladen werden.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Fetch attachments when contract type changes
   useEffect(() => {
     if (selectedContractType) {
-      const fetchCompositions = async (typeId: string) => {
-        setLoading(true);
-        setError(null);
-        try {
-          // Schritt 1: Hole die geordnete Liste der Module für diesen Vertragstyp
-          const { data: compositionsData, error: compositionsError } = await supabase
-            .from('contract_compositions')
-            .select('*, contract_modules(*)')
-            .eq('contract_type_id', typeId)
-            .order('sort_order');
-
-          if (compositionsError) throw compositionsError;
-
-          // Schritt 2: Hole alle zugehörigen Anhänge für diesen Vertragstyp
-          const { data: attachmentsData, error: attachmentsError } = await supabase
-            .from('attachments')
-            .select('*')
-            .eq('contract_type_id', typeId);
-
-          if (attachmentsError) throw attachmentsError;
-
-          // Schritt 3: Verknüpfe die Daten im Code
-          const attachmentsMap = new Map(
-            attachmentsData.map((att) => [att.module_id, att])
-          );
-
-          const combinedData = compositionsData.map((comp) => ({
-            ...comp,
-            attachments: attachmentsMap.get(comp.module_id) || null,
-          }));
-
-          setCompositions(combinedData as CompositionWithModuleAndAttachment[]);
-        } catch (err) {
-          console.error('Fehler beim Laden der Vertragsstruktur:', err);
-          setError('Vertragsstruktur konnte nicht geladen werden.');
-        } finally {
-          setLoading(false);
-        }
-      };
       fetchCompositions(selectedContractType.id);
     } else {
       setCompositions([]);
     }
-  }, [selectedContractType]);
+  }, [selectedContractType, fetchCompositions]);
 
   const handleMove = async (index: number, direction: 'up' | 'down') => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
@@ -93,7 +94,7 @@ export function UnifiedTemplateEditor() {
       const { error } = await supabase.from('contract_compositions').upsert(updates);
       if (error) throw error;
       toast({ title: 'Erfolg', description: 'Reihenfolge aktualisiert.' });
-      fetchData(); // Refetch all admin data to update the list
+      if (selectedContractType) fetchCompositions(selectedContractType.id);
     } catch (error) {
       console.error('Error updating order:', error);
       toast({ title: 'Fehler', description: 'Reihenfolge konnte nicht gespeichert werden.', variant: 'destructive' });
@@ -116,7 +117,7 @@ export function UnifiedTemplateEditor() {
           toast({ title: 'Fehler', description: 'Anhang konnte nicht entfernt werden.', variant: 'destructive' });
         } else {
           toast({ title: 'Erfolg', description: 'Anhang-Eigenschaft entfernt.' });
-          if (selectedContractType) fetchData();
+          if (selectedContractType) fetchCompositions(selectedContractType.id);
         }
       }
     } else {
@@ -133,7 +134,7 @@ export function UnifiedTemplateEditor() {
         toast({ title: 'Fehler', description: 'Anhang-Typ konnte nicht gespeichert werden.', variant: 'destructive' });
       } else {
         toast({ title: 'Erfolg', description: 'Anhang-Typ gespeichert.' });
-        if (selectedContractType) fetchData();
+        if (selectedContractType) fetchCompositions(selectedContractType.id);
       }
     }
   };
@@ -163,7 +164,7 @@ export function UnifiedTemplateEditor() {
       const { error } = await supabase.from('contract_compositions').insert(newCompositions);
       if (error) throw error;
       toast({ title: 'Erfolg', description: `${newCompositions.length} Modul(e) hinzugefügt.` });
-      fetchData();
+      if (selectedContractType) fetchCompositions(selectedContractType.id);
     } catch (error) {
       console.error('Error adding modules:', error);
       toast({ title: 'Fehler', description: 'Module konnten nicht hinzugefügt werden.', variant: 'destructive' });
@@ -178,7 +179,7 @@ export function UnifiedTemplateEditor() {
       const { error } = await supabase.from('contract_compositions').delete().eq('id', compositionId);
       if (error) throw error;
       toast({ title: 'Erfolg', description: 'Modul wurde aus der Struktur entfernt.' });
-      fetchData();
+      if (selectedContractType) fetchCompositions(selectedContractType.id);
     } catch (error) {
       console.error('Error removing module from composition:', error);
       toast({ title: 'Fehler', description: 'Modul konnte nicht entfernt werden.', variant: 'destructive' });

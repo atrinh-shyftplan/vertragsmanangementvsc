@@ -120,33 +120,54 @@ export type Database = {
       }
       contract_compositions: {
         Row: {
+          contract_type_id: string
           contract_type_key: string
           created_at: string
           id: string
           is_active: boolean | null
+          module_id: string
           module_key: string
           sort_order: number | null
           updated_at: string
         }
         Insert: {
+          contract_type_id: string
           contract_type_key: string
           created_at?: string
           id?: string
           is_active?: boolean | null
+          module_id: string
           module_key: string
           sort_order?: number | null
           updated_at?: string
         }
         Update: {
+          contract_type_id?: string
           contract_type_key?: string
           created_at?: string
           id?: string
           is_active?: boolean | null
+          module_id?: string
           module_key?: string
           sort_order?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contract_compositions_contract_type_id_fkey"
+            columns: ["contract_type_id"]
+            isOneToOne: false
+            referencedRelation: "contract_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_compositions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "contract_modules"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contract_modules: {
         Row: {
