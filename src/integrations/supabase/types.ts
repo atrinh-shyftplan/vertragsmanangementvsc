@@ -23,7 +23,7 @@ export type Database = {
           description: string | null
           module_id: string | null
           sort_order: number | null
-          contract_type_id: string
+          contract_type_key: string
         }
         Insert: {
           id?: string
@@ -615,11 +615,9 @@ export interface AttachmentWithModule extends Attachment {
   contract_modules: ContractModule | null;
 }
 
-export interface CompositionWithModuleAndAttachment {
-  id: string; // from contract_compositions
-  contract_type_id: string; // from contract_compositions
-  module_id: string; // from contract_compositions
-  sort_order: number | null; // from contract_compositions
+export type ContractComposition = Database["public"]["Tables"]["contract_compositions"]["Row"];
+
+export interface CompositionWithModuleAndAttachment extends ContractComposition {
   contract_modules: ContractModule | null; // nested module
   attachments: Attachment | null; // nested attachment
 }
