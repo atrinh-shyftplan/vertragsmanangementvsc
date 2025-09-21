@@ -9,8 +9,8 @@ import { useAdminData } from '@/hooks/useAdminData';
 import { ContractTypeModal } from '@/components/admin/ContractTypeModal';
 import { ContractModuleModal } from '@/components/admin/ContractModuleModal';
 import { ContractCategoryModal } from '@/components/admin/ContractCategoryModal';
-import { GlobalVariableModal } from '@/components/admin/GlobalVariableModal';
-import { ContractCompositionManager } from '@/components/admin/ContractCompositionManager';
+import { GlobalVariableModal } from '@/components/admin/GlobalVariableModal'; 
+import { AttachmentManager } from '@/components/admin/AttachmentManager';
 import { ProductTagManager } from '@/components/admin/ProductTagManager';
 import { ContractBuilder } from '@/components/admin/ContractBuilder';
 import { Plus, Edit2, Trash2, Copy, Settings, Database, FileText, Blocks, Variable, Tag } from 'lucide-react';
@@ -504,12 +504,7 @@ export default function Admin() {
 
         {/* Vertragszusammensetzung */}
         <TabsContent value="composition" className="space-y-6">
-          <ContractCompositionManager
-            contractTypes={contractTypes}
-            contractModules={contractModules}
-            contractCompositions={contractCompositions}
-            onUpdate={fetchData}
-          />
+          <AttachmentManager />
         </TabsContent>
       </Tabs>
 
