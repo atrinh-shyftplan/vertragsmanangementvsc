@@ -72,7 +72,8 @@ export function UnifiedTemplateEditor() {
 
       const { data: attachmentsData, error: attachmentsError } = await supabase
         .from('attachments')
-        .select('*');
+        .select('*')
+        .eq('contract_type_key', typeId);
       if (attachmentsError) throw attachmentsError;
 
       const attachmentsMap = new Map<string, Attachment>(
@@ -127,6 +128,7 @@ export function UnifiedTemplateEditor() {
           contract_type_key: item.contract_type_key,
           module_key: item.module_key,
           contract_type_id: item.contract_type_id,
+          module_id: item.module_id,
         };
         return updateData;
       });
