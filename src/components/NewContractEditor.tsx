@@ -163,8 +163,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       const { supabase } = await import('@/integrations/supabase/client');
       
       // Load the full, ordered structure for the preview
-      const { data: compositionsData, error: compositionsError } = await supabase
-        supabase.from('contract_compositions').select('*').eq('contract_type_key', type.key).order('sort_order'),
+      const { data: compositionsData, error: compositionsError } = await supabase.from('contract_compositions').select('*').eq('contract_type_key', type.key).order('sort_order');
       
       if (compositionsError) {
         toast.error('Fehler beim Laden der Vertragsstruktur.');
@@ -364,9 +363,16 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const renderSimpleModule = (module: ContractModule, isAnnex: boolean, annexNumber: number) => {
     let moduleVariables = [];
     try {
-      moduleVariables = Array.isArray(module.variables) 
-        ? module.variables 
-        : (module.variables && module.variables.trim() !== '' ? JSON.parse(module.variables as string) : []) || [];
+      if (module.variables) {
+        if (Array.isArray(module.variables)) {
+          moduleVariables = module.variables;
+        } else if (typeof module.variables === 'string' && module.variables.trim()) {
+          const parsed = JSON.parse(module.variables);
+          if (Array.isArray(parsed)) {
+            moduleVariables = parsed;
+          }
+        }
+      }
     } catch (error) {
       console.error('Failed to parse module variables:', error);
       moduleVariables = [];

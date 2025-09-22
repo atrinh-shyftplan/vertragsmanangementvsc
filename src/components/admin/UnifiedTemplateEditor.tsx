@@ -99,7 +99,7 @@ export function UnifiedTemplateEditor() {
       return;
     }
     fetchCompositions(selectedContractType.key);
-  }, [selectedContractType, contractModules]);
+  }, [selectedContractType]); // KORREKTUR: contractModules entfernt, um Endlosschleife zu verhindern
 
   const handleDragEnd = async (event: any) => {
     const { active, over } = event;
