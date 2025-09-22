@@ -280,9 +280,9 @@ export function UnifiedTemplateEditor() {
 
       let moduleHtml = `<div class="py-4 my-2 border-b">`;
       if (germanContent && englishContent) {
-        moduleHtml += `<div class="grid grid-cols-2 gap-6"><div><h3 class="font-bold mb-2">${module.title_de}</h3><div>${germanContent}</div></div><div><h3 class="font-bold mb-2">${module.title_en || module.title_de}</h3><div>${englishContent}</div></div></div>`;
+        moduleHtml += `<div class="grid grid-cols-2 gap-6"><div><h3 class="font-bold mb-2">${module.contract_modules.title_de}</h3><div>${germanContent}</div></div><div><h3 class="font-bold mb-2">${module.contract_modules.title_en || module.contract_modules.title_de}</h3><div>${englishContent}</div></div></div>`;
       } else {
-        moduleHtml += `<h3 class="font-bold mb-2">${module.title_de || module.title_en}</h3><div>${germanContent || englishContent}</div>`;
+        moduleHtml += `<h3 class="font-bold mb-2">${module.contract_modules.title_de || module.contract_modules.title_en}</h3><div>${germanContent || englishContent}</div>`;
       }
       moduleHtml += `</div>`;
       return moduleHtml;

@@ -617,6 +617,8 @@ export interface ContractModule {
   id: string;
   key: string;
   name: string;
+  title_de: string | null;
+  title_en: string | null;
   content_de: string | null;
   content_en: string | null;
   category: string | null;

@@ -191,16 +191,16 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       const fullStructure = (compositionsData || []).map(comp => {
         const module = processedContractModules.find(m => m.key === comp.module_key); // Use processed modules
         if (!module) return null; // Should not happen with consistent data
-        const attachment = attachmentsMap.get(module.id);
-        return { composition: comp, module, attachment: attachment || undefined };
-      }).filter(Boolean) as typeof contractStructure;
+        const attachments = attachmentsMap.get(module.id);
+        return { ...comp, contract_modules: module, attachments: attachments || null };
+      }).filter(item => item.contract_modules) as CompositionWithModuleAndAttachment[];
 
       setContractStructure(fullStructure);
 
       // 4. Pre-select fixed attachments.
       const fixedAttachmentIds = fullStructure
-        .filter(item => item.attachment?.type === 'fest')
-        .map(item => item.attachment!.id);
+        .filter(item => item.attachments?.type === 'fest')
+        .map(item => item.attachments!.id);
       setSelectedAttachmentIds(fixedAttachmentIds);
     }; // End of loadDataForType
     loadDataForType();
@@ -225,9 +225,9 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   }, [variableValues, contractStructure, selectedAttachmentIds, showDetails, outline]);
 
   useEffect(() => {
-    const selectedModules = contractStructure.filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id)).map(item => item.module);
+    const selectedModules = contractStructure.filter(item => !item.attachments || selectedAttachmentIds.includes(item.attachments.id)).map(item => item.contract_modules!);
     const status = variableValues.status || 'draft';
-    const schema = getValidationSchema(status, selectedModules, contractModules, globalVariables, contractStructure.map(cs => cs.attachment).filter(Boolean) as RawAttachment[]);
+    const schema = getValidationSchema(status, selectedModules, contractModules, globalVariables, contractStructure.map(cs => cs.attachments).filter(Boolean) as RawAttachment[]);
     const description = schema.describe();
     setRequiredFields(Object.keys(description.fields));
   }, [variableValues.status, contractStructure, selectedAttachmentIds, contractModules, globalVariables]);
@@ -269,9 +269,9 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     
     const modulesToRender = contractStructure.filter(item => {
       // Always include modules that are not selectable attachments
-      if (!item.attachment) return true;
+      if (!item.attachments) return true;
       // Include selectable attachments if their ID is in the selected list
-      return selectedAttachmentIds.includes(item.attachment.id);
+      return selectedAttachmentIds.includes(item.attachments.id);
     });
     
     // Separate regular modules from annexes and count annexes for proper numbering
@@ -279,10 +279,10 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     const annexModules = [];
     
     modulesToRender.forEach((item) => {
-      if (item.module.category === 'anhang') {
-        annexModules.push(item.module);
+      if (item.contract_modules!.category === 'anhang') {
+        annexModules.push(item.contract_modules!);
       } else {
-        regularModules.push(item.module);
+        regularModules.push(item.contract_modules!);
       }
     });
     
@@ -440,7 +440,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       moduleHtml += `<div>`;
       if (!isHeaderModule && hasEnglishTitle) {
         const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en}` : module.title_en;
-        englishColumn += `<h3>${displayTitle}</h3>`;
+        moduleHtml += `<h3>${displayTitle}</h3>`;
       }
       if (hasEnglishContent) {
         moduleHtml += `<div>${processContent(module.content_en, moduleVariables)}</div>`;
@@ -469,13 +469,13 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
 
   const saveContract = async () => {
-    const selectedModules = contractStructure.filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id)).map(item => item.module);
+    const selectedModules = contractStructure.filter(item => !item.attachments || selectedAttachmentIds.includes(item.attachments.id)).map(item => item.contract_modules!);
     const validationSchema = getValidationSchema(
       variableValues.status || 'draft',
       selectedModules,
       contractModules, // This is RawContractModule[]
       globalVariables,
-      contractStructure.map(cs => cs.attachment).filter(Boolean) as RawAttachment[]
+      contractStructure.map(cs => cs.attachments).filter(Boolean) as RawAttachment[]
     );
 
     try {
@@ -824,15 +824,15 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                   <div>
                     <h4 className="font-medium text-sm text-muted-foreground mb-2">Feste Bestandteile</h4>
                     <div className="space-y-2">
-                      {contractStructure.filter(item => item.attachment?.type === 'fest').map(item => (
-                        <div key={item.attachment!.id} className="flex items-center space-x-2 opacity-70">
+                      {contractStructure.filter(item => item.attachments?.type === 'fest').map(item => (
+                        <div key={item.attachments!.id} className="flex items-center space-x-2 opacity-70">
                           <Checkbox
-                            id={`attachment-${item.attachment!.id}`}
+                            id={`attachment-${item.attachments!.id}`}
                             checked={true}
                             disabled={true}
                           />
-                          <Label htmlFor={`attachment-${item.attachment!.id}`} className="cursor-not-allowed">
-                            {item.module.name}
+                          <Label htmlFor={`attachment-${item.attachments!.id}`} className="cursor-not-allowed">
+                            {item.contract_modules!.name}
                           </Label>
                         </div>
                       ))}
@@ -843,21 +843,21 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                   <div>
                     <h4 className="font-medium text-sm text-muted-foreground mb-2">Produkte (mindestens eines auswählen)</h4>
                     <div className="space-y-2">
-                      {contractStructure.filter(item => item.attachment?.type === 'produkt').map(item => (
-                        <div key={item.attachment!.id} className="flex items-center space-x-2">
+                      {contractStructure.filter(item => item.attachments?.type === 'produkt').map(item => (
+                        <div key={item.attachments!.id} className="flex items-center space-x-2">
                           <Checkbox
-                            id={`attachment-${item.attachment!.id}`}
-                            checked={selectedAttachmentIds.includes(item.attachment!.id)}
+                            id={`attachment-${item.attachments!.id}`}
+                            checked={selectedAttachmentIds.includes(item.attachments!.id)}
                             onCheckedChange={(checked) => {
                               setSelectedAttachmentIds(prev => 
                                 checked 
-                                  ? [...prev, item.attachment!.id] 
-                                  : prev.filter(id => id !== item.attachment!.id)
+                                  ? [...prev, item.attachments!.id] 
+                                  : prev.filter(id => id !== item.attachments!.id)
                               );
                             }}
                           />
-                          <Label htmlFor={`attachment-${item.attachment!.id}`}>
-                            {item.module.name}
+                          <Label htmlFor={`attachment-${item.attachments!.id}`}>
+                            {item.contract_modules!.name}
                           </Label>
                         </div>
                       ))}
@@ -868,21 +868,21 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                   <div>
                     <h4 className="font-medium text-sm text-muted-foreground mb-2">Optionale Zusatzleistungen</h4>
                     <div className="space-y-2">
-                      {contractStructure.filter(item => item.attachment?.type === 'zusatz').map(item => (
-                        <div key={item.attachment!.id} className="flex items-center space-x-2">
+                      {contractStructure.filter(item => item.attachments?.type === 'zusatz').map(item => (
+                        <div key={item.attachments!.id} className="flex items-center space-x-2">
                           <Checkbox
-                            id={`attachment-${item.attachment!.id}`}
-                            checked={selectedAttachmentIds.includes(item.attachment!.id)}
+                            id={`attachment-${item.attachments!.id}`}
+                            checked={selectedAttachmentIds.includes(item.attachments!.id)}
                             onCheckedChange={(checked) => {
                               setSelectedAttachmentIds(prev => 
                                 checked 
-                                  ? [...prev, item.attachment!.id] 
-                                  : prev.filter(id => id !== item.attachment!.id)
+                                  ? [...prev, item.attachments!.id] 
+                                  : prev.filter(id => id !== item.attachments!.id)
                               );
                             }}
                           />
-                          <Label htmlFor={`attachment-${item.attachment!.id}`}>
-                            {item.module.name}
+                          <Label htmlFor={`attachment-${item.attachments!.id}`}>
+                            {item.contract_modules!.name}
                           </Label>
                         </div>
                       ))}
@@ -892,7 +892,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
               </Card>
 
               <VariableInputRenderer
-                selectedModules={contractStructure.filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id)).map(item => item.module)}
+                selectedModules={contractStructure.filter(item => !item.attachments || selectedAttachmentIds.includes(item.attachments.id)).map(item => item.contract_modules!)}
                 globalVariables={globalVariables}
                 variableValues={variableValues}
                 onVariableChange={(key, value) => setVariableValues(prev => ({
