@@ -606,36 +606,18 @@ export const Constants = {
     Enums: {},
   },
 } as const
+export type ContractModule = Database["public"]["Tables"]["contract_modules"]["Row"];
+export type Attachment = Database["public"]["Tables"]["attachments"]["Row"];
+export type AttachmentInsert = Database["public"]["Tables"]["attachments"]["Insert"];
 
-// Raw database types
-export type RawContractModule = Database["public"]["Tables"]["contract_modules"]["Row"];
-export type RawAttachment = Database["public"]["Tables"]["attachments"]["Row"];
-export type RawContractComposition = Database["public"]["Tables"]["contract_compositions"]["Row"];
-
-// Processed types for frontend use (adjusted `variables` based on usage)
-export interface ContractModule {
-  id: string;
-  key: string;
-  name: string;
-  title_de: string | null;
-  title_en: string | null;
-  content_de: string | null;
-  content_en: string | null;
-  category: string | null;
-  variables: Array<{ key: string; name_de: string; [k: string]: any; }> | null; // Adjusted based on code usage
-  created_at: string;
-}
 // Definiert die kombinierte Struktur eines Anhangs mit seinem optional verknüpften Textmodul
 export interface AttachmentWithModule extends Attachment {
   contract_modules: ContractModule | null;
 }
 
-export interface CompositionWithModuleAndAttachment extends RawContractComposition {
-  contract_modules: ContractModule | null;
-  attachments: RawAttachment | null;
-}
+export type ContractComposition = Database["public"]["Tables"]["contract_compositions"]["Row"];
 
-// Re-export original types for compatibility where needed
-export type Attachment = RawAttachment;
-export type AttachmentInsert = Database["public"]["Tables"]["attachments"]["Insert"];
-export type ContractComposition = RawContractComposition;
+export interface CompositionWithModuleAndAttachment extends ContractComposition {
+  contract_modules: ContractModule | null; // nested module
+  attachments: Attachment | null; // nested attachment
+}
