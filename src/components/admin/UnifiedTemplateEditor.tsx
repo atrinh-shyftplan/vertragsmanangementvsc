@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { Database, Attachment, ContractModule, CompositionWithModuleAndAttachment, ContractComposition } from '@/integrations/supabase/types';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -55,7 +55,6 @@ export function UnifiedTemplateEditor() {
   const selectedContractType = contractTypes.find(t => t.key === selectedContractTypeKey);
 
   const fetchCompositions = async (typeId: string) => {
-    console.log('SPION: fetchCompositions gestartet für typeId:', typeId); // <-- SPION 1
     setLoading(true);
     setError(null);
     try {
@@ -65,8 +64,6 @@ export function UnifiedTemplateEditor() {
         .eq('contract_type_key', typeId)
         .order('sort_order');
       if (compositionsError) throw compositionsError;
-
-      console.log('SPION: compositionsData erfolgreich geladen:', compositionsData); // <-- SPION 2
 
       const { data: attachmentsData, error: attachmentsError } = await supabase
         .from('attachments')
@@ -89,7 +86,6 @@ export function UnifiedTemplateEditor() {
       setCompositions(combinedData);
 
     } catch (err: any) {
-      console.error('SPION: FEHLER im catch-Block:', err); // <-- SPION 3
       console.error('Fehler beim Laden der Vertragsstruktur:', err);
       setError(`Vertragsstruktur konnte nicht geladen werden: ${err.message}`);
     } finally {
@@ -107,23 +103,36 @@ export function UnifiedTemplateEditor() {
     fetchCompositions(selectedContractType.key);
   }, [selectedContractType]); // KORREKTUR: contractModules entfernt, um Endlosschleife zu verhindern
 
-  const handleDragEnd = async (event: any) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    if (active.id !== over.id) {
+    // Ensure we have a valid drop target and the item was actually moved
+    if (over && active.id !== over.id) {
       const oldIndex = compositions.findIndex((c) => c.id === active.id);
       const newIndex = compositions.findIndex((c) => c.id === over.id);
-      const reordered = arrayMove(compositions, oldIndex, newIndex);
-      setCompositions(reordered);
 
-      const updates = reordered.map((item, idx) => ({
+      // Reorder the compositions in the local state for immediate UI feedback
+      const reorderedCompositions = arrayMove(compositions, oldIndex, newIndex);
+      setCompositions(reorderedCompositions);
+
+      // Prepare the data for the database update. Only 'id' and 'sort_order' are needed.
+      const updates = reorderedCompositions.map((item, index) => ({
         id: item.id,
-        sort_order: idx,
+        sort_order: index,
       }));
 
+      // Upsert the new order into the database
       const { error } = await supabase.from('contract_compositions').upsert(updates);
+
       if (error) {
-        toast({ title: 'Fehler', description: 'Reihenfolge konnte nicht gespeichert werden.', variant: 'destructive' });
-        if (selectedContractType) fetchCompositions(selectedContractType.key); // Revert on error
+        toast({
+          title: 'Fehler',
+          description: 'Die neue Reihenfolge konnte nicht gespeichert werden.',
+          variant: 'destructive',
+        });
+        // Revert the local state on error to match the database
+        if (selectedContractType) {
+          fetchCompositions(selectedContractType.key);
+        }
       } else {
         toast({ title: 'Erfolg', description: 'Reihenfolge aktualisiert.' });
       }
