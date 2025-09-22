@@ -155,32 +155,42 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   }, []);
 
   useEffect(() => {
-    const loadContractStructure = async () => {
+    const loadDataForType = async () => {
       if (!selectedType) return;
       const type = contractTypes.find(t => t.key === selectedType);
       if (!type) return;
 
       const { supabase } = await import('@/integrations/supabase/client');
       
-      const [compositionsResult, attachmentsResult] = await Promise.all([
+      // Load the full, ordered structure for the preview
+      const { data: compositionsData, error: compositionsError } = await supabase
         supabase.from('contract_compositions').select('*').eq('contract_type_key', type.key).order('sort_order'),
-        supabase.from('attachments').select('*').eq('contract_type_id', type.id)
-      ]);
-
-      if (compositionsResult.error || attachmentsResult.error) {
+      
+      if (compositionsError) {
         toast.error('Fehler beim Laden der Vertragsstruktur.');
         return;
       }
 
-      const compositions = compositionsResult.data || [];
-      const attachments = attachmentsResult.data || [];
-
-      const structure = compositions.map(comp => {
+      const compositions = compositionsData || [];
+      const fullStructure = compositions.map(comp => {
         const module = contractModules.find(m => m.key === comp.module_key);
         if (!module) return null;
-        const attachment = attachments.find(a => a.module_id === module.id);
-        return { composition: comp, module, attachment };
+        return { composition: comp, module };
       }).filter(Boolean) as typeof contractStructure;
+
+      // Separately, load ONLY the configured attachments for the selection panel
+      const { data: attachmentsData, error: attachmentsError } = await supabase
+        .from('attachments')
+        .select('*, contract_modules!inner(*)')
+        .eq('contract_type_id', type.id);
+
+      if (attachmentsError) { /* Handle error if needed */ }
+
+      const structure = (attachmentsData || []).map(att => ({
+        composition: fullStructure.find(s => s.module.id === att.module_id)?.composition,
+        module: att.contract_modules as ContractModule,
+        attachment: att,
+      })).filter(item => item.composition && item.module) as typeof contractStructure;
       
       setContractStructure(structure);
 
@@ -190,7 +200,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         .map(item => item.attachment!.id);
       setSelectedAttachmentIds(fixedAttachmentIds);
     };
-    loadContractStructure();
+    loadDataForType();
   }, [selectedType, contractTypes, contractModules]);
 
   useEffect(() => {
@@ -814,7 +824,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                   <div>
                     <h4 className="font-medium text-sm text-muted-foreground mb-2">Feste Bestandteile</h4>
                     <div className="space-y-2">
-                      {contractStructure.filter(item => item.attachment && item.attachment.type === 'fest').map(item => (
+                      {contractStructure.filter(item => item.attachment?.type === 'fest').map(item => (
                         <div key={item.attachment!.id} className="flex items-center space-x-2 opacity-70">
                           <Checkbox
                             id={`attachment-${item.attachment!.id}`}
@@ -833,7 +843,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                   <div>
                     <h4 className="font-medium text-sm text-muted-foreground mb-2">Produkte (mindestens eines auswählen)</h4>
                     <div className="space-y-2">
-                      {contractStructure.filter(item => item.attachment && item.attachment.type === 'produkt').map(item => (
+                      {contractStructure.filter(item => item.attachment?.type === 'produkt').map(item => (
                         <div key={item.attachment!.id} className="flex items-center space-x-2">
                           <Checkbox
                             id={`attachment-${item.attachment!.id}`}
@@ -858,7 +868,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                   <div>
                     <h4 className="font-medium text-sm text-muted-foreground mb-2">Optionale Zusatzleistungen</h4>
                     <div className="space-y-2">
-                      {contractStructure.filter(item => item.attachment && item.attachment.type === 'zusatz').map(item => (
+                      {contractStructure.filter(item => item.attachment?.type === 'zusatz').map(item => (
                         <div key={item.attachment!.id} className="flex items-center space-x-2">
                           <Checkbox
                             id={`attachment-${item.attachment!.id}`}
