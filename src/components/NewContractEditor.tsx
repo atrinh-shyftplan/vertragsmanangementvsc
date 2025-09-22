@@ -181,7 +181,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         const attachment = attachments.find(a => a.module_id === module.id);
         return { composition: comp, module, attachment };
       }).filter(Boolean) as typeof contractStructure;
-
+      
       setContractStructure(structure);
 
       // Pre-select fixed attachments
@@ -191,7 +191,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       setSelectedAttachmentIds(fixedAttachmentIds);
     };
     loadContractStructure();
-  }, [selectedType, contractTypes]);
+  }, [selectedType, contractTypes, contractModules]);
 
   useEffect(() => {
     if (previewRef.current && showDetails) {
@@ -814,7 +814,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                   <div>
                     <h4 className="font-medium text-sm text-muted-foreground mb-2">Feste Bestandteile</h4>
                     <div className="space-y-2">
-                      {contractStructure.filter(item => item.attachment?.type === 'fest').map(item => (
+                      {contractStructure.filter(item => item.attachment && item.attachment.type === 'fest').map(item => (
                         <div key={item.attachment!.id} className="flex items-center space-x-2 opacity-70">
                           <Checkbox
                             id={`attachment-${item.attachment!.id}`}
@@ -833,7 +833,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                   <div>
                     <h4 className="font-medium text-sm text-muted-foreground mb-2">Produkte (mindestens eines auswählen)</h4>
                     <div className="space-y-2">
-                      {contractStructure.filter(item => item.attachment?.type === 'produkt').map(item => (
+                      {contractStructure.filter(item => item.attachment && item.attachment.type === 'produkt').map(item => (
                         <div key={item.attachment!.id} className="flex items-center space-x-2">
                           <Checkbox
                             id={`attachment-${item.attachment!.id}`}
@@ -858,7 +858,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                   <div>
                     <h4 className="font-medium text-sm text-muted-foreground mb-2">Optionale Zusatzleistungen</h4>
                     <div className="space-y-2">
-                      {contractStructure.filter(item => item.attachment?.type === 'zusatz').map(item => (
+                      {contractStructure.filter(item => item.attachment && item.attachment.type === 'zusatz').map(item => (
                         <div key={item.attachment!.id} className="flex items-center space-x-2">
                           <Checkbox
                             id={`attachment-${item.attachment!.id}`}

@@ -16,7 +16,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-function SortableCompositionItem({ composition }: { composition: CompositionWithModuleAndAttachment }) {
+function SortableCompositionItem({ composition, onRemove }: { composition: CompositionWithModuleAndAttachment, onRemove: (id: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: composition.id });
 
   const style = {
@@ -32,7 +32,7 @@ function SortableCompositionItem({ composition }: { composition: CompositionWith
         </Button>
         <span className="font-semibold text-slate-900">{composition.contract_modules?.name}</span>
       </div>
-      <Button variant="outline" size="sm" onClick={() => { /* remove function can be passed here */ }}>
+      <Button variant="outline" size="sm" onClick={() => onRemove(composition.id)}>
         <Trash2 className="h-4 w-4 text-destructive" />
       </Button>
     </div>
@@ -305,55 +305,59 @@ export function UnifiedTemplateEditor() {
         {error && <p className="text-destructive text-center py-4">{error}</p>}
 
         {selectedContractTypeKey && !loading && !adminDataLoading && (
-          <div className="space-y-8">
-            {/* Section 1: Module Order */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Reihenfolge der Bausteine</h3>
-              <DndContext sensors={useSensors(useSensor(PointerSensor))} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={compositions} strategy={verticalListSortingStrategy}>
-                  <div className="space-y-2">
-                    {compositions.map((composition) => (
-                      <SortableCompositionItem key={composition.id} composition={composition} />
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
-            </div>
-
-            {/* Section 2: Attachment Configuration */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Konfiguration der wählbaren Anhänge</h3>
-              <div className="space-y-2">
-                {compositions
-                  .filter(c => c.contract_modules?.category === 'anhaenge')
-                  .map((composition) => (
-                    <div key={composition.id} className="flex items-center justify-between p-3 border rounded-lg bg-slate-50">
-                      <span className="font-medium text-slate-800">{composition.contract_modules?.name}</span>
-                      <Select
-                        value={composition.attachments?.type || 'none'}
-                        onValueChange={(value) =>
-                          handleAttachmentTypeChange(
-                            composition.module_key,
-                            value as 'fest' | 'produkt' | 'zusatz' | 'none'
-                          )
-                        }
-                      >
-                        <SelectTrigger className="w-[240px] bg-white">
-                          <SelectValue placeholder="Anhang-Typ festlegen..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Kein Anhang (Standard)</SelectItem>
-                          <SelectItem value="fest">Fester Bestandteil</SelectItem>
-                          <SelectItem value="produkt">Produkt (wählbar)</SelectItem>
-                          <SelectItem value="zusatz">Zusatzleistung (optional)</SelectItem>
-                        </SelectContent>
-                      </Select>
+          compositions.length > 0 ? (
+            <div className="space-y-8">
+              {/* Section 1: Module Order */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Reihenfolge der Bausteine</h3>
+                <DndContext sensors={useSensors(useSensor(PointerSensor))} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={compositions} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-2">
+                      {compositions.map((composition) => (
+                        <SortableCompositionItem key={composition.id} composition={composition} onRemove={removeModuleFromComposition} />
+                      ))}
                     </div>
-                  ))
-                }
+                  </SortableContext>
+                </DndContext>
+              </div>
+
+              {/* Section 2: Attachment Configuration */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Konfiguration der wählbaren Anhänge</h3>
+                <div className="space-y-2">
+                  {compositions
+                    .filter(c => c.contract_modules?.category === 'anhaenge')
+                    .map((composition) => (
+                      <div key={composition.id} className="flex items-center justify-between p-3 border rounded-lg bg-slate-50">
+                        <span className="font-medium text-slate-800">{composition.contract_modules?.name}</span>
+                        <Select
+                          value={composition.attachments?.type || 'none'}
+                          onValueChange={(value) =>
+                            handleAttachmentTypeChange(
+                              composition.module_key,
+                              value as 'fest' | 'produkt' | 'zusatz' | 'none'
+                            )
+                          }
+                        >
+                          <SelectTrigger className="w-[240px] bg-white">
+                            <SelectValue placeholder="Anhang-Typ festlegen..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Kein Anhang (Standard)</SelectItem>
+                            <SelectItem value="fest">Fester Bestandteil</SelectItem>
+                            <SelectItem value="produkt">Produkt (wählbar)</SelectItem>
+                            <SelectItem value="zusatz">Zusatzleistung (optional)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ))
+                  }
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-8">Keine Module für diesen Vertragstyp konfiguriert.</p>
+          )
         )}
       </CardContent>
 
