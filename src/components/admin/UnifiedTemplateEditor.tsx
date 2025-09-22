@@ -128,39 +128,37 @@ export function UnifiedTemplateEditor() {
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    // Ensure we have a valid drop target and the item was actually moved
     if (over && active.id !== over.id) {
       const oldIndex = compositions.findIndex((c) => c.id === active.id);
       const newIndex = compositions.findIndex((c) => c.id === over.id);
 
-      // Reorder the compositions in the local state for immediate UI feedback
       const reorderedCompositions = arrayMove(compositions, oldIndex, newIndex);
       setCompositions(reorderedCompositions);
 
-      const updates = reorderedCompositions.map((item, index) => {
-        // Erstelle ein sauberes Objekt, das NUR die Felder der contract_compositions-Tabelle enthält.
-        const updateData: Partial<ContractComposition> = {
-          id: item.id,
-          sort_order: index,
-          contract_type_key: item.contract_type_key,
-          module_key: item.module_key,
-          contract_type_id: item.contract_type_id,
-        };
-        return updateData;
-      });
+      // Erstelle einen vollständigen Datensatz für jede Zeile, die aktualisiert wird.
+      // Dies gibt Supabase den vollen Kontext und vermeidet Fehler.
+      const updates = reorderedCompositions.map((item, index) => ({
+        id: item.id,
+        sort_order: index,
+        contract_type_key: item.contract_type_key,
+        module_key: item.module_key,
+        contract_type_id: item.contract_type_id,
+        // Wichtig: module_id ist hier absichtlich nicht enthalten, da es diese Spalte nicht gibt.
+      }));
 
-      // TypeScript braucht hier eine kleine Hilfe, um sicherzugehen, dass der Typ stimmt.
+      // Wir verwenden 'upsert', was eine robuste Methode für Updates ist.
       const { error } = await supabase
         .from('contract_compositions')
-        .upsert(updates as ContractComposition[]);
+        .upsert(updates);
 
       if (error) {
+        console.error("Fehler beim Speichern der Reihenfolge:", error);
         toast({
           title: 'Fehler',
-          description: 'Die neue Reihenfolge konnte nicht gespeichert werden.',
+          description: `Die neue Reihenfolge konnte nicht gespeichert werden: ${error.message}`,
           variant: 'destructive',
         });
-        // Revert the local state on error to match the database
+        
         if (selectedContractType) {
           fetchCompositions(selectedContractType);
         }
