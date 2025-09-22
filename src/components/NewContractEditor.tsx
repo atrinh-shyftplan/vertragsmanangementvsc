@@ -706,30 +706,6 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="start_date">Startdatum {requiredFields.includes('start_date') && <span className="text-destructive">*</span>}</Label>
-                        <Input
-                          id="start_date"
-                          type="date"
-                          value={variableValues.start_date || ''}
-                          onChange={(e) => setVariableValues(prev => ({
-                            ...prev,
-                            start_date: e.target.value
-                          }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="end_date">Enddatum {requiredFields.includes('end_date') && <span className="text-destructive">*</span>}</Label>
-                        <Input
-                          id="end_date"
-                          type="date"
-                          value={variableValues.end_date || ''}
-                          onChange={(e) => setVariableValues(prev => ({
-                            ...prev,
-                            end_date: e.target.value
-                          }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
                         <Label htmlFor="gueltig_bis">Angebot gültig bis</Label>
                         <Input
                           id="gueltig_bis"
@@ -788,18 +764,6 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                             ))}
                           </SelectContent>
                         </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="assigned_to">Zugewiesen an</Label>
-                        <Input
-                          id="assigned_to"
-                          value={variableValues.assigned_to || ''}
-                          onChange={(e) => setVariableValues(prev => ({
-                            ...prev,
-                            assigned_to: e.target.value
-                          }))}
-                          placeholder="Name des Bearbeiters"
-                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="status">Status {requiredFields.includes('status') && <span className="text-destructive">*</span>}</Label>
@@ -908,7 +872,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
               <VariableInputRenderer
                 selectedModules={contractStructure.filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id)).map(item => item.module)}
-                globalVariables={globalVariables}
+                globalVariables={globalVariables.filter(v => v.key !== 'gueltig_bis')}
                 variableValues={variableValues}
                 onVariableChange={(key, value) => setVariableValues(prev => ({
                   ...prev,
