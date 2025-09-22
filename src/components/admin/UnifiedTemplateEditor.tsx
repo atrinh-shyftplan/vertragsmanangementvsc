@@ -76,6 +76,10 @@ export function UnifiedTemplateEditor() {
       if (compositionsError) throw compositionsError;
       console.log("SPION: Compositions mit Modul-Daten (JOIN):", compositionsData);
       
+      // NEUER SICHERHEITSFILTER: Ignoriere alle Einträge, bei denen der JOIN fehlgeschlagen ist
+      // oder bei denen es aus irgendeinem Grund kein contract_modules-Objekt gibt.
+      const validCompositionsData = (compositionsData || []).filter(comp => comp.contract_modules);
+      
       // Schritt 2: Lade die Konfigurationen für die Anhänge
       const { data: attachmentsData, error: attachmentsError } = await supabase
         .from('attachments')
@@ -95,13 +99,12 @@ export function UnifiedTemplateEditor() {
         }
       }
       
-      // Schritt 3: Kombiniere die Daten. Funktioniert auch, wenn compositionsData leer ist.
-      const combinedData = (compositionsData || []).map((comp) => {
+      const combinedData = validCompositionsData.map((comp) => {
         const moduleData = Array.isArray(comp.contract_modules) ? comp.contract_modules[0] : comp.contract_modules;
         
         return {
           ...comp,
-          contract_modules: moduleData || null,
+          contract_modules: moduleData,
           attachments: moduleData ? attachmentsMap.get(moduleData.id) || null : null,
         };
       });
@@ -135,11 +138,12 @@ export function UnifiedTemplateEditor() {
       const reorderedCompositions = arrayMove(compositions, oldIndex, newIndex);
       setCompositions(reorderedCompositions);
 
-      const updates: Pick<ContractComposition, 'id' | 'sort_order'>[] =
-        reorderedCompositions.map((item, index) => ({
+      const updates = reorderedCompositions.map((item, index) => ({
         id: item.id,
         sort_order: index,
-        }));
+        contract_type_key: item.contract_type_key,
+        module_key: item.module_key,
+      }));
 
       const { error } = await supabase
         .from('contract_compositions')
