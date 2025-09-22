@@ -52,12 +52,7 @@ export function UnifiedTemplateEditor() {
 
   const sensors = useSensors(useSensor(PointerSensor));
 
-  const mainModules = useMemo(
-    () => compositions.filter(c => c.contract_modules?.category !== 'anhang'),
-    [compositions]
-  );
-
-  const attachmentModules = useMemo(
+  const attachmentConfigurations = useMemo(
     () => compositions.filter(c => c.contract_modules?.category === 'anhang'),
     [compositions]
   );
@@ -336,11 +331,11 @@ export function UnifiedTemplateEditor() {
             <div className="space-y-8">
               {/* Section 1: Module Order */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">Reihenfolge der Bausteine</h3>
+                <h3 className="text-lg font-semibold mb-4">Reihenfolge aller Bausteine</h3>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={mainModules} strategy={verticalListSortingStrategy}>
+                  <SortableContext items={compositions} strategy={verticalListSortingStrategy}>
                     <div className="space-y-2">
-                      {mainModules.map((composition) => (
+                      {compositions.map((composition) => (
                         <SortableCompositionItem key={composition.id} composition={composition} onRemove={removeModuleFromComposition} />
                       ))}
                     </div>
@@ -352,7 +347,7 @@ export function UnifiedTemplateEditor() {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Konfiguration der wählbaren Anhänge</h3>
                 <div className="space-y-2">
-                  {attachmentModules.map((composition) => (
+                  {attachmentConfigurations.map((composition) => (
                     <div key={composition.id} className="flex items-center justify-between p-3 border rounded-lg bg-slate-50">
                       <span className="font-medium text-slate-800">{composition.contract_modules?.name}</span>
                       <Select
