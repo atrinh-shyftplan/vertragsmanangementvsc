@@ -16,6 +16,8 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type D
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+type ContractType = Database['public']['Tables']['contract_types']['Row'];
+
 function SortableCompositionItem({ composition, onRemove }: { composition: CompositionWithModuleAndAttachment, onRemove: (id: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: composition.id });
 
@@ -59,55 +61,70 @@ export function UnifiedTemplateEditor() {
 
   const selectedContractType = contractTypes.find(t => t.key === selectedContractTypeKey);
 
-  const fetchCompositions = async (typeId: string) => {
+  const fetchCompositions = async (contractType: ContractType) => {
+    console.log("SPION: fetchCompositions gestartet für typeKey:", contractType.key);
     setLoading(true);
     setError(null);
     try {
+      // Schritt 1: Lade die Struktur (das "Skelett") und verknüpfe es direkt mit den Modul-Details.
       const { data: compositionsData, error: compositionsError } = await supabase
         .from('contract_compositions')
-        .select('*')
-        .eq('contract_type_key', typeId)
+        .select(`*, contract_modules(*)`)
+        .eq('contract_type_key', contractType.key) // Hier wird korrekterweise der contract_type_key verwendet
         .order('sort_order');
-      if (compositionsError) throw compositionsError;
 
+      if (compositionsError) throw compositionsError;
+      console.log("SPION: Compositions mit Modul-Daten (JOIN):", compositionsData);
+      
+      // Schritt 2: Lade die Konfigurationen für die Anhänge
       const { data: attachmentsData, error: attachmentsError } = await supabase
         .from('attachments')
         .select('*')
-        .eq('contract_type_key', typeId);
+        .eq('contract_type_id', contractType.id); // Hier wird korrekterweise die contract_type_id verwendet
+        
       if (attachmentsError) throw attachmentsError;
+      console.log("SPION: Relevante attachmentsData geladen:", attachmentsData);
 
-      const attachmentsMap = new Map<string, Attachment>(
-        attachmentsData.map((att) => [att.module_id, att])
-      );
-
-      const combinedData = compositionsData.map((comp) => {
-        const module = contractModules.find(m => m.key === comp.module_key);
+      // Erstelle eine Nachschlage-Map für die Anhänge
+      const attachmentsMap = new Map<string, Attachment>();
+      if (attachmentsData) {
+        for (const att of attachmentsData) {
+          if (att.module_id) {
+            attachmentsMap.set(att.module_id, att);
+          }
+        }
+      }
+      
+      // Schritt 3: Kombiniere die Daten. Funktioniert auch, wenn compositionsData leer ist.
+      const combinedData = (compositionsData || []).map((comp) => {
+        const moduleData = Array.isArray(comp.contract_modules) ? comp.contract_modules[0] : comp.contract_modules;
+        
         return {
           ...comp,
-          contract_modules: module || null,
-          attachments: module ? attachmentsMap.get(module.id) || null : null,
+          contract_modules: moduleData || null,
+          attachments: moduleData ? attachmentsMap.get(moduleData.id) || null : null,
         };
       });
       
-      setCompositions(combinedData);
+      console.log("SPION: Final kombinierte Daten für die UI:", combinedData);
+      setCompositions(combinedData as any);
 
     } catch (err: any) {
       console.error('Fehler beim Laden der Vertragsstruktur:', err);
       setError(`Vertragsstruktur konnte nicht geladen werden: ${err.message}`);
+      console.log("SPION: FEHLER!", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch attachments when contract type changes
   useEffect(() => {
-    // Sicherheits-Abfrage: Stoppe die Ausführung, wenn kein Vertragstyp ausgewählt ist.
-    if (!selectedContractType) {
+    if (selectedContractType && !adminDataLoading) {
+      fetchCompositions(selectedContractType); // Übergebe das ganze Objekt
+    } else {
       setCompositions([]);
-      return;
     }
-    fetchCompositions(selectedContractType.key);
-  }, [selectedContractType, adminDataLoading]); // KORREKTUR: contractModules entfernt, um Endlosschleife zu verhindern
+  }, [selectedContractType, adminDataLoading]);
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -145,7 +162,7 @@ export function UnifiedTemplateEditor() {
         });
         // Revert the local state on error to match the database
         if (selectedContractType) {
-          fetchCompositions(selectedContractType.key);
+          fetchCompositions(selectedContractType);
         }
       } else {
         toast({ title: 'Erfolg', description: 'Reihenfolge aktualisiert.' });
@@ -187,7 +204,7 @@ export function UnifiedTemplateEditor() {
     }
 
     // Lade die Daten neu, um die UI zu aktualisieren
-    fetchCompositions(selectedContractType.key);
+    fetchCompositions(selectedContractType);
     toast({
       title: 'Erfolg',
       description: 'Anhang-Typ wurde gespeichert.',
@@ -225,7 +242,7 @@ export function UnifiedTemplateEditor() {
         description: 'Module wurden hinzugefügt.',
       });
       // WICHTIG: Lade die Daten neu, um die Ansicht zu aktualisieren
-      fetchCompositions(selectedContractType.key);
+      fetchCompositions(selectedContractType);
     }
     setAddModuleOpen(false);
   };
@@ -235,7 +252,7 @@ export function UnifiedTemplateEditor() {
       const { error } = await supabase.from('contract_compositions').delete().eq('id', compositionId);
       if (error) throw error;
       toast({ title: 'Erfolg', description: 'Modul wurde aus der Struktur entfernt.' });
-      if (selectedContractType) fetchCompositions(selectedContractType.key);
+      if (selectedContractType) fetchCompositions(selectedContractType);
     } catch (error) {
       console.error('Error removing module from composition:', error);
       toast({ title: 'Fehler', description: 'Modul konnte nicht entfernt werden.', variant: 'destructive' });
