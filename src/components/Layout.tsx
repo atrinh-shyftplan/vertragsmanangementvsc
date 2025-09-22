@@ -29,7 +29,7 @@ export default function Layout({ children }: LayoutProps) {
   const navigation = [
     { name: 'Verträge', href: '/', icon: FileText },
     ...(profile?.role === 'admin' ? [
-      { name: 'Admin Panel', href: '/admin', icon: Settings },
+      { name: 'Admin Dashboard', href: '/admin', icon: Settings },
       { name: 'Benutzerverwaltung', href: '/users', icon: Users }
     ] : [])
   ];
