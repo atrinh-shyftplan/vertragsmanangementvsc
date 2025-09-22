@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, ChevronUp, ChevronDown, Loader2, Eye, BookOpen } from 'lucide-react';
+import { Plus, Trash2, Loader2, Eye, BookOpen, GripVertical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminData } from '@/hooks/useAdminData';
@@ -12,6 +12,32 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { Database, Attachment, ContractModule, CompositionWithModuleAndAttachment, ContractComposition } from '@/integrations/supabase/types';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+function SortableCompositionItem({ composition }: { composition: CompositionWithModuleAndAttachment }) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: composition.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center justify-between p-3 border rounded-lg bg-white shadow-sm">
+      <div className="flex items-center space-x-3">
+        <Button variant="ghost" size="sm" {...attributes} {...listeners} className="cursor-grab">
+          <GripVertical className="h-5 w-5 text-muted-foreground" />
+        </Button>
+        <span className="font-semibold text-slate-900">{composition.contract_modules?.name}</span>
+      </div>
+      <Button variant="outline" size="sm" onClick={() => { /* remove function can be passed here */ }}>
+        <Trash2 className="h-4 w-4 text-destructive" />
+      </Button>
+    </div>
+  );
+}
 
 export function UnifiedTemplateEditor() {
   const { contractTypes, contractModules, contractCompositions, globalVariables, loading: adminDataLoading, fetchData } = useAdminData();
@@ -75,42 +101,38 @@ export function UnifiedTemplateEditor() {
     fetchCompositions(selectedContractType.key);
   }, [selectedContractType, contractModules]);
 
-  const handleMove = async (index: number, direction: 'up' | 'down') => {
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= compositions.length) return;
+  const handleDragEnd = async (event: any) => {
+    const { active, over } = event;
+    if (active.id !== over.id) {
+      const oldIndex = compositions.findIndex((c) => c.id === active.id);
+      const newIndex = compositions.findIndex((c) => c.id === over.id);
+      const reordered = arrayMove(compositions, oldIndex, newIndex);
+      setCompositions(reordered);
 
-    const reorderedCompositions = [...compositions];
-    [reorderedCompositions[index], reorderedCompositions[newIndex]] = [reorderedCompositions[newIndex], reorderedCompositions[index]];
-
-    const updates = reorderedCompositions.map((item, idx) => ({
+      const updates = reordered.map((item, idx) => ({
       id: item.id,
       sort_order: idx,
     }));
 
-    try {
       const { error } = await supabase.from('contract_compositions').upsert(updates);
-      if (error) throw error;
-      toast({ title: 'Erfolg', description: 'Reihenfolge aktualisiert.' });
-      if (selectedContractType) fetchCompositions(selectedContractType.key);
-    } catch (error) {
-      console.error('Error updating order:', error);
-      toast({ title: 'Fehler', description: 'Reihenfolge konnte nicht gespeichert werden.', variant: 'destructive' });
+      if (error) {
+        toast({ title: 'Fehler', description: 'Reihenfolge konnte nicht gespeichert werden.', variant: 'destructive' });
+        if (selectedContractType) fetchCompositions(selectedContractType.key); // Revert on error
+      } else {
+        toast({ title: 'Erfolg', description: 'Reihenfolge aktualisiert.' });
+      }
     }
   };
 
   const handleAttachmentTypeChange = async (
     moduleKey: string,
-    type: 'fest' | 'produkt' | 'optional' | 'none'
+    type: 'fest' | 'produkt' | 'zusatz' | 'none'
   ) => {
     if (!selectedContractType) return;
 
     const module = contractModules.find(m => m.key === moduleKey);
     if (!module) {
-      toast({
-        title: 'Fehler',
-        description: 'Modul nicht gefunden.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Fehler', description: 'Modul nicht gefunden.', variant: 'destructive' });
       return;
     }
 
@@ -119,18 +141,20 @@ export function UnifiedTemplateEditor() {
     if (type === 'none') {
       // Lösche den Anhang, wenn "Kein Anhang" ausgewählt wird
       if (existingAttachment) {
-        await supabase.from('attachments').delete().eq('id', existingAttachment.id);
+        const { error } = await supabase.from('attachments').delete().eq('id', existingAttachment.id);
+        if (error) toast({ title: 'Fehler beim Löschen', description: error.message, variant: 'destructive' });
       }
     } else {
       // Erstelle oder aktualisiere den Anhang
-      await supabase.from('attachments').upsert({
+      const { error } = await supabase.from('attachments').upsert({
         id: existingAttachment?.id,
         contract_type_id: selectedContractType.id,
         module_id: module.id,
         name: module.name,
-        type: type as 'fest' | 'produkt' | 'zusatz', // Cast to correct db type
+        type: type,
         sort_order: compositions.findIndex(c => c.module_key === moduleKey)
       });
+      if (error) toast({ title: 'Fehler beim Speichern', description: error.message, variant: 'destructive' });
     }
 
     // Lade die Daten neu, um die UI zu aktualisieren
@@ -148,12 +172,13 @@ export function UnifiedTemplateEditor() {
       const module = contractModules.find(m => m.id === moduleId);
       if (!module) return null;
       return {
-        contract_type_key: selectedContractType.key,
+        contract_type_id: selectedContractType.id,
         module_id: moduleId,
         sort_order: compositions.length + index,
+        contract_type_key: selectedContractType.key,
         module_key: module.key,
       };
-    }).filter(Boolean);
+    }).filter(Boolean) as ContractComposition[];
 
     const { error } = await supabase
       .from('contract_compositions')
@@ -280,51 +305,54 @@ export function UnifiedTemplateEditor() {
         {error && <p className="text-destructive text-center py-4">{error}</p>}
 
         {selectedContractTypeKey && !loading && !adminDataLoading && (
-          <div className="space-y-2">
-            {compositions.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">Keine Module für diesen Vertragstyp konfiguriert.</p>
-            ) : (
-              compositions.map((composition, index) => {
-                // Die Diagnosezeile:
-                console.log('Prüfe Modul:', { 
-                  name: composition.contract_modules?.name, 
-                  category: composition.contract_modules?.category 
-                });
-
-                return (
-                  <div key={composition.id} className="flex items-center justify-between p-3 border rounded-lg gap-4">
-                    <div className="flex items-center space-x-3 flex-grow">
-                      <Badge variant="outline" className="text-lg">{index + 1}</Badge>
-                      <div>
-                        <div className="font-medium">{composition.contract_modules?.name || composition.contract_modules?.title_de || 'Unbekanntes Modul'}</div>
-                        <div className="text-sm text-muted-foreground">Kategorie: {composition.contract_modules?.category || 'N/A'}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {composition.contract_modules?.category === 'anhaenge' && (
-                        <Select
-                          value={composition.attachments?.type || 'none'}
-                          onValueChange={(value) => handleAttachmentTypeChange(composition.module_key, value as any)}
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Anhang-Typ..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Kein Anhang</SelectItem>
-                            <SelectItem value="fest">Fester Bestandteil</SelectItem>
-                            <SelectItem value="produkt">Produkt</SelectItem>
-                            <SelectItem value="zusatz">Zusatzleistung</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                      <Button variant="ghost" size="sm" onClick={() => handleMove(index, 'up')} disabled={index === 0}><ChevronUp className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleMove(index, 'down')} disabled={index === compositions.length - 1}><ChevronDown className="h-4 w-4" /></Button>
-                      <Button variant="outline" size="sm" onClick={() => removeModuleFromComposition(composition.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                    </div>
+          <div className="space-y-8">
+            {/* Section 1: Module Order */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Reihenfolge der Bausteine</h3>
+              <DndContext sensors={useSensors(useSensor(PointerSensor))} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={compositions} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-2">
+                    {compositions.map((composition) => (
+                      <SortableCompositionItem key={composition.id} composition={composition} />
+                    ))}
                   </div>
-                );
-              })
-            )}
+                </SortableContext>
+              </DndContext>
+            </div>
+
+            {/* Section 2: Attachment Configuration */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Konfiguration der wählbaren Anhänge</h3>
+              <div className="space-y-2">
+                {compositions
+                  .filter(c => c.contract_modules?.category === 'anhaenge')
+                  .map((composition) => (
+                    <div key={composition.id} className="flex items-center justify-between p-3 border rounded-lg bg-slate-50">
+                      <span className="font-medium text-slate-800">{composition.contract_modules?.name}</span>
+                      <Select
+                        value={composition.attachments?.type || 'none'}
+                        onValueChange={(value) =>
+                          handleAttachmentTypeChange(
+                            composition.module_key,
+                            value as 'fest' | 'produkt' | 'zusatz' | 'none'
+                          )
+                        }
+                      >
+                        <SelectTrigger className="w-[240px] bg-white">
+                          <SelectValue placeholder="Anhang-Typ festlegen..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Kein Anhang (Standard)</SelectItem>
+                          <SelectItem value="fest">Fester Bestandteil</SelectItem>
+                          <SelectItem value="produkt">Produkt (wählbar)</SelectItem>
+                          <SelectItem value="zusatz">Zusatzleistung (optional)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
           </div>
         )}
       </CardContent>
