@@ -135,18 +135,12 @@ export function UnifiedTemplateEditor() {
       const reorderedCompositions = arrayMove(compositions, oldIndex, newIndex);
       setCompositions(reorderedCompositions);
 
-      // Erstelle einen vollständigen Datensatz für jede Zeile, die aktualisiert wird.
-      // Dies gibt Supabase den vollen Kontext und vermeidet Fehler.
-      const updates = reorderedCompositions.map((item, index) => ({
+      const updates: Pick<ContractComposition, 'id' | 'sort_order'>[] =
+        reorderedCompositions.map((item, index) => ({
         id: item.id,
         sort_order: index,
-        contract_type_key: item.contract_type_key,
-        module_key: item.module_key,
-        contract_type_id: item.contract_type_id,
-        // Wichtig: module_id ist hier absichtlich nicht enthalten, da es diese Spalte nicht gibt.
-      }));
+        }));
 
-      // Wir verwenden 'upsert', was eine robuste Methode für Updates ist.
       const { error } = await supabase
         .from('contract_compositions')
         .upsert(updates);
@@ -212,37 +206,45 @@ export function UnifiedTemplateEditor() {
   const handleAddModules = async (selectedModuleIds: string[]) => {
     if (!selectedContractType) return;
 
-    const newCompositions = selectedModuleIds.map((moduleId, index) => {
-      const module = contractModules.find(m => m.id === moduleId);
-      if (!module) return null;
-      return {
-        contract_type_id: selectedContractType.id,
-        sort_order: compositions.length + index,
-        contract_type_key: selectedContractType.key,
-        module_key: module.key,
-      };
-    }).filter(Boolean) as ContractComposition[];
+    type NewComposition = Omit<ContractComposition, 'id' | 'created_at' | 'updated_at' | 'is_active'>;
+
+    const newCompositions: NewComposition[] = selectedModuleIds
+      .map((moduleId, index) => {
+        const module = contractModules.find((m) => m.id === moduleId);
+        if (!module) return null;
+        
+        // Erstelle das Objekt exakt so, wie es die Datenbank erwartet.
+        // KEINE contract_type_id hier!
+        return {
+          contract_type_key: selectedContractType.key,
+          module_key: module.key,
+          sort_order: compositions.length + index,
+        };
+      })
+      .filter((c): c is NewComposition => c !== null);
+
+    if (newCompositions.length === 0) return;
 
     const { error } = await supabase
       .from('contract_compositions')
       .insert(newCompositions);
 
     if (error) {
+      console.error("Fehler beim Hinzufügen von Modulen:", error);
       toast({
         title: 'Fehler',
-        description: 'Module konnten nicht hinzugefügt werden.',
+        description: `Module konnten nicht hinzugefügt werden: ${error.message}`,
         variant: 'destructive',
       });
-      console.error(error);
     } else {
       toast({
         title: 'Erfolg',
-        description: 'Module wurden hinzugefügt.',
+        description: `${newCompositions.length} Modul(e) wurden hinzugefügt.`,
       });
-      // WICHTIG: Lade die Daten neu, um die Ansicht zu aktualisieren
       fetchCompositions(selectedContractType);
     }
     setAddModuleOpen(false);
+    setModulesToAdd([]);
   };
 
   const removeModuleFromComposition = async (compositionId: string) => {
