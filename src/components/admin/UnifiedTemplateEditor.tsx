@@ -106,7 +106,7 @@ export function UnifiedTemplateEditor() {
       return;
     }
     fetchCompositions(selectedContractType.key);
-  }, [selectedContractType]); // KORREKTUR: contractModules entfernt, um Endlosschleife zu verhindern
+  }, [selectedContractType, adminDataLoading]); // KORREKTUR: contractModules entfernt, um Endlosschleife zu verhindern
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -119,18 +119,22 @@ export function UnifiedTemplateEditor() {
       const reorderedCompositions = arrayMove(compositions, oldIndex, newIndex);
       setCompositions(reorderedCompositions);
 
-      // Prepare the data for the database update. Only 'id' and 'sort_order' are needed.
-      const updates = reorderedCompositions.map((item, index) => ({
-        id: item.id,
-        sort_order: index,
-        contract_type_key: item.contract_type_key, // Hinzugefügt
-        module_key: item.module_key,             // Hinzugefügt
-        contract_type_id: item.contract_type_id,   // Hinzugefügt
-        module_id: item.module_id 
-      }));
+      const updates = reorderedCompositions.map((item, index) => {
+        // Erstelle ein sauberes Objekt, das NUR die Felder der contract_compositions-Tabelle enthält.
+        const updateData: Partial<ContractComposition> = {
+          id: item.id,
+          sort_order: index,
+          contract_type_key: item.contract_type_key,
+          module_key: item.module_key,
+          contract_type_id: item.contract_type_id,
+        };
+        return updateData;
+      });
 
-      // Upsert the new order into the database
-      const { error } = await supabase.from('contract_compositions').upsert(updates);
+      // TypeScript braucht hier eine kleine Hilfe, um sicherzugehen, dass der Typ stimmt.
+      const { error } = await supabase
+        .from('contract_compositions')
+        .upsert(updates as ContractComposition[]);
 
       if (error) {
         toast({
