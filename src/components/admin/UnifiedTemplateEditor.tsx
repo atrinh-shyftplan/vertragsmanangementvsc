@@ -50,9 +50,12 @@ export function UnifiedTemplateEditor() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  const sensors = useSensors(useSensor(PointerSensor));
+
   const selectedContractType = contractTypes.find(t => t.key === selectedContractTypeKey);
 
   const fetchCompositions = async (typeId: string) => {
+    console.log('SPION: fetchCompositions gestartet für typeId:', typeId); // <-- SPION 1
     setLoading(true);
     setError(null);
     try {
@@ -62,6 +65,8 @@ export function UnifiedTemplateEditor() {
         .eq('contract_type_key', typeId)
         .order('sort_order');
       if (compositionsError) throw compositionsError;
+
+      console.log('SPION: compositionsData erfolgreich geladen:', compositionsData); // <-- SPION 2
 
       const { data: attachmentsData, error: attachmentsError } = await supabase
         .from('attachments')
@@ -84,6 +89,7 @@ export function UnifiedTemplateEditor() {
       setCompositions(combinedData);
 
     } catch (err: any) {
+      console.error('SPION: FEHLER im catch-Block:', err); // <-- SPION 3
       console.error('Fehler beim Laden der Vertragsstruktur:', err);
       setError(`Vertragsstruktur konnte nicht geladen werden: ${err.message}`);
     } finally {
@@ -110,9 +116,9 @@ export function UnifiedTemplateEditor() {
       setCompositions(reordered);
 
       const updates = reordered.map((item, idx) => ({
-      id: item.id,
-      sort_order: idx,
-    }));
+        id: item.id,
+        sort_order: idx,
+      }));
 
       const { error } = await supabase.from('contract_compositions').upsert(updates);
       if (error) {
@@ -308,7 +314,7 @@ export function UnifiedTemplateEditor() {
               {/* Section 1: Module Order */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Reihenfolge der Bausteine</h3>
-                <DndContext sensors={useSensors(useSensor(PointerSensor))} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={compositions} strategy={verticalListSortingStrategy}>
                     <div className="space-y-2">
                       {compositions.map((composition) => (
