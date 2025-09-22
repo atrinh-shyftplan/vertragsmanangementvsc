@@ -15,16 +15,14 @@ import { toast } from 'sonner';
 import { VariableInputRenderer } from '@/components/admin/VariableInputRenderer';
 import { Checkbox } from '@/components/ui/checkbox';
 import * as yup from 'yup';
-import { Attachment, ContractModule, Database } from '@/integrations/supabase/types';
-
-type ContractComposition = Database['public']['Tables']['contract_compositions']['Row'];
+import { RawAttachment, ContractModule, Database, CompositionWithModuleAndAttachment, RawContractModule, RawContractComposition } from '@/integrations/supabase/types';
 
 const getValidationSchema = (
   status: string,
   modules: ContractModule[],
-  allContractModules: any[],
-  globalVars: any[],
-  allAttachments: Attachment[]
+  allContractModules: RawContractModule[], // This is RawContractModule[] from useAdminData
+  globalVars: any[], // This is GlobalVariable[]
+  allAttachments: RawAttachment[]
 ) => {
   const isDraft = status === 'draft';
 
@@ -54,23 +52,10 @@ const getValidationSchema = (
     // Dynamically add all variables from modules as required
     modules.forEach(module => {
       if (module) {
-        // Add variables from the 'variables' JSON field
-        let moduleJsonVars: any[] = [];
+        // module.variables is already Array<{ key: string, name_de: string, ... }> | null
         if (module.variables) {
-          if (Array.isArray(module.variables)) {
-            moduleJsonVars = module.variables;
-          } else if (typeof module.variables === 'string' && module.variables.trim()) {
-            try {
-              const parsed = JSON.parse(module.variables);
-              if (Array.isArray(parsed)) {
-                moduleJsonVars = parsed;
-              }
-            } catch (e) {
-              console.error(`Failed to parse variables for module ${module.key}:`, e);
-            }
-          }
-        }
-        moduleJsonVars.forEach((variable: any) => {
+          module.variables.forEach((variable: { key: string; name_de: string; [k: string]: any; }) => {
+            // Assuming variable has key and name_de
           if (variable && typeof variable.key === 'string') {
             requiredFieldsShape[variable.key] = yup.string().required(`Das Feld "${variable.name_de || variable.key}" ist erforderlich.`);
           }
@@ -118,12 +103,8 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const previewRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<ImperativePanelHandle>(null);
   
-  // Holds all modules for the selected contract type, including attachment info
-  const [contractStructure, setContractStructure] = useState<{
-    composition: ContractComposition;
-    module: ContractModule;
-    attachment?: Attachment;
-  }[]>([]);
+  // Holds all modules for the selected contract type, including attachment info, using the new combined type
+  const [contractStructure, setContractStructure] = useState<CompositionWithModuleAndAttachment[]>([]);
 
   const [selectedAttachmentIds, setSelectedAttachmentIds] = useState<string[]>([]);
 
@@ -163,7 +144,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       const { supabase } = await import('@/integrations/supabase/client');
 
       // 1. Load the full, ordered list of all modules for the contract type from contract_compositions.
-      const { data: compositionsData, error: compositionsError } = await supabase
+      const { data: compositionsData, error: compositionsError } = await supabase // compositionsData is RawContractComposition[]
         .from('contract_compositions')
         .select('*')
         .eq('contract_type_key', type.key)
@@ -176,7 +157,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
       // 2. Load all configured attachments for the same contract type.
       const { data: attachmentsData, error: attachmentsError } = await supabase
-        .from('attachments')
+        .from('attachments') // attachmentsData is RawAttachment[]
         .select('*')
         .eq('contract_type_id', type.id);
 
@@ -185,16 +166,30 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         // Proceeding without attachments is acceptable, the structure will just not have selectable parts.
       }
 
-      const attachmentsMap = new Map<string, Attachment>();
+      const attachmentsMap = new Map<string, RawAttachment>();
       if (attachmentsData) {
         for (const att of attachmentsData) {
           attachmentsMap.set(att.module_id, att);
         }
       }
 
+      // Process raw contract modules from useAdminData to the desired ContractModule type
+      const processedContractModules: ContractModule[] = contractModules.map(rawModule => { // contractModules is RawContractModule[] from useAdminData
+        let processedVariables: Array<{ key: string; name_de: string; [k: string]: any; }> | null = null;
+        if (rawModule.variables) {
+          try {
+            const parsed = JSON.parse(rawModule.variables as string);
+            if (Array.isArray(parsed)) {
+              processedVariables = parsed.filter(item => typeof item === 'object' && item !== null && 'key' in item && 'name_de' in item);
+            }
+          } catch (e) { /* ignore parse errors, or log them */ }
+        }
+        return { ...rawModule, variables: processedVariables } as ContractModule;
+      });
+
       // 3. Build the final structure based on compositions, enriched with attachment info.
       const fullStructure = (compositionsData || []).map(comp => {
-        const module = contractModules.find(m => m.key === comp.module_key);
+        const module = processedContractModules.find(m => m.key === comp.module_key); // Use processed modules
         if (!module) return null; // Should not happen with consistent data
         const attachment = attachmentsMap.get(module.id);
         return { composition: comp, module, attachment: attachment || undefined };
@@ -207,7 +202,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         .filter(item => item.attachment?.type === 'fest')
         .map(item => item.attachment!.id);
       setSelectedAttachmentIds(fixedAttachmentIds);
-    };
+    }; // End of loadDataForType
     loadDataForType();
   }, [selectedType, contractTypes, contractModules]);
 
@@ -232,7 +227,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   useEffect(() => {
     const selectedModules = contractStructure.filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id)).map(item => item.module);
     const status = variableValues.status || 'draft';
-    const schema = getValidationSchema(status, selectedModules, contractModules, globalVariables, contractStructure.map(cs => cs.attachment).filter(Boolean) as Attachment[]);
+    const schema = getValidationSchema(status, selectedModules, contractModules, globalVariables, contractStructure.map(cs => cs.attachment).filter(Boolean) as RawAttachment[]);
     const description = schema.describe();
     setRequiredFields(Object.keys(description.fields));
   }, [variableValues.status, contractStructure, selectedAttachmentIds, contractModules, globalVariables]);
@@ -292,7 +287,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     });
     
     // Process regular modules first
-    regularModules.forEach((module) => {
+    regularModules.forEach((module: ContractModule) => { // Ensure module is ContractModule
       preview += renderSimpleModule(module, false, 0);
     });
     
@@ -369,17 +364,817 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   };
 
   // Simplified module rendering function with intelligent paragraph alignment
-  const renderSimpleModule = (module: ContractModule, isAnnex: boolean, annexNumber: number) => {
-    let moduleVariables = [];
+  const renderSimpleModule = (module: ContractModule, isAnnex: boolean, annexNumber: number) => { // module is ContractModule
+    let moduleVariables: Array<{ key: string; name_de: string; [k: string]: any; }> = [];
+    if (module.variables) {
+      // module.variables is already Array<{ key: string, name_de: string, ... }> | null
+      // No need for JSON.parse or Array.isArray checks here
+      moduleVariables = module.variables;
+    }
+    
+    const hasGermanContent = (module.content_de || '').trim().length > 0;
+    const hasEnglishContent = (module.content_en || '').trim().length > 0;
+    const hasGermanTitle = (module.title_de || '').trim().length > 0;
+    const hasEnglishTitle = (module.title_en || '').trim().length > 0;
+    
+    // A module is empty if it has no title and no content, unless it's the special header
+    if (module.key !== 'Header Sales' && !hasGermanTitle && !hasEnglishTitle && !hasGermanContent && !hasEnglishContent) {
+      return '';
+    }
+
+    // Special handling for Header Sales module
+    const isHeaderModule = module.key === 'Header Sales';
+    
+    let moduleHtml = '';
+    
+    if (isHeaderModule) {
+      moduleHtml += `<div class="mb-8 not-prose flex justify-center">`;
+      moduleHtml += `<div class="header-content" style="text-align: center; margin: 0 auto; max-width: 800px; padding: 20px; border: 2px solid #e5e7eb; border-radius: 8px; background-color: white;">`; // Stile beibehalten
+    } else {
+      moduleHtml += `<div class="mb-8">`;
+    }
+    
+    const isBilingual = (hasGermanContent || hasGermanTitle) && (hasEnglishContent || hasEnglishTitle);
+
+    if (isBilingual) {
+      moduleHtml += `<div class="grid grid-cols-2 side-by-side-table">`;
+      
+      // German column
+      let germanColumn = `<div class="german-content pr-4 border-r border-gray-200">`;
+      if (!isHeaderModule && hasGermanTitle) {
+        const displayTitleDe = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
+        germanColumn += `<h3>${displayTitleDe}</h3>`;
+      }
+      if (hasGermanContent) {
+        germanColumn += `<div>${processContent(module.content_de, moduleVariables)}</div>`;
+      }
+      germanColumn += `</div>`;
+      moduleHtml += germanColumn;
+
+      // English column
+      let englishColumn = `<div class="pl-4">`;
+      if (!isHeaderModule && hasEnglishTitle) {
+        const displayTitleEn = isAnnex ? `Annex ${annexNumber}: ${module.title_en}` : module.title_en;
+        englishColumn += `<h3>${displayTitleEn}</h3>`;
+      }
+      if (hasEnglishContent) {
+        englishColumn += `<div>${processContent(module.content_en, moduleVariables)}</div>`;
+      }
+      englishColumn += `</div>`;
+      moduleHtml += englishColumn;
+
+      moduleHtml += `</div>`;
+    } else if (hasGermanContent || hasGermanTitle) {
+      // German only
+      moduleHtml += `<div class="german-content">`;
+      if (!isHeaderModule && hasGermanTitle) {
+        const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
+        moduleHtml += `<h3>${displayTitle}</h3>`;
+      }
+      if (hasGermanContent) {
+        moduleHtml += `<div>${processContent(module.content_de, moduleVariables)}</div>`;
+      }
+      moduleHtml += `</div>`;
+    } else if (hasEnglishContent || hasEnglishTitle) {
+      // English only
+      moduleHtml += `<div>`;
+      if (!isHeaderModule && hasEnglishTitle) {
+        const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en}` : module.title_en;
+        englishColumn += `<h3>${displayTitle}</h3>`;
+      }
+      if (hasEnglishContent) {
+        moduleHtml += `<div>${processContent(module.content_en, moduleVariables)}</div>`;
+      }
+      moduleHtml += `</div>`;
+    }
+    
+    if (isHeaderModule) {
+      moduleHtml += `</div>`; // Close centering wrapper
+    }
+    moduleHtml += `</div>`;
+    
+    return moduleHtml;
+  };
+
+  const togglePanel = () => {
+    const panel = panelRef.current;
+    if (panel) {
+      if (panel.isCollapsed()) {
+        panel.expand();
+      } else {
+        panel.collapse();
+      }
+    }
+  };
+
+
+  const saveContract = async () => {
+    const selectedModules = contractStructure.filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id)).map(item => item.module);
+    const validationSchema = getValidationSchema(
+      variableValues.status || 'draft',
+      selectedModules,
+      contractModules, // This is RawContractModule[]
+      globalVariables,
+      contractStructure.map(cs => cs.attachment).filter(Boolean) as RawAttachment[]
+    );
+
     try {
-      if (module.variables) {
-        if (Array.isArray(module.variables)) {
-          moduleVariables = module.variables;
-        } else if (typeof module.variables === 'string' && module.variables.trim()) {
-          const parsed = JSON.parse(module.variables);
-          if (Array.isArray(parsed)) {
-            moduleVariables = parsed;
-          }
+      await validationSchema.validate(
+        { ...variableValues, selectedAttachmentIds: selectedAttachmentIds },
+        { abortEarly: false } // Collect all errors
+      );
+    } catch (err) {
+      if (err instanceof yup.ValidationError) {
+        toast.error(
+          <div className="flex flex-col gap-2">
+            <p className="font-semibold">Bitte füllen Sie alle Pflichtfelder aus:</p>
+            <ol className="list-decimal list-inside text-sm pl-4">
+              {err.inner.map(e => <li key={e.path}>{e.message}</li>)}
+            </ol>
+          </div>,
+          { duration: 8000 }
+        );
+      } else {
+        toast.error('Ein unerwarteter Validierungsfehler ist aufgetreten.');
+      }
+      return;
+    }
+
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+
+      // 1. Prepare and insert main contract data
+      const contractData = {
+        title: variableValues.title,
+        client: variableValues.client || 'TBD',
+        status: (variableValues.status || 'draft'),
+        value: parseFloat(variableValues.value) || 0,
+        start_date: variableValues.start_date || null,
+        end_date: variableValues.end_date || null,
+        assigned_to: variableValues.assigned_to || 'Unassigned',
+        description: `${contractTypes.find(t => t.key === selectedType)?.name_de || 'Vertrag'}`,
+        tags: [contractTypes.find(t => t.key === selectedType)?.name_de || 'Vertrag'],
+        progress: variableValues.status === 'draft' ? 0 : 25,
+        contract_type_key: selectedType,
+        assigned_to_user_id: variableValues.assigned_to_user_id || null,
+        template_variables: variableValues, // Products are now in a join table
+        global_variables: Object.fromEntries(
+          globalVariables.map(gv => [gv.key, variableValues[gv.key] || ''])
+        )
+      };
+
+      const { data: newContract, error: contractError } = await supabase
+        .from('contracts')
+        .insert([contractData])
+        .select('id')
+        .single();
+
+      if (contractError) throw contractError;
+      if (!newContract) throw new Error('Contract creation failed, no contract returned.');
+
+      // 2. Prepare and insert attachment relations
+      if (selectedAttachmentIds.length > 0) {
+        const contractAttachmentsData = selectedAttachmentIds.map(attachmentId => ({
+          contract_id: newContract.id,
+          attachment_id: attachmentId,
+        }));
+
+        const { error: joinTableError } = await supabase
+          .from('contract_attachments')
+          .insert(contractAttachmentsData);
+
+        if (joinTableError) throw joinTableError;
+      }
+
+      toast.success('Vertrag erfolgreich gespeichert');
+      
+      // Close modal if callback provided
+      onClose?.();
+      
+    } catch (error) {
+      console.error('Error saving contract:', error);
+      toast.error('Fehler beim Speichern des Vertrags');
+    }
+  };
+
+  if (!selectedType || !showDetails) {
+    return (
+      <div className="space-y-6 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Neuer Vertrag erstellen</h2>
+            <p className="text-muted-foreground mb-6">Wählen Sie einen Vertragstyp aus</p>
+          </div>
+          {onClose && (
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {contractTypes.map((type) => (
+            <Card 
+              key={type.key} 
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => handleTypeSelect(type.key)}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  {type.name_de}
+                </CardTitle>
+                <CardDescription>{type.description}</CardDescription>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-muted/30 rounded-lg overflow-hidden">
+      <header className="flex items-center justify-between p-4 border-b bg-background flex-shrink-0">
+        <div>
+          <h2 className="text-xl font-bold">Vertrag erstellen</h2>
+          <p className="text-muted-foreground">
+            Typ: {contractTypes.find(t => t.key === selectedType)?.name_de}
+          </p>
+        </div>
+        <div className="flex-grow"></div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={togglePanel}
+        >
+          {isPanelVisible ? <PanelLeftClose className="h-5 w-5" /> : <PanelRightClose className="h-5 w-5" />}
+        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSelectedType('');
+              setShowDetails(false);
+              setSelectedUser([]);
+              setVariableValues({});
+            }}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Zurück
+          </Button>
+          <Button variant="outline" onClick={() => setIsOutlineSheetOpen(true)}>
+            <BookOpen className="mr-2 h-4 w-4" />
+            Gliederung
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+                setPdfFilename(`${variableValues.title || 'Vertrag'}.pdf`);
+                setIsPdfDialogOpen(true);
+            }}
+          >
+            <FileDown className="mr-2 h-4 w-4" />
+            PDF Export
+          </Button>
+          <Button onClick={saveContract}>
+            <Save className="mr-2 h-4 w-4" />
+            Speichern
+          </Button>
+          {onClose && (
+            <Button variant="ghost" onClick={onClose}>
+              <X className="mr-2 h-4 w-4" />
+              Schließen
+            </Button>
+          )}
+        </div>
+      </header>
+
+      <ResizablePanelGroup direction="horizontal" className="flex-grow overflow-hidden">
+        {/* Input Fields - smaller width */}
+        <ResizablePanel
+          ref={panelRef}
+          collapsible
+          onCollapse={() => setIsPanelVisible(false)}
+          onExpand={() => setIsPanelVisible(true)}
+          defaultSize={33}
+          minSize={25}
+          className="relative bg-background"
+        >
+          <ScrollArea className="h-full">
+            <div className="space-y-6 p-6">
+              {/* Basic Contract Fields with better structure */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Vertragsdaten</CardTitle>
+                  <CardDescription>
+                    Grundlegende Vertragsinformationen
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Grunddaten Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide border-b pb-2">
+                      Grunddaten
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Titel {requiredFields.includes('title') && <span className="text-destructive">*</span>}</Label>
+                        <Input
+                          id="title"
+                          value={variableValues.title || ''}
+                          onChange={(e) => setVariableValues(prev => ({
+                            ...prev,
+                            title: e.target.value
+                          }))}
+                          placeholder="Vertragstitel"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="start_date">Startdatum {requiredFields.includes('start_date') && <span className="text-destructive">*</span>}</Label>
+                        <Input
+                          id="start_date"
+                          type="date"
+                          value={variableValues.start_date || ''}
+                          onChange={(e) => setVariableValues(prev => ({
+                            ...prev,
+                            start_date: e.target.value
+                          }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="end_date">Enddatum {requiredFields.includes('end_date') && <span className="text-destructive">*</span>}</Label>
+                        <Input
+                          id="end_date"
+                          type="date"
+                          value={variableValues.end_date || ''}
+                          onChange={(e) => setVariableValues(prev => ({
+                            ...prev,
+                            end_date: e.target.value
+                          }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="gueltig_bis">Angebot gültig bis</Label>
+                        <Input
+                          id="gueltig_bis"
+                          type="date"
+                          value={variableValues.gueltig_bis || ''}
+                         onChange={(e) => {
+                            const dateValue = e.target.value;
+                            // Format date as German date string for variable
+                            const formattedDate = dateValue ? 
+                              new Date(dateValue).toLocaleDateString('de-DE', {
+                                day: '2-digit',
+                                month: '2-digit', 
+                                year: 'numeric'
+                              }) : '';
+                            
+                            setVariableValues(prev => ({
+                              ...prev,
+                              gueltig_bis: dateValue,
+                              gueltig_bis_formatted: formattedDate // Update the variable value for contract content
+                            }));
+                          }}
+                          placeholder="Gültigkeitsdatum"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Zuständigkeit Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide border-b pb-2">
+                      Zuständigkeit
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="assigned_to_user_id">Zuständiger Ansprechpartner {requiredFields.includes('assigned_to_user_id') && <span className="text-destructive">*</span>}</Label>
+                        <Select
+                          value={variableValues.assigned_to_user_id || ''}
+                         onValueChange={(value) => {
+                            const user = users.find(u => u.user_id === value);
+                            setVariableValues(prev => ({
+                              ...prev,
+                              assigned_to_user_id: value,
+                              assigned_to: user?.display_name || prev.assigned_to || ''
+                            }));
+                            setSelectedUser(user || null);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Ansprechpartner auswählen" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {users.map(user => (
+                              <SelectItem key={user.id} value={user.user_id}>
+                                {user.display_name || user.email || 'Unbekannter Benutzer'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="assigned_to">Zugewiesen an</Label>
+                        <Input
+                          id="assigned_to"
+                          value={variableValues.assigned_to || ''}
+                          onChange={(e) => setVariableValues(prev => ({
+                            ...prev,
+                            assigned_to: e.target.value
+                          }))}
+                          placeholder="Name des Bearbeiters"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="status">Status {requiredFields.includes('status') && <span className="text-destructive">*</span>}</Label>
+                        <Select 
+                          value={variableValues.status || 'draft'} 
+                          onValueChange={(value) => setVariableValues(prev => ({
+                            ...prev,
+                            status: value
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Status auswählen" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="draft">Entwurf</SelectItem>
+                            <SelectItem value="ready_for_review">Zur Prüfung</SelectItem>
+                            <SelectItem value="active">Aktiv</SelectItem>
+                            <SelectItem value="archived">Archiviert</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Module Variables using VariableInputRenderer */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Vertragsbestandteile</CardTitle>
+                  <CardDescription>
+                    Stellen Sie die Komponenten des Vertrags zusammen.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Feste Bestandteile */}
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Feste Bestandteile</h4>
+                    <div className="space-y-2">
+                      {contractStructure.filter(item => item.attachment?.type === 'fest').map(item => (
+                        <div key={item.attachment!.id} className="flex items-center space-x-2 opacity-70">
+                          <Checkbox
+                            id={`attachment-${item.attachment!.id}`}
+                            checked={true}
+                            disabled={true}
+                          />
+                          <Label htmlFor={`attachment-${item.attachment!.id}`} className="cursor-not-allowed">
+                            {item.module.name}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Produkte */}
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Produkte (mindestens eines auswählen)</h4>
+                    <div className="space-y-2">
+                      {contractStructure.filter(item => item.attachment?.type === 'produkt').map(item => (
+                        <div key={item.attachment!.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`attachment-${item.attachment!.id}`}
+                            checked={selectedAttachmentIds.includes(item.attachment!.id)}
+                            onCheckedChange={(checked) => {
+                              setSelectedAttachmentIds(prev => 
+                                checked 
+                                  ? [...prev, item.attachment!.id] 
+                                  : prev.filter(id => id !== item.attachment!.id)
+                              );
+                            }}
+                          />
+                          <Label htmlFor={`attachment-${item.attachment!.id}`}>
+                            {item.module.name}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Optionale Zusatzleistungen */}
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Optionale Zusatzleistungen</h4>
+                    <div className="space-y-2">
+                      {contractStructure.filter(item => item.attachment?.type === 'zusatz').map(item => (
+                        <div key={item.attachment!.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`attachment-${item.attachment!.id}`}
+                            checked={selectedAttachmentIds.includes(item.attachment!.id)}
+                            onCheckedChange={(checked) => {
+                              setSelectedAttachmentIds(prev => 
+                                checked 
+                                  ? [...prev, item.attachment!.id] 
+                                  : prev.filter(id => id !== item.attachment!.id)
+                              );
+                            }}
+                          />
+                          <Label htmlFor={`attachment-${item.attachment!.id}`}>
+                            {item.module.name}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <VariableInputRenderer
+                selectedModules={contractStructure.filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id)).map(item => item.module)}
+                globalVariables={globalVariables}
+                variableValues={variableValues}
+                onVariableChange={(key, value) => setVariableValues(prev => ({
+                  ...prev,
+                  [key]: value
+                }))}
+              />
+            </div>
+          </ScrollArea>
+        </ResizablePanel>
+
+        <ResizableHandle withHandle />
+
+        {/* Preview Panel - larger width */}
+        <ResizablePanel defaultSize={67}>
+          <main className="flex-1 h-full bg-muted/40 flex justify-center">
+            <ScrollArea className="h-full w-full">
+              <div className="w-full max-w-4xl mx-auto my-6">
+                <Card className="shadow-lg">
+                  <CardHeader>
+                    <CardTitle>Live-Vorschau</CardTitle>
+                    <CardDescription>
+                      Vorschau des generierten Vertrags - Variable Felder sind gelb markiert
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                      <div 
+                      ref={previewRef}
+                      className="prose prose-sm sm:prose-base max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
+                      style={{ lineHeight: '1.6', fontFamily: 'Arial, sans-serif' }}
+                      dangerouslySetInnerHTML={{ 
+                        __html: `
+                        <style>
+                          /* Ensure consistent heading sizes with editor */
+                          .contract-preview h1 {
+                            font-size: 1.5rem !important; /* text-2xl */
+                          }
+                          .contract-preview h2 {
+                            font-size: 1.25rem !important; /* text-xl */
+                          }
+                          .contract-preview h3 {
+                            font-size: 1.125rem !important; /* text-lg */
+                            font-weight: 700 !important;
+                            color: #1f2937 !important;
+                            margin-top: 0 !important;
+                            margin-bottom: 0.75rem !important; /* mb-3 */
+                          }
+
+                          /* Side-by-side table layout - prose-compatible */
+                          .contract-preview .side-by-side-table {
+                            width: 100%;
+                            margin: 1.5rem 0;
+                          }
+                          
+                          .contract-preview .table-content-de,
+                          .contract-preview .table-content-en {
+                            vertical-align: top;
+                          }
+                          
+                          /* Ensure prose styles work within table cells */
+                          .contract-preview .table-content-de p,
+                          .contract-preview .table-content-en p {
+                            margin: 0.75rem 0;
+                          }
+                          
+                          .contract-preview .table-content-de ul,
+                          .contract-preview .table-content-en ul {
+                            margin: 0.75rem 0;
+                            padding-left: 1.5rem;
+                            list-style-type: disc;
+                          }
+                          
+                          .contract-preview .table-content-de ol,
+                          .contract-preview .table-content-en ol {
+                            margin: 0.75rem 0;
+                            padding-left: 1.5rem;
+                            list-style-type: decimal;
+                          }
+                          
+                          .contract-preview .table-content-de li,
+                          .contract-preview .table-content-en li {
+                            margin: 0.25rem 0;
+                          }
+                          /* Header content table styling - unchanged */
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin: 10px 0;
+                          .header-content table td {
+                            padding: 8px 12px;
+                            vertical-align: top;
+                            border: 1px solid #e5e7eb;
+                          }
+                          .header-content table td:first-child {
+                            font-weight: 600;
+                            background-color: #f9fafb;
+                            width: 40%;
+                          }
+                          .header-content .company-logo {
+                            font-size: 24px;
+                            font-weight: bold;
+                            color: #1f2937;
+                            margin-bottom: 30px;
+                          }
+                          .header-content .offer-info-block {
+                            margin: 25px 0;
+                            padding: 15px;
+                            background-color: white;
+                            border: 1px solid #d1d5db;
+                            border-radius: 6px;
+                          }
+                          .header-content .convenience-block {
+                            margin: 25px 0;
+                            padding: 15px;
+                            background-color: white;
+                            border: 1px solid #d1d5db;
+                            border-radius: 6px;
+                            border-style: dashed;
+                          }
+                          .header-content .company-section {
+                            margin: 30px 0;
+                            padding: 20px;
+                            background-color: white;
+                            border: 1px solid #e5e7eb;
+                            border-radius: 8px;
+                          }
+                          .header-content .company-divider {
+                            margin: 40px 0;
+                            height: 2px;
+                            background-color: #e5e7eb;
+                            border-radius: 1px;
+                          }
+                          .header-content .info-line {
+                            display: flex;
+                            justify-content: space-between;
+                            margin: 8px 0;
+                            padding: 6px 10px;
+                            background-color: #f8fafc;
+                            border-radius: 4px;
+                            border-left: 4px solid #3b82f6;
+                          }
+                          .header-content .info-label {
+                            font-weight: 600;
+                            color: #374151;
+                            min-width: 120px;
+                          }
+                          .header-content .info-value {
+                            color: #1f2937;
+                          }
+                          .header-content p {
+                            margin: 8px 0;
+                            line-height: 1.5;
+                          }
+                          .header-content strong {
+                            font-weight: 600;
+                          }
+                          .header-content .between-text {
+                            margin: 30px 0 20px 0;
+                            font-size: 14px;
+                            color: #6b7280;
+                            font-style: italic;
+                          }
+                          /* FORCE BLACK BULLETS AND TEXT IN PREVIEW */
+                          .contract-preview ul {
+                            list-style-type: disc !important;
+                            padding-left: 1.5rem !important;
+                            margin: 0.5rem 0 !important;
+                            color: #000000 !important;
+                          }
+                          .contract-preview ul li {
+                            color: #000000 !important;
+                            margin: 0.25rem 0 !important;
+                          }
+                          .contract-preview ul li::marker {
+                            color: #000000 !important;
+                            content: "●" !important;
+                          }
+                          .contract-preview ol {
+                            padding-left: 1.5rem !important;
+                            margin: 0.5rem 0 !important;
+                            color: #000000 !important;
+                          }
+                          .contract-preview ol li {
+                            color: #000000 !important;
+                            margin: 0.25rem 0 !important;
+                          }
+                          .contract-preview p {
+                            color: #000000 !important;
+                            margin: 0.5rem 0 !important;
+                          }
+                          /* Force all content to be black */
+                          .contract-preview * {
+                            color: #000000 !important;
+                          }
+                          /* Override any white or transparent colors */
+                          .contract-preview li::before {
+                            color: #000000 !important;
+                          }
+                          /* Specific override for list markers */
+                          .contract-preview ul > li::marker,
+                          .contract-preview ol > li::marker {
+                            color: #000000 !important;
+                            font-weight: bold !important;
+                          }
+                        </style>
+                        ${generatePreview()}
+                        ` 
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </ScrollArea>
+          </main>
+        </ResizablePanel>
+      </ResizablePanelGroup>
+
+      <AlertDialog open={isPdfDialogOpen} onOpenChange={setIsPdfDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>PDF exportieren</AlertDialogTitle>
+            <AlertDialogDescription>
+              Geben Sie einen Dateinamen für den PDF-Export ein.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Label htmlFor="pdf-filename">Dateiname</Label>
+            <Input
+              id="pdf-filename"
+              value={pdfFilename}
+              onChange={(e) => setPdfFilename(e.target.value)}
+              placeholder="Dateiname.pdf"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                const previewElement = previewRef.current;
+                if (previewElement && pdfFilename) {
+                  const { generatePdf: exportToPdf } = await import('@/lib/pdf-export');
+                  await exportToPdf(previewElement, pdfFilename);
+                }
+              }}
+            >
+              Exportieren
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Sheet open={isOutlineSheetOpen} onOpenChange={setIsOutlineSheetOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Gliederung</SheetTitle>
+            <SheetDescription>
+              Klicken Sie auf einen Abschnitt, um dorthin zu springen.
+            </SheetDescription>
+          </SheetHeader>
+          <ScrollArea className="h-[calc(100vh-8rem)]">
+            <ul className="py-4">
+              {outline.map(item => (
+                <li key={item.id}>
+                  <a
+                    href={`#${item.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      setIsOutlineSheetOpen(false);
+                    }}
+                    className="block p-2 text-sm hover:bg-accent rounded"
+                  >
+                    {item.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
         }
       }
     } catch (error) {

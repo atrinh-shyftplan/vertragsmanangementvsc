@@ -11,7 +11,7 @@ import { useAdminData } from '@/hooks/useAdminData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import type { Database, Attachment, ContractModule, CompositionWithModuleAndAttachment, ContractComposition } from '@/integrations/supabase/types';
+import type { Database, Attachment, ContractModule, CompositionWithModuleAndAttachment, ContractComposition, RawContractModule } from '@/integrations/supabase/types';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -40,7 +40,7 @@ function SortableCompositionItem({ composition, onRemove }: { composition: Compo
 }
 
 export function UnifiedTemplateEditor() {
-  const { contractTypes, contractModules, contractCompositions, globalVariables, loading: adminDataLoading, fetchData } = useAdminData();
+  const { contractTypes, contractModules: rawContractModules, contractCompositions, globalVariables, loading: adminDataLoading, fetchData } = useAdminData();
   const [selectedContractTypeKey, setSelectedContractTypeKey] = useState<string>('');
   const [compositions, setCompositions] = useState<CompositionWithModuleAndAttachment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -74,8 +74,22 @@ export function UnifiedTemplateEditor() {
         attachmentsData.map((att) => [att.module_id, att])
       );
 
+      // Map raw contract modules from useAdminData to the desired ContractModule type
+      const processedContractModules: ContractModule[] = rawContractModules.map(rawModule => {
+        let processedVariables: Array<{ key: string; name_de: string; [k: string]: any; }> | null = null;
+        if (rawModule.variables) {
+          try {
+            const parsed = JSON.parse(rawModule.variables as string);
+            if (Array.isArray(parsed)) {
+              processedVariables = parsed.filter(item => typeof item === 'object' && item !== null && 'key' in item && 'name_de' in item);
+            }
+          } catch (e) { /* ignore parse errors, or log them */ }
+        }
+        return { ...rawModule, variables: processedVariables } as ContractModule;
+      });
+
       const combinedData = compositionsData.map((comp) => {
-        const module = contractModules.find(m => m.key === comp.module_key);
+        const module = processedContractModules.find(m => m.key === comp.module_key);
         return {
           ...comp,
           contract_modules: module || null,
@@ -145,7 +159,7 @@ export function UnifiedTemplateEditor() {
   ) => {
     if (!selectedContractType) return;
 
-    const module = contractModules.find(m => m.key === moduleKey);
+    const module = rawContractModules.find(m => m.key === moduleKey);
     if (!module) {
       toast({ title: 'Fehler', description: 'Modul nicht gefunden.', variant: 'destructive' });
       return;
@@ -184,7 +198,7 @@ export function UnifiedTemplateEditor() {
     if (!selectedContractType) return;
 
     const newCompositions = selectedModuleIds.map((moduleId, index) => {
-      const module = contractModules.find(m => m.id === moduleId);
+      const module = rawContractModules.find(m => m.id === moduleId);
       if (!module) return null;
       return {
         contract_type_id: selectedContractType.id,
@@ -230,31 +244,22 @@ export function UnifiedTemplateEditor() {
   };
 
   const availableModulesToAdd = useMemo(() => {
-    return contractModules.filter(m => !compositions.some(c => c.module_key === m.key));
-  }, [contractModules, compositions]);
+    return rawContractModules.filter(m => !compositions.some(c => c.module_key === m.key));
+  }, [rawContractModules, compositions]);
 
   const processPreviewContent = (content: string, module: ContractModule | undefined) => {
     if (!content || !module) return '';
     let processedContent = content;
 
     const allVars = [...globalVariables];
+    // module.variables is already Array<{ key: string, name_de: string, ... }> | null
     if (module.variables) {
-      try {
-        const moduleVars = Array.isArray(module.variables) ? module.variables : JSON.parse(module.variables as string);
-        moduleVars.forEach((v: any) => allVars.push({
-            key: v.key, name_de: v.name_de,
-            category: '',
-            created_at: '',
-            created_by: '',
-            default_value: '',
-            description: '',
-            id: '',
-            is_active: false,
-            is_required: false,
-            name_en: '',
-            updated_at: ''
-        }));
-      } catch (e) { /* ignore */ }
+      module.variables.forEach((v: { key: string; name_de: string; [k: string]: any; }) => allVars.push({
+          key: v.key,
+          name_de: v.name_de,
+          // Provide default/empty values for other GlobalVariable properties if they are not present in `v`
+          category: '', created_at: '', created_by: '', default_value: '', description: '', id: '', is_active: false, is_required: false, name_en: '', updated_at: ''
+      }));
     }
 
     allVars.forEach(variable => {
