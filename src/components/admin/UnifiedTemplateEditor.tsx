@@ -118,6 +118,10 @@ export function UnifiedTemplateEditor() {
       const updates = reorderedCompositions.map((item, index) => ({
         id: item.id,
         sort_order: index,
+        contract_type_key: item.contract_type_key, // Hinzugefügt
+        module_key: item.module_key,             // Hinzugefügt
+        contract_type_id: item.contract_type_id,   // Hinzugefügt
+        module_id: item.module_id 
       }));
 
       // Upsert the new order into the database
