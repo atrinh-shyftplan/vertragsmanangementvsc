@@ -161,40 +161,49 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       if (!type) return;
 
       const { supabase } = await import('@/integrations/supabase/client');
-      
-      // Load the full, ordered structure for the preview
-      const { data: compositionsData, error: compositionsError } = await supabase.from('contract_compositions').select('*').eq('contract_type_key', type.key).order('sort_order');
-      
+
+      // 1. Load the full, ordered list of all modules for the contract type from contract_compositions.
+      const { data: compositionsData, error: compositionsError } = await supabase
+        .from('contract_compositions')
+        .select('*')
+        .eq('contract_type_key', type.key)
+        .order('sort_order');
+
       if (compositionsError) {
         toast.error('Fehler beim Laden der Vertragsstruktur.');
         return;
       }
 
-      const compositions = compositionsData || [];
-      const fullStructure = compositions.map(comp => {
-        const module = contractModules.find(m => m.key === comp.module_key);
-        if (!module) return null;
-        return { composition: comp, module };
-      }).filter(Boolean) as typeof contractStructure;
-
-      // Separately, load ONLY the configured attachments for the selection panel
+      // 2. Load all configured attachments for the same contract type.
       const { data: attachmentsData, error: attachmentsError } = await supabase
         .from('attachments')
-        .select('*, contract_modules!inner(*)')
+        .select('*')
         .eq('contract_type_id', type.id);
 
-      if (attachmentsError) { /* Handle error if needed */ }
+      if (attachmentsError) {
+        toast.error('Fehler beim Laden der konfigurierten Anhänge.');
+        // Proceeding without attachments is acceptable, the structure will just not have selectable parts.
+      }
 
-      const structure = (attachmentsData || []).map(att => ({
-        composition: fullStructure.find(s => s.module.id === att.module_id)?.composition,
-        module: att.contract_modules as ContractModule,
-        attachment: att,
-      })).filter(item => item.composition && item.module) as typeof contractStructure;
-      
-      setContractStructure(structure);
+      const attachmentsMap = new Map<string, Attachment>();
+      if (attachmentsData) {
+        for (const att of attachmentsData) {
+          attachmentsMap.set(att.module_id, att);
+        }
+      }
 
-      // Pre-select fixed attachments
-      const fixedAttachmentIds = structure
+      // 3. Build the final structure based on compositions, enriched with attachment info.
+      const fullStructure = (compositionsData || []).map(comp => {
+        const module = contractModules.find(m => m.key === comp.module_key);
+        if (!module) return null; // Should not happen with consistent data
+        const attachment = attachmentsMap.get(module.id);
+        return { composition: comp, module, attachment: attachment || undefined };
+      }).filter(Boolean) as typeof contractStructure;
+
+      setContractStructure(fullStructure);
+
+      // 4. Pre-select fixed attachments.
+      const fixedAttachmentIds = fullStructure
         .filter(item => item.attachment?.type === 'fest')
         .map(item => item.attachment!.id);
       setSelectedAttachmentIds(fixedAttachmentIds);
