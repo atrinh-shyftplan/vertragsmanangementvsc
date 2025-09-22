@@ -53,8 +53,8 @@ export function UnifiedTemplateEditor() {
   const sensors = useSensors(useSensor(PointerSensor));
 
   const attachmentConfigurations = useMemo(
-    () => compositions.filter(c => c.contract_modules?.category === 'anhang'),
-    [compositions]
+    () => compositions.filter(c => c.contract_modules?.category?.toLowerCase() === 'anhang'),
+  [compositions]
   );
 
   const selectedContractType = contractTypes.find(t => t.key === selectedContractTypeKey);
@@ -128,7 +128,6 @@ export function UnifiedTemplateEditor() {
           contract_type_key: item.contract_type_key,
           module_key: item.module_key,
           contract_type_id: item.contract_type_id,
-          module_id: item.module_id,
         };
         return updateData;
       });
@@ -203,7 +202,6 @@ export function UnifiedTemplateEditor() {
       if (!module) return null;
       return {
         contract_type_id: selectedContractType.id,
-        module_id: moduleId,
         sort_order: compositions.length + index,
         contract_type_key: selectedContractType.key,
         module_key: module.key,

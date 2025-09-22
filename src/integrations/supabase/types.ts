@@ -125,7 +125,6 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean | null
-          module_id: string
           module_key: string
           sort_order: number | null
           updated_at: string
@@ -136,7 +135,6 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean | null
-          module_id: string
           module_key: string
           sort_order?: number | null
           updated_at?: string

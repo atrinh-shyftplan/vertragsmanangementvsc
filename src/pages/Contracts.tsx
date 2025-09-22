@@ -40,7 +40,7 @@ interface Contract {
   id: string;
   title: string;
   client: string;
-  status: 'active' | 'pending' | 'expired' | 'draft' | 'ready_for_review' | 'approved';
+  status: 'draft' | 'ready_for_review' | 'active' | 'archived';
   value: number;
   startDate: string | null;
   endDate: string | null;
@@ -182,14 +182,12 @@ export default function Contracts() {
     });
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: Contract['status']) => {
     switch (status) {
-      case 'active': return 'text-status-active border-status-active/20 bg-status-active/10';
-      case 'pending': return 'text-status-pending border-status-pending/20 bg-status-pending/10';
-      case 'expired': return 'text-status-expired border-status-expired/20 bg-status-expired/10';
       case 'draft': return 'text-status-draft border-status-draft/20 bg-status-draft/10';
       case 'ready_for_review': return 'text-blue-600 border-blue-600/20 bg-blue-600/10';
-      case 'approved': return 'text-teal-600 border-teal-600/20 bg-teal-600/10';
+      case 'active': return 'text-status-active border-status-active/20 bg-status-active/10';
+      case 'archived': return 'text-gray-500 border-gray-500/20 bg-gray-500/10';
       default: return 'text-muted-foreground';
     }
   };
@@ -207,12 +205,10 @@ export default function Contracts() {
   };
 
   const statusLabels = {
-    active: 'Final/Aktiv',
-    pending: 'Ausstehend',
-    expired: 'Abgelaufen',
     draft: 'Entwurf',
     ready_for_review: 'Zur Prüfung',
-    approved: 'Genehmigt'
+    active: 'Aktiv',
+    archived: 'Archiviert'
   };
 
   return (
@@ -244,34 +240,13 @@ export default function Contracts() {
                 className="pl-10"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant={filterStatus === 'all' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilterStatus('all')}
               >
                 Alle
-              </Button>
-              <Button
-                variant={filterStatus === 'active' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilterStatus('active')}
-              >
-                Final/Aktiv
-              </Button>
-              <Button
-                variant={filterStatus === 'pending' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilterStatus('pending')}
-              >
-                Ausstehend
-              </Button>
-              <Button
-                variant={filterStatus === 'expired' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilterStatus('expired')}
-              >
-                Abgelaufen
               </Button>
               <Button
                 variant={filterStatus === 'draft' ? 'default' : 'outline'}
@@ -288,11 +263,18 @@ export default function Contracts() {
                 Zur Prüfung
               </Button>
               <Button
-                variant={filterStatus === 'approved' ? 'default' : 'outline'}
+                variant={filterStatus === 'active' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setFilterStatus('approved')}
+                onClick={() => setFilterStatus('active')}
               >
-                Genehmigt
+                Aktiv
+              </Button>
+              <Button
+                variant={filterStatus === 'archived' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterStatus('archived')}
+              >
+                Archiviert
               </Button>
             </div>
           </div>
