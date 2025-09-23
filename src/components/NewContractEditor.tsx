@@ -28,6 +28,7 @@ const getValidationSchema = (
 ) => {
   const isDraft = status === 'draft';
 
+  // Grundschema, das jetzt für ALLE Status die Produktauswahl erfordert.
   let schema = yup.object({
     title: yup.string().required('Titel ist ein Pflichtfeld.'),
     assigned_to_user_id: yup.string().required('Zuständiger Ansprechpartner ist ein Pflichtfeld.'),
@@ -37,31 +38,43 @@ const getValidationSchema = (
         'has-product',
         'Mindestens ein Produkt muss ausgewählt werden.',
         (ids) => {
+          // --- DEBUGGING START ---
+          console.log("%c--- Validierungs-Check ---", "color: blue; font-weight: bold;");
+          console.log("1. IDs, die validiert werden:", ids);
+          console.log("2. Alle Anhänge, die zur Prüfung bereitstehen:", allAttachments);
+          
           if (!ids) return false;
+          
           const selected = ids.map(id => allAttachments.find(a => a.id === id)).filter(Boolean);
-          return selected.some(a => a!.type === 'produkt');
+          
+          console.log("3. Gefundene Anhang-Objekte:", selected);
+          const hasProduct = selected.some(a => a!.type === 'produkt');
+          console.log("4. Ergebnis: Hat es ein Produkt?", hasProduct);
+          console.log("%c--------------------------", "color: blue; font-weight: bold;");
+          // --- DEBUGGING END ---
+
+          return hasProduct;
         }
       ).required('Produktauswahl ist ein Pflichtfeld.'),
   });
 
+  // Wenn der Status NICHT "Entwurf" ist, fügen wir die zusätzlichen Pflichtfelder hinzu.
   if (!isDraft) {
     const requiredFieldsShape: { [key: string]: yup.AnySchema } = {
       start_date: yup.string().required('Startdatum ist ein Pflichtfeld.'),
       end_date: yup.string().required('Enddatum ist ein Pflichtfeld.'),
-      // Add other static fields that are required for non-drafts
     };
 
-    // Dynamically add all variables from modules as required
+    // Dynamische Validierung für alle Variablen in den Modulen
     modules.forEach(module => {
       if (module) {
-        // Add variables from the 'variables' JSON field
         let moduleJsonVars: any[] = [];
         if (module.variables) {
           if (Array.isArray(module.variables)) {
             moduleJsonVars = module.variables;
           } else if (typeof module.variables === 'string' && module.variables.trim()) {
             try {
-              const parsed = JSON.parse(module.variables);
+              const parsed = JSON.parse(module.variables as string);
               if (Array.isArray(parsed)) {
                 moduleJsonVars = parsed;
               }
@@ -76,7 +89,6 @@ const getValidationSchema = (
           }
         });
 
-        // Add variables found in the content
         const contentVariables = extractVariablesFromContent(module.content_de || '');
         contentVariables.forEach(variableKey => {
           if (!requiredFieldsShape[variableKey]) {
@@ -85,6 +97,8 @@ const getValidationSchema = (
         });
       }
     });
+    
+    // Kombiniere das Basisschema mit den zusätzlichen Regeln
     schema = schema.concat(yup.object(requiredFieldsShape));
   }
 
@@ -209,7 +223,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       setSelectedAttachmentIds(fixedAttachmentIds);
     };
     loadDataForType();
-  }, [selectedType, contractTypes, contractModules]);
+  }, [selectedType]);
 
   useEffect(() => {
     if (previewRef.current && showDetails) {
@@ -484,6 +498,13 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
 
   const saveContract = async () => {
+    // --- DEBUGGING START ---
+    console.log("%c--- Speichervorgang gestartet ---", "color: green; font-weight: bold;");
+    console.log("Aktuell ausgewählte Attachment-IDs:", selectedAttachmentIds);
+    const attachmentsForValidation = contractStructure.map(cs => cs.attachment).filter(Boolean) as Attachment[];
+    console.log("Anhänge, die an den Validator gesendet werden:", attachmentsForValidation);
+    console.log("%c----------------------------------", "color: green; font-weight: bold;");
+    // --- DEBUGGING END ---
     const selectedModules = contractStructure.filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id)).map(item => item.module);
     const validationSchema = getValidationSchema(
       variableValues.status || 'draft',
@@ -828,6 +849,9 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                             id={`attachment-${item.attachment!.id}`}
                             checked={selectedAttachmentIds.includes(item.attachment!.id)}
                             onCheckedChange={(checked) => {
+                              // --- NEUER SPION ---
+                              console.log(`%cProdukt-Checkbox geklickt: ${item.module.name}, Checked: ${checked}, ID: ${item.attachment!.id}`, "color: purple; font-weight: bold;");
+                              
                               setSelectedAttachmentIds(prev => 
                                 checked 
                                   ? [...prev, item.attachment!.id] 
