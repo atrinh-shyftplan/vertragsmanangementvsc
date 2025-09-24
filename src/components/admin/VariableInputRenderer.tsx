@@ -73,7 +73,9 @@ export function VariableInputRenderer({
       // Get variables from module definition
       if (module.variables) {
         try {
-          const moduleVars = JSON.parse(module.variables as string);
+          const moduleVars = Array.isArray(module.variables)
+            ? module.variables
+            : JSON.parse(module.variables as string);
           if (Array.isArray(moduleVars)) {
             moduleVars.forEach(v => {
               if (v.id) {

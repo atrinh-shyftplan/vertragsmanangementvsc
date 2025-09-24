@@ -168,15 +168,21 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     loadData();
   }, []);
 
+  // NEUER, KORREKTER useEffect ZUM LADEN DER DATEN
   useEffect(() => {
+    // Diese Funktion wird NUR ausgeführt, wenn sich der 'selectedType' ändert.
     const loadDataForType = async () => {
-      if (!selectedType) return;
+      if (!selectedType) {
+        setContractStructure([]); // Leeren, wenn kein Typ ausgewählt ist
+        return;
+      }
+
       const type = contractTypes.find(t => t.key === selectedType);
       if (!type) return;
 
       const { supabase } = await import('@/integrations/supabase/client');
 
-      // 1. Load the full, ordered list of all modules for the contract type from contract_compositions.
+      // 1. Lade die Struktur (contract_compositions)
       const { data: compositionsData, error: compositionsError } = await supabase
         .from('contract_compositions')
         .select('*')
@@ -188,15 +194,14 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         return;
       }
 
-      // 2. Load all configured attachments for the same contract type.
+      // 2. Lade alle zugehörigen Anhänge (attachments)
       const { data: attachmentsData, error: attachmentsError } = await supabase
         .from('attachments')
         .select('*')
         .eq('contract_type_id', type.id);
 
       if (attachmentsError) {
-        toast.error('Fehler beim Laden der konfigurierten Anhänge.');
-        // Proceeding without attachments is acceptable, the structure will just not have selectable parts.
+        toast.error('Fehler beim Laden der Anhänge.');
       }
 
       const attachmentsMap = new Map<string, Attachment>();
@@ -206,24 +211,27 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         }
       }
 
-      // 3. Build the final structure based on compositions, enriched with attachment info.
+      // 3. Baue die finale Struktur zusammen
       const fullStructure = (compositionsData || []).map(comp => {
         const module = contractModules.find(m => m.key === comp.module_key);
-        if (!module) return null; // Should not happen with consistent data
+        if (!module) return null;
         const attachment = attachmentsMap.get(module.id);
         return { composition: comp, module, attachment: attachment || undefined };
       }).filter(Boolean) as typeof contractStructure;
 
       setContractStructure(fullStructure);
 
-      // 4. Pre-select fixed attachments.
+      // 4. Setze NUR die festen Anhänge als Standard-Auswahl.
+      // Deine Produktauswahl wird diesen Wert später einfach ergänzen.
       const fixedAttachmentIds = fullStructure
         .filter(item => item.attachment?.type === 'fest')
         .map(item => item.attachment!.id);
       setSelectedAttachmentIds(fixedAttachmentIds);
     };
+
     loadDataForType();
-  }, [selectedType]);
+    
+  }, [selectedType]); // <-- DAS IST DER SCHLÜSSEL: Stabil und korrekt.
 
   useEffect(() => {
     if (previewRef.current && showDetails) {
