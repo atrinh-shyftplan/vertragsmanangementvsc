@@ -555,14 +555,8 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         title: variableValues.title,
         client: variableValues.client,
         status: (variableValues.status || 'draft'),
-        value: parseFloat(variableValues.value) || 0,
-        start_date: variableValues.start_date || null,
-        end_date: variableValues.end_date || null,
-        assigned_to: users.find(u => u.user_id === variableValues.assigned_to_user_id)?.display_name || 'Unassigned',
-        description: `${contractTypes.find(t => t.key === selectedTypeKey)?.name_de || 'Vertrag'}`,
-        contract_type_key: selectedTypeKey,
+        contract_type_id:contractTypes.find(t => t.key === selectedTypeKey)?.id || null,
         assigned_to_user_id: variableValues.assigned_to_user_id || null,
-        created_by: users?.id || null,
         template_variables: variableValues,
         global_variables: Object.fromEntries(globalVariables.map(gv => [gv.key, variableValues[gv.key] || '']))
       };
