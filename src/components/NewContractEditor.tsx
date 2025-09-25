@@ -31,6 +31,7 @@ const getValidationSchema = (
   // Grundschema, das jetzt für ALLE Status die Produktauswahl erfordert.
   let schema = yup.object({
     title: yup.string().required('Titel ist ein Pflichtfeld.'),
+    client: yup.string().required('Kunde ist ein Pflichtfeld.'),
     assigned_to_user_id: yup.string().required('Zuständiger Ansprechpartner ist ein Pflichtfeld.'),
     status: yup.string().required('Status ist ein Pflichtfeld.'),
     selectedAttachmentIds: yup.array().of(yup.string())
@@ -552,6 +553,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       // 1. Prepare and insert main contract data
       const contractData = {
         title: variableValues.title,
+        client: variableValues.client,
         status: (variableValues.status || 'draft'),
         value: parseFloat(variableValues.value) || 0,
         start_date: variableValues.start_date || null,
@@ -733,6 +735,18 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                             title: e.target.value
                           }))}
                           placeholder="Vertragstitel"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="client">Kunde {requiredFields.includes('client') && <span className="text-destructive">*</span>}</Label>
+                        <Input
+                          id="client"
+                          value={variableValues.client || ''}
+                          onChange={(e) => setVariableValues(prev => ({
+                            ...prev,
+                            client: e.target.value
+                          }))}
+                          placeholder="Name des Kunden"
                         />
                       </div>
                       <div className="space-y-2">

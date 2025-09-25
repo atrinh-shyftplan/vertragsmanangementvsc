@@ -61,6 +61,9 @@ interface Contract {
   contract_attachments: {
     attachments: AttachmentWithModule | null;
   }[];
+  contract_types: {
+    name_de: string;
+  } | null;
 }
 
 export default function Contracts() {
@@ -95,6 +98,7 @@ export default function Contracts() {
     templateVariables: dbContract.template_variables as TemplateVariables | undefined,
     globalVariables: dbContract.global_variables || undefined,
     contract_attachments: dbContract.contract_attachments || [],
+    contract_types: dbContract.contract_types || null,
   });
 
   // Load contracts from database with assigned user data
@@ -103,7 +107,7 @@ export default function Contracts() {
       setLoading(true);
     const { data, error } = await supabase
       .from('contracts')
-      .select('*, assigned_user:profiles(display_name), creator:profiles(display_name), contract_attachments(attachments(*, contract_modules(*)))')
+      .select('*, assigned_user:profiles(display_name), creator:profiles(display_name), contract_attachments(attachments(*, contract_modules(*))), contract_types(name_de)')
       .order('updated_at', { ascending: false });
 
       if (error) throw error;
@@ -303,6 +307,10 @@ export default function Contracts() {
                 <div>
                   <p className="text-xs text-muted-foreground">Zugewiesen an</p>
                   <p className="text-sm font-medium">{contract.assignedTo}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Vertragstyp</p>
+                  <p className="text-sm font-medium">{contract.contract_types?.name_de || 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Produkte</p>
