@@ -103,8 +103,8 @@ export default function Contracts() {
       setLoading(true);
     const { data, error } = await supabase
       .from('contracts')
-      .select('*, assigned_user:profiles(*), contract_attachments(attachments(*, contract_modules(*))), contract_types(name_de)')
-      .order('updated_at', { ascending: false });
+      .select('*, assigned_user:profiles!assigned_to_user_id(*), contract_attachments(attachments(*, contract_modules(*))), contract_types(name_de)')
+      .order('created_at', { ascending: false });
 
       if (error) throw error;
 
