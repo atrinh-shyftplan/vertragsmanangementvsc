@@ -62,60 +62,54 @@ export function UnifiedTemplateEditor() {
   const selectedContractType = contractTypes.find(t => t.key === selectedContractTypeKey);
 
   const fetchCompositions = async (contractType: ContractType) => {
-    console.log("SPION: fetchCompositions gestartet für typeKey:", contractType.key);
     setLoading(true);
     setError(null);
     try {
-      // Schritt 1: Lade die Struktur (das "Skelett") und verknüpfe es direkt mit den Modul-Details.
-      const { data: compositionsData, error: compositionsError } = await supabase
-        .from('contract_compositions')
-        .select(`*, contract_modules(*)`)
-        .eq('contract_type_key', contractType.key) // Hier wird korrekterweise der contract_type_key verwendet
-        .order('sort_order');
+      // Lade Kompositionen, alle Module und Anhänge parallel, um die Ladezeit zu optimieren
+      const [compositionsResult, modulesResult, attachmentsResult] = await Promise.all([
+        supabase
+          .from('contract_compositions')
+          .select('*')
+          .eq('contract_type_key', contractType.key)
+          .order('sort_order'),
+        supabase
+          .from('contract_modules')
+          .select('id, key, name, title_de, category, content_de, content_en, variables'), // Lade alle benötigten Felder
+        supabase
+          .from('attachments')
+          .select('*')
+          .eq('contract_type_id', contractType.id)
+      ]);
 
-      if (compositionsError) throw compositionsError;
-      console.log("SPION: Compositions mit Modul-Daten (JOIN):", compositionsData);
-      
-      // NEUER SICHERHEITSFILTER: Ignoriere alle Einträge, bei denen der JOIN fehlgeschlagen ist
-      // oder bei denen es aus irgendeinem Grund kein contract_modules-Objekt gibt.
-      const validCompositionsData = (compositionsData || []).filter(comp => comp.contract_modules);
-      
-      // Schritt 2: Lade die Konfigurationen für die Anhänge
-      const { data: attachmentsData, error: attachmentsError } = await supabase
-        .from('attachments')
-        .select('*')
-        .eq('contract_type_id', contractType.id); // Hier wird korrekterweise die contract_type_id verwendet
-        
-      if (attachmentsError) throw attachmentsError;
-      console.log("SPION: Relevante attachmentsData geladen:", attachmentsData);
+      const { data: compositionsData, error: compositionsError } = compositionsResult;
+      const { data: allModules, error: modulesError } = modulesResult;
+      const { data: attachmentsData, error: attachmentsError } = attachmentsResult;
 
-      // Erstelle eine Nachschlage-Map für die Anhänge
-      const attachmentsMap = new Map<string, Attachment>();
-      if (attachmentsData) {
-        for (const att of attachmentsData) {
-          if (att.module_id) {
-            attachmentsMap.set(att.module_id, att);
-          }
-        }
+      // Fehlerbehandlung
+      if (compositionsError || modulesError || attachmentsError) {
+        console.error('Fehler beim Laden der Kompositionsdaten:', { compositionsError, modulesError, attachmentsError });
+        setError(`Vertragsstruktur konnte nicht geladen werden.`);
+        setCompositions([]);
+        return;
       }
-      
-      const combinedData = validCompositionsData.map((comp) => {
-        const moduleData = Array.isArray(comp.contract_modules) ? comp.contract_modules[0] : comp.contract_modules;
+
+      // Führe die Daten explizit zusammen, um die Verbindung wiederherzustellen
+      const enrichedCompositions = (compositionsData || []).map(comp => {
+        const module = allModules?.find(m => m.key === comp.module_key) || null;
+        const attachment = attachmentsData?.find(att => att.module_id === module?.id) || null;
         
         return {
           ...comp,
-          contract_modules: moduleData,
-          attachments: moduleData ? attachmentsMap.get(moduleData.id) || null : null,
+          contract_modules: module,
+          attachments: attachment 
         };
       });
-      
-      console.log("SPION: Final kombinierte Daten für die UI:", combinedData);
-      setCompositions(combinedData as any);
+
+      setCompositions(enrichedCompositions as any);
 
     } catch (err: any) {
       console.error('Fehler beim Laden der Vertragsstruktur:', err);
       setError(`Vertragsstruktur konnte nicht geladen werden: ${err.message}`);
-      console.log("SPION: FEHLER!", err);
     } finally {
       setLoading(false);
     }

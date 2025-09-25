@@ -45,7 +45,7 @@ const getValidationSchema = (
           
           if (!ids) return false;
           
-          const selected = ids.map(id => allAttachments.find(a => a.id === id)).filter(Boolean);
+          const selected = ids.map(id => allAttachments.find(a => a.id.toString() === id)).filter(Boolean);
           
           console.log("3. Gefundene Anhang-Objekte:", selected);
           const hasProduct = selected.some(a => a!.type === 'produkt');
