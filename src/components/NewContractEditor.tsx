@@ -557,10 +557,10 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         start_date: variableValues.start_date || null,
         end_date: variableValues.end_date || null,
         assigned_to: users.find(u => u.user_id === variableValues.assigned_to_user_id)?.display_name || 'Unassigned',
-        description: `${contractTypes.find(t => t.key === selectedType)?.name_de || 'Vertrag'}`,
-        tags: [contractTypes.find(t => t.key === selectedType)?.name_de || 'Vertrag'],
+        description: `${contractTypes.find(t => t.key === selectedTypeKey)?.name_de || 'Vertrag'}`,
+        tags: [contractTypes.find(t => t.key === selectedTypeKey)?.name_de || 'Vertrag'],
         progress: variableValues.status === 'draft' ? 0 : 25,
-        contract_type_key: selectedType,
+        contract_type_key: selectedTypeKey,
         assigned_to_user_id: variableValues.assigned_to_user_id || null,
         template_variables: variableValues, // Products are now in a join table
         global_variables: Object.fromEntries(
