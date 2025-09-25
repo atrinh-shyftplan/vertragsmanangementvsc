@@ -321,7 +321,6 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
-          client: string
           assigned_to_user_id?: string | null
           contract_type_key?: string | null
           created_at?: string
@@ -341,7 +340,6 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
-          client?: string
           assigned_to_user_id?: string | null
           contract_type_key?: string | null
           created_at?: string
