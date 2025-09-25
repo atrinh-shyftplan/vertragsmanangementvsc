@@ -118,7 +118,6 @@ const extractVariablesFromContent = (content: string) => {
 
 export default function NewContractEditor({ onClose }: NewContractEditorProps) {
   const { contractTypes, contractModules, contractCompositions, globalVariables } = useAdminData();
-  const [selectedType, setSelectedType] = useState<string>('');
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
   const [showDetails, setShowDetails] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
@@ -141,13 +140,14 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
   const [selectedAttachmentIds, setSelectedAttachmentIds] = useState<string[]>([]);
 
-  const handleTypeSelect = (typeKey: string) => {
-    setSelectedType(typeKey);
-    
-    // Reset modules and variables when type changes
-    setVariableValues({});
-    setShowDetails(true);
-  };
+  const handleTypeChange = (typeKey: string) => {
+    setVariableValues(prev => ({
+      // Behalte bestehende Werte, aber setze den neuen Typ und resette die Auswahl
+      ...prev,
+      contract_type_key: typeKey,
+    }));
+    setShowDetails(true); // Zeige den Editor an, nachdem ein Typ gewählt wurde
+  }
 
   // Load users on component mount
   useEffect(() => {
@@ -168,16 +168,18 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     loadData();
   }, []);
 
+  const selectedTypeKey = variableValues.contract_type_key;
+
   // NEUER, KORREKTER useEffect ZUM LADEN DER DATEN
   useEffect(() => {
     // Diese Funktion wird NUR ausgeführt, wenn sich der 'selectedType' ändert.
     const loadDataForType = async () => {
-      if (!selectedType) {
+      if (!selectedTypeKey) {
         setContractStructure([]); // Leeren, wenn kein Typ ausgewählt ist
         return;
       }
 
-      const type = contractTypes.find(t => t.key === selectedType);
+      const type = contractTypes.find(t => t.key === selectedTypeKey);
       if (!type) return;
 
       const { supabase } = await import('@/integrations/supabase/client');
@@ -231,7 +233,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
     loadDataForType();
     
-  }, [selectedType]); // <-- DAS IST DER SCHLÜSSEL: Stabil und korrekt.
+  }, [selectedTypeKey, contractTypes, contractModules]); // <-- DAS IST DER SCHLÜSSEL: Stabil und korrekt.
 
   useEffect(() => {
     if (previewRef.current && showDetails) {
@@ -554,11 +556,11 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         value: parseFloat(variableValues.value) || 0,
         start_date: variableValues.start_date || null,
         end_date: variableValues.end_date || null,
-        assigned_to: variableValues.assigned_to || 'Unassigned',
-        description: `${contractTypes.find(t => t.key === selectedType)?.name_de || 'Vertrag'}`,
-        tags: [contractTypes.find(t => t.key === selectedType)?.name_de || 'Vertrag'],
+        assigned_to: users.find(u => u.user_id === variableValues.assigned_to_user_id)?.display_name || 'Unassigned',
+        description: `${contractTypes.find(t => t.key === selectedTypeKey)?.name_de || 'Vertrag'}`,
+        tags: [contractTypes.find(t => t.key === selectedTypeKey)?.name_de || 'Vertrag'],
         progress: variableValues.status === 'draft' ? 0 : 25,
-        contract_type_key: selectedType,
+        contract_type_key: selectedTypeKey,
         assigned_to_user_id: variableValues.assigned_to_user_id || null,
         template_variables: variableValues, // Products are now in a join table
         global_variables: Object.fromEntries(
@@ -600,7 +602,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     }
   };
 
-  if (!selectedType || !showDetails) {
+  if (!selectedTypeKey || !showDetails) {
     return (
       <div className="space-y-6 p-6">
         <div className="flex items-center justify-between">
@@ -620,7 +622,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
             <Card 
               key={type.key} 
               className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => handleTypeSelect(type.key)}
+              onClick={() => handleTypeChange(type.key)}
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -642,7 +644,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         <div>
           <h2 className="text-xl font-bold">Vertrag erstellen</h2>
           <p className="text-muted-foreground">
-            Typ: {contractTypes.find(t => t.key === selectedType)?.name_de}
+            Typ: {contractTypes.find(t => t.key === selectedTypeKey)?.name_de}
           </p>
         </div>
         <div className="flex-grow"></div>
@@ -657,7 +659,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
           <Button
             variant="outline"
             onClick={() => {
-              setSelectedType('');
+              setVariableValues(prev => ({ ...prev, contract_type_key: '' }));
               setShowDetails(false);
               setSelectedUser([]);
               setVariableValues({});
