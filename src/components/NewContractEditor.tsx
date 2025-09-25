@@ -560,14 +560,10 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         end_date: variableValues.end_date || null,
         assigned_to: users.find(u => u.user_id === variableValues.assigned_to_user_id)?.display_name || 'Unassigned',
         description: `${contractTypes.find(t => t.key === selectedTypeKey)?.name_de || 'Vertrag'}`,
-        tags: [contractTypes.find(t => t.key === selectedTypeKey)?.name_de || 'Vertrag'],
-        progress: variableValues.status === 'draft' ? 0 : 25,
         contract_type_key: selectedTypeKey,
         assigned_to_user_id: variableValues.assigned_to_user_id || null,
-        template_variables: variableValues, // Products are now in a join table
-        global_variables: Object.fromEntries(
-          globalVariables.map(gv => [gv.key, variableValues[gv.key] || ''])
-        )
+        template_variables: variableValues,
+        global_variables: Object.fromEntries(globalVariables.map(gv => [gv.key, variableValues[gv.key] || '']))
       };
 
       const { data: newContract, error: contractError } = await supabase

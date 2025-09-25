@@ -48,9 +48,6 @@ interface Contract {
   assignedUser?: {
     display_name: string | null;
   };
-  creator?: {
-    display_name: string | null;
-  };
   description: string;
   tags: string[];
   lastModified: string;
@@ -89,7 +86,6 @@ export default function Contracts() {
     endDate: dbContract.end_date || null,
     assignedTo: dbContract.assigned_user?.display_name || dbContract.assigned_to || 'Unassigned',
     assignedUser: dbContract.assigned_user || undefined,
-    creator: dbContract.creator || undefined,
     description: dbContract.description || '',
     tags: dbContract.tags || [],
     lastModified: dbContract.updated_at,
@@ -107,7 +103,7 @@ export default function Contracts() {
       setLoading(true);
     const { data, error } = await supabase
       .from('contracts')
-      .select('*, assigned_user:profiles(display_name), creator:profiles(display_name), contract_attachments(attachments(*, contract_modules(*))), contract_types(name_de)')
+      .select('*, assigned_user:profiles(*), contract_attachments(attachments(*, contract_modules(*))), contract_types(name_de)')
       .order('updated_at', { ascending: false });
 
       if (error) throw error;

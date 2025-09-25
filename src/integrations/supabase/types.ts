@@ -305,7 +305,6 @@ export type Database = {
           assigned_to_user_id: string | null
           contract_type_key: string | null
           created_at: string
-          created_by: string | null
           description: string | null
           end_date: string
           global_variables: Json | null
@@ -324,7 +323,6 @@ export type Database = {
           assigned_to_user_id?: string | null
           contract_type_key?: string | null
           created_at?: string
-          created_by?: string | null
           description?: string | null
           end_date: string
           global_variables?: Json | null
@@ -343,7 +341,6 @@ export type Database = {
           assigned_to_user_id?: string | null
           contract_type_key?: string | null
           created_at?: string
-          created_by?: string | null
           description?: string | null
           end_date?: string
           global_variables?: Json | null
