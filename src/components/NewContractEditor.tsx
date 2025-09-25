@@ -562,6 +562,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         description: `${contractTypes.find(t => t.key === selectedTypeKey)?.name_de || 'Vertrag'}`,
         contract_type_key: selectedTypeKey,
         assigned_to_user_id: variableValues.assigned_to_user_id || null,
+        created_by: users?.id || null,
         template_variables: variableValues,
         global_variables: Object.fromEntries(globalVariables.map(gv => [gv.key, variableValues[gv.key] || '']))
       };
