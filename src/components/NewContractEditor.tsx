@@ -557,8 +557,9 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
         status: (variableValues.status || 'draft'),
         contract_type_id:contractTypes.find(t => t.key === selectedTypeKey)?.id || null,
         assigned_to_user_id: variableValues.assigned_to_user_id || null,
-        template_variables: variableValues,
-        global_variables: Object.fromEntries(globalVariables.map(gv => [gv.key, variableValues[gv.key] || '']))
+        variables: {
+          ...variableValues,
+          ...Object.fromEntries(globalVariables.map(gv => [gv.key, variableValues[gv.key] || '']))}
       };
 
       const { data: newContract, error: contractError } = await supabase
