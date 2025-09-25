@@ -573,7 +573,8 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
 
       // 2. Prepare and insert attachment relations
       if (selectedAttachmentIds.length > 0) {
-        const contractAttachmentsData = selectedAttachmentIds.map(attachmentId => ({
+        const uniqueAttachmentIds = [...new Set(selectedAttachmentIds)];
+        const contractAttachmentsData = uniqueAttachmentIds.map(attachmentId => ({
           contract_id: newContract.id,
           attachment_id: attachmentId,
         }));
