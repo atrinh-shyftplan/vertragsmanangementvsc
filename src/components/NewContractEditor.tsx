@@ -550,7 +550,6 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       // 1. Prepare and insert main contract data
       const contractData = {
         title: variableValues.title,
-        client: variableValues.client || 'TBD',
         status: (variableValues.status || 'draft'),
         value: parseFloat(variableValues.value) || 0,
         start_date: variableValues.start_date || null,
