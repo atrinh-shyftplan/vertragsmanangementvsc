@@ -151,29 +151,80 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     setShowDetails(true); // Zeige den Editor an, nachdem ein Typ gewählt wurde
   }
 
-  // NEUER, SICHERER INITIALISIERUNGS-HOOK
   useEffect(() => {
-    // WACHE: Führe den Code nur aus, wenn ein Vertrag ZUM BEARBEITEN da ist
-    // UND die Liste der Vertragstypen bereits geladen wurde.
-    if (existingContract && contractTypes.length > 0) {
-      
-      // Finde den zugehörigen Vertragstyp anhand der ID
-      const type = contractTypes.find(t => t.id === existingContract.contract_type_id);
+    const initializeEditor = async () => {
+      // WACHE: Führe nichts aus, bis der zu bearbeitende Vertrag und die Admin-Daten geladen sind.
+      if (!existingContract || contractTypes.length === 0 || contractModules.length === 0) {
+        return;
+      }
 
-      // Setze alle Werte auf einmal
+      // 1. Finde den zugehörigen Vertragstyp anhand der ID
+      const type = contractTypes.find(t => t.id === existingContract.contract_type_id);
+      if (!type) {
+        toast.error("Der zugehörige Vertragstyp konnte nicht gefunden werden.");
+        return;
+      }
+      
+      const typeKey = type.key;
+
+      // 2. Setze die Basis-Formulardaten
       setVariableValues({
         ...existingContract.variables,
         ...existingContract,
-        contract_type_key: type?.key, // Setze den Key, den wir gefunden haben
+        contract_type_key: typeKey,
       });
 
-      // Setze die gespeicherten Anhänge
-      setSelectedAttachmentIds(existingContract.contract_attachments.map((ca: any) => ca.attachment_id));
-      
-      // Zeige sofort die Detailansicht
+      // 3. Lade die Vertragsstruktur (Module und Anhänge) für diesen Typ
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data: compositionsData, error: compositionsError } = await supabase
+        .from('contract_compositions')
+        .select('*')
+        .eq('contract_type_key', typeKey)
+        .order('sort_order');
+
+      if (compositionsError) {
+        toast.error('Fehler beim Laden der Vertragsstruktur.');
+        return;
+      }
+
+      const { data: attachmentsData, error: attachmentsError } = await supabase
+        .from('attachments')
+        .select('*')
+        .eq('contract_type_id', type.id);
+
+      if (attachmentsError) {
+        toast.error('Fehler beim Laden der Anhänge.');
+      }
+
+      const attachmentsMap = new Map<string, Attachment>();
+      if (attachmentsData) {
+        for (const att of attachmentsData) {
+          attachmentsMap.set(att.module_id, att);
+        }
+      }
+
+      // 4. Baue die finale Struktur zusammen
+      const fullStructure = (compositionsData || []).map(comp => {
+        const module = contractModules.find(m => m.key === comp.module_key);
+        if (!module) return null;
+        const attachment = attachmentsMap.get(module.id);
+        return { composition: comp, module, attachment: attachment || undefined };
+      }).filter(Boolean) as typeof contractStructure;
+
+      setContractStructure(fullStructure);
+
+      // 5. Setze die ausgewählten Anhänge aus dem gespeicherten Vertrag
+      if (existingContract.contract_attachments) {
+         setSelectedAttachmentIds(existingContract.contract_attachments.map((ca: any) => ca.attachment_id));
+      }
+
+      // 6. Zeige den Editor an
       setShowDetails(true);
-    }
-  }, [existingContract?.id, contractTypes]); // Dieser Hook reagiert auf die ID und die Typen
+    };
+
+    initializeEditor();
+    
+  }, [existingContract?.id, contractTypes, contractModules]); // Reagiert auf alle relevanten Datenquellen
 
 
   // Load users on component mount
@@ -197,71 +248,66 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
 
   const selectedTypeKey = variableValues.contract_type_key;
 
-  // NEUER, KORREKTER useEffect ZUM LADEN DER DATEN
   useEffect(() => {
-    // Diese Funktion wird NUR ausgeführt, wenn sich der 'selectedType' ändert.
-    const loadDataForType = async () => {
-      if (!selectedTypeKey) {
-        setContractStructure([]); // Leeren, wenn kein Typ ausgewählt ist
-        return;
-      }
-
-      const type = contractTypes.find(t => t.key === selectedTypeKey);
-      if (!type) return;
-
-      const { supabase } = await import('@/integrations/supabase/client');
-
-      // 1. Lade die Struktur (contract_compositions)
-      const { data: compositionsData, error: compositionsError } = await supabase
-        .from('contract_compositions')
-        .select('*')
-        .eq('contract_type_key', type.key)
-        .order('sort_order');
-
-      if (compositionsError) {
-        toast.error('Fehler beim Laden der Vertragsstruktur.');
-        return;
-      }
-
-      // 2. Lade alle zugehörigen Anhänge (attachments)
-      const { data: attachmentsData, error: attachmentsError } = await supabase
-        .from('attachments')
-        .select('*')
-        .eq('contract_type_id', type.id);
-
-      if (attachmentsError) {
-        toast.error('Fehler beim Laden der Anhänge.');
-      }
-
-      const attachmentsMap = new Map<string, Attachment>();
-      if (attachmentsData) {
-        for (const att of attachmentsData) {
-          attachmentsMap.set(att.module_id, att);
+    // Nur für NEUE Verträge ausführen
+    if (!existingContract) {
+      const loadDataForNewContract = async () => {
+        if (!selectedTypeKey) {
+          setContractStructure([]);
+          return;
         }
-      }
-
-      // 3. Baue die finale Struktur zusammen
-      const fullStructure = (compositionsData || []).map(comp => {
-        const module = contractModules.find(m => m.key === comp.module_key);
-        if (!module) return null;
-        const attachment = attachmentsMap.get(module.id);
-        return { composition: comp, module, attachment: attachment || undefined };
-      }).filter(Boolean) as typeof contractStructure;
-
-      setContractStructure(fullStructure);
-
-      // 4. Setze die Standard-Auswahl NUR, wenn es ein NEUER Vertrag ist. (KORREKT)
-      if (!existingContract) {
-          const fixedAttachmentIds = fullStructure
-            .filter(item => item.attachment?.type === 'fest')
-            .map(item => item.attachment!.id);
-          setSelectedAttachmentIds(fixedAttachmentIds);
-      }
-    };
-
-    loadDataForType();
-    
-  }, [selectedTypeKey, contractTypes, contractModules]); // <-- DAS IST DER SCHLÜSSEL: Stabil und korrekt.
+  
+        const type = contractTypes.find(t => t.key === selectedTypeKey);
+        if (!type) return;
+  
+        const { supabase } = await import('@/integrations/supabase/client');
+  
+        const { data: compositionsData, error: compositionsError } = await supabase
+          .from('contract_compositions')
+          .select('*')
+          .eq('contract_type_key', type.key)
+          .order('sort_order');
+  
+        if (compositionsError) {
+          toast.error('Fehler beim Laden der Vertragsstruktur.');
+          return;
+        }
+  
+        const { data: attachmentsData, error: attachmentsError } = await supabase
+          .from('attachments')
+          .select('*')
+          .eq('contract_type_id', type.id);
+  
+        if (attachmentsError) {
+          toast.error('Fehler beim Laden der Anhänge.');
+        }
+  
+        const attachmentsMap = new Map<string, Attachment>();
+        if (attachmentsData) {
+          for (const att of attachmentsData) {
+            attachmentsMap.set(att.module_id, att);
+          }
+        }
+  
+        const fullStructure = (compositionsData || []).map(comp => {
+          const module = contractModules.find(m => m.key === comp.module_key);
+          if (!module) return null;
+          const attachment = attachmentsMap.get(module.id);
+          return { composition: comp, module, attachment: attachment || undefined };
+        }).filter(Boolean) as typeof contractStructure;
+  
+        setContractStructure(fullStructure);
+  
+        // Setze die Standard-Auswahl für neue Verträge
+        const fixedAttachmentIds = fullStructure
+          .filter(item => item.attachment?.type === 'fest')
+          .map(item => item.attachment!.id);
+        setSelectedAttachmentIds(fixedAttachmentIds);
+      };
+  
+      loadDataForNewContract();
+    }
+  }, [selectedTypeKey, existingContract, contractTypes, contractModules]);
 
   useEffect(() => {
     if (previewRef.current && showDetails) {
