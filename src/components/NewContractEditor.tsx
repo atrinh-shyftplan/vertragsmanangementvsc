@@ -153,16 +153,17 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
 
   useEffect(() => {
     if (existingContract) {
-      const type = contractTypes.find(t => t.id === existingContract.contract_type_id);
+      // Wir verwenden jetzt direkt den Key aus dem Vertragsobjekt.
+      // Das ist viel stabiler und vermeidet eine Race Condition.
       setVariableValues({
         ...existingContract.variables,
         ...existingContract,
-        contract_type_key: type?.key,
+        contract_type_key: existingContract.contractType,
       });
       setSelectedAttachmentIds(existingContract.contract_attachments.map((ca: any) => ca.attachment_id));
       setShowDetails(true);
     }
-  }, [existingContract, contractTypes]);
+  }, [existingContract]);
 
 
   // Load users on component mount
