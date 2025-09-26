@@ -811,7 +811,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                         <Select
                           value={variableValues.assigned_to_profile_id || ''}
                          onValueChange={(value) => {
-                            const user = users.find(u => u.user_id === value);
+                            const user = users.find(u => u.id === value);
                             setVariableValues(prev => ({
                               ...prev,
                               assigned_to_profile_id: value,

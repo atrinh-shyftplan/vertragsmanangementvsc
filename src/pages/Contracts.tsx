@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AttachmentWithModule } from '@/integrations/supabase/types';
-import { ContractEditModal } from '@/components/ContractEditModal';
+// import { ContractEditModal } from '@/components/ContractEditModal'; // Veraltet
 import ContractViewer from '@/components/ContractViewer';
 import NewContractEditor from '@/components/NewContractEditor';
 import { useToast } from '@/hooks/use-toast';
@@ -136,6 +136,12 @@ export default function Contracts() {
   const handleNewContractClose = () => {
     setIsNewContractModalOpen(false);
     loadContracts(); // Refresh the list
+  };
+
+  const handleEditContractClose = () => {
+    setIsEditModalOpen(false);
+    setEditingContract(null);
+    loadContracts(); // Wichtig: Lade die Liste neu, um Änderungen zu sehen!
   };
 
   const filteredContracts = contracts.filter(contract => {
@@ -355,18 +361,15 @@ export default function Contracts() {
         </DialogContent>
       </Dialog>
 
-      {/* Contract Edit Modal */}
-      {editingContract && isEditModalOpen && (
-        <ContractEditModal
-          contract={editingContract}
-          isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            setEditingContract(null);
-          }}
-          onSave={handleSaveContract}
-        />
-      )}
+      {/* Neues, einheitliches Modal für die Bearbeitung */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0">
+          <NewContractEditor
+            existingContract={editingContract}
+            onClose={handleEditContractClose}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Contract Viewer Modal */}
       {viewingContract && isViewerOpen && (
