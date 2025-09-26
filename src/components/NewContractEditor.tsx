@@ -239,12 +239,13 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
 
       setContractStructure(fullStructure);
 
-      // 4. Setze NUR die festen Anhänge als Standard-Auswahl.
-      // Deine Produktauswahl wird diesen Wert später einfach ergänzen.
-      const fixedAttachmentIds = fullStructure
-        .filter(item => item.attachment?.type === 'fest')
-        .map(item => item.attachment!.id);
-      setSelectedAttachmentIds(fixedAttachmentIds);
+      // 4. Setze die Standard-Auswahl NUR, wenn es ein NEUER Vertrag ist. (KORREKT)
+      if (!existingContract) {
+          const fixedAttachmentIds = fullStructure
+            .filter(item => item.attachment?.type === 'fest')
+            .map(item => item.attachment!.id);
+          setSelectedAttachmentIds(fixedAttachmentIds);
+      }
     };
 
     loadDataForType();
