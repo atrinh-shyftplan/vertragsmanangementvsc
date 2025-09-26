@@ -151,19 +151,29 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     setShowDetails(true); // Zeige den Editor an, nachdem ein Typ gewählt wurde
   }
 
+  // NEUER, SICHERER INITIALISIERUNGS-HOOK
   useEffect(() => {
-    if (existingContract) {
-      // Wir verwenden jetzt direkt den Key aus dem Vertragsobjekt.
-      // Das ist viel stabiler und vermeidet eine Race Condition.
+    // WACHE: Führe den Code nur aus, wenn ein Vertrag ZUM BEARBEITEN da ist
+    // UND die Liste der Vertragstypen bereits geladen wurde.
+    if (existingContract && contractTypes.length > 0) {
+      
+      // Finde den zugehörigen Vertragstyp anhand der ID
+      const type = contractTypes.find(t => t.id === existingContract.contract_type_id);
+
+      // Setze alle Werte auf einmal
       setVariableValues({
         ...existingContract.variables,
         ...existingContract,
-        contract_type_key: existingContract.contractType,
+        contract_type_key: type?.key, // Setze den Key, den wir gefunden haben
       });
+
+      // Setze die gespeicherten Anhänge
       setSelectedAttachmentIds(existingContract.contract_attachments.map((ca: any) => ca.attachment_id));
+      
+      // Zeige sofort die Detailansicht
       setShowDetails(true);
     }
-  }, [existingContract]);
+  }, [existingContract?.id, contractTypes]); // Dieser Hook reagiert auf die ID und die Typen
 
 
   // Load users on component mount
