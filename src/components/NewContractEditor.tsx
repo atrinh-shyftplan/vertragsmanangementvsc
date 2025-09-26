@@ -32,7 +32,7 @@ const getValidationSchema = (
   let schema = yup.object({
     title: yup.string().required('Titel ist ein Pflichtfeld.'),
     client: yup.string().required('Kunde ist ein Pflichtfeld.'),
-    assigned_to_user_id: yup.string().required('Zuständiger Ansprechpartner ist ein Pflichtfeld.'),
+    assigned_to_profile_id: yup.string().required('Zuständiger Ansprechpartner ist ein Pflichtfeld.'),
     status: yup.string().required('Status ist ein Pflichtfeld.'),
     selectedAttachmentIds: yup.array().of(yup.string())
       .test(
@@ -107,6 +107,7 @@ const getValidationSchema = (
 };
 
 interface NewContractEditorProps {
+  existingContract?: any;
   onClose?: () => void;
 }
 
@@ -117,7 +118,7 @@ const extractVariablesFromContent = (content: string) => {
   return matches ? matches.map(match => match.replace(/\{\{|\}\}/g, '').trim()) : [];
 };
 
-export default function NewContractEditor({ onClose }: NewContractEditorProps) {
+export default function NewContractEditor({ existingContract, onClose }: NewContractEditorProps) {
   const { contractTypes, contractModules, contractCompositions, globalVariables } = useAdminData();
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
   const [showDetails, setShowDetails] = useState(false);
@@ -149,6 +150,20 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     }));
     setShowDetails(true); // Zeige den Editor an, nachdem ein Typ gewählt wurde
   }
+
+  useEffect(() => {
+    if (existingContract) {
+      const type = contractTypes.find(t => t.id === existingContract.contract_type_id);
+      setVariableValues({
+        ...existingContract.variables,
+        ...existingContract,
+        contract_type_key: type?.key,
+      });
+      setSelectedAttachmentIds(existingContract.contract_attachments.map((ca: any) => ca.attachment_id));
+      setShowDetails(true);
+    }
+  }, [existingContract, contractTypes]);
+
 
   // Load users on component mount
   useEffect(() => {
@@ -550,43 +565,58 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
 
-      // 1. Prepare and insert main contract data
+      // 1. Prepare contract data
       const contractData = {
         title: variableValues.title,
         client: variableValues.client,
         status: (variableValues.status || 'draft'),
         contract_type_id:contractTypes.find(t => t.key === selectedTypeKey)?.id || null,
-        assigned_to_user_id: variableValues.assigned_to_user_id || null,
+        assigned_to_profile_id: variableValues.assigned_to_profile_id || null,
         variables: {
           ...variableValues,
           ...Object.fromEntries(globalVariables.map(gv => [gv.key, variableValues[gv.key] || '']))}
       };
 
-      const { data: newContract, error: contractError } = await supabase
-        .from('contracts')
-        .insert([contractData])
-        .select('id')
-        .single();
+      let contractId = existingContract?.id;
 
-      if (contractError) throw contractError;
-      if (!newContract) throw new Error('Contract creation failed, no contract returned.');
+      if (contractId) {
+        // --- UPDATE-LOGIK ---
+        // 1. Haupt-Vertragsdaten aktualisieren
+        const { error: updateError } = await supabase
+          .from('contracts')
+          .update(contractData)
+          .eq('id', contractId);
+        if (updateError) throw updateError;
+        
+        // 2. Alte Modul-Verknüpfungen löschen
+        await supabase.from('contract_attachments').delete().eq('contract_id', contractId);
 
-      // 2. Prepare and insert attachment relations
-      if (selectedAttachmentIds.length > 0) {
-        const uniqueAttachmentIds = [...new Set(selectedAttachmentIds)];
-        const contractAttachmentsData = uniqueAttachmentIds.map(attachmentId => ({
-          contract_id: newContract.id,
-          attachment_id: attachmentId,
-        }));
-
-        const { error: joinTableError } = await supabase
-          .from('contract_attachments')
-          .insert(contractAttachmentsData);
-
-        if (joinTableError) throw joinTableError;
+      } else {
+        // --- INSERT-LOGIK (bestehend) ---
+        const { data: newContract, error: insertError } = await supabase
+          .from('contracts')
+          .insert(contractData)
+          .select('id')
+          .single();
+        if (insertError) throw insertError;
+        if (!newContract) throw new Error('Contract creation failed, no contract returned.');
+        contractId = newContract.id;
       }
 
-      toast.success('Vertrag erfolgreich gespeichert');
+      // --- GEMEINSAME LOGIK ---
+      // 3. Neue Modul-Verknüpfungen für beide Fälle einfügen
+      if (selectedAttachmentIds.length > 0) {
+        const attachmentsData = selectedAttachmentIds.map(attachmentId => ({
+          contract_id: contractId!,
+          attachment_id: attachmentId,
+        }));
+        const { error: attachmentsError } = await supabase
+          .from('contract_attachments')
+          .insert(attachmentsData);
+        if (attachmentsError) throw attachmentsError;
+      }
+
+      toast.success(`Vertrag erfolgreich ${existingContract ? 'aktualisiert' : 'gespeichert'}!`);
       
       // Close modal if callback provided
       onClose?.();
@@ -597,7 +627,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
     }
   };
 
-  if (!selectedTypeKey || !showDetails) {
+  if (!showDetails) {
     return (
       <div className="space-y-6 p-6">
         <div className="flex items-center justify-between">
@@ -638,7 +668,7 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
       <header className="flex items-center justify-between p-4 border-b bg-background flex-shrink-0">
         <div>
           <h2 className="text-xl font-bold">Vertrag erstellen</h2>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Typ: {contractTypes.find(t => t.key === selectedTypeKey)?.name_de}
           </p>
         </div>
@@ -777,14 +807,14 @@ export default function NewContractEditor({ onClose }: NewContractEditorProps) {
                     </h4>
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="assigned_to_user_id">Zuständiger Ansprechpartner {requiredFields.includes('assigned_to_user_id') && <span className="text-destructive">*</span>}</Label>
+                        <Label htmlFor="assigned_to_user_id">Zuständiger Ansprechpartner {requiredFields.includes('assigned_to_profile_id') && <span className="text-destructive">*</span>}</Label>
                         <Select
-                          value={variableValues.assigned_to_user_id || ''}
+                          value={variableValues.assigned_to_profile_id || ''}
                          onValueChange={(value) => {
                             const user = users.find(u => u.user_id === value);
                             setVariableValues(prev => ({
                               ...prev,
-                              assigned_to_user_id: value,
+                              assigned_to_profile_id: value,
                               assigned_to: user?.display_name || prev.assigned_to || ''
                             }));
                             setSelectedUser(user || null);
