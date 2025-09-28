@@ -33,7 +33,7 @@ export function useAdminData() {
       setLoading(true);
       
       const [typesResult, modulesResult, categoriesResult, variablesResult, compositionsResult, templatesResult] = await Promise.all([
-        supabase.from('contract_types').select('*, contract_modules:contract_module_id(*)').order('name_de'),
+        supabase.from('contract_types').select('*').order('name_de'),
         supabase.from('contract_modules').select('*').order('title_de'),
         supabase.from('contract_categories').select('*').order('sort_order, name_de'),
         supabase.from('global_variables').select('*').order('name_de'),
