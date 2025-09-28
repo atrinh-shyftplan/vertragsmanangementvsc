@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { FileText, ArrowLeft, Save, X, PanelLeftClose, PanelRightClose, BookOpen, FileDown } from 'lucide-react';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { FileText, ArrowLeft, Save, X, PanelLeftClose, PanelRightClose, BookOpen, FileDown, Loader2 } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import type { ImperativePanelHandle } from "react-resizable-panels";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -15,81 +15,41 @@ import { toast } from 'sonner';
 import { VariableInputRenderer } from '@/components/admin/VariableInputRenderer';
 import { Checkbox } from '@/components/ui/checkbox';
 import * as yup from 'yup';
-import { Attachment, ContractModule, Database } from '@/integrations/supabase/types';
+import type { Attachment, ContractModule, Database } from '@/integrations/supabase/types';
 
 type ContractComposition = Database['public']['Tables']['contract_compositions']['Row'];
 
 const getValidationSchema = (
   status: string,
-  modules: ContractModule[],
-  allContractModules: any[],
-  globalVars: any[],
+  selectedModules: ContractModule[],
   allAttachments: Attachment[]
 ) => {
   const isDraft = status === 'draft';
 
-  // Grundschema, das jetzt für ALLE Status die Produktauswahl erfordert.
   let schema = yup.object({
     title: yup.string().required('Titel ist ein Pflichtfeld.'),
     client: yup.string().required('Kunde ist ein Pflichtfeld.'),
     assigned_to_profile_id: yup.string().required('Zuständiger Ansprechpartner ist ein Pflichtfeld.'),
     status: yup.string().required('Status ist ein Pflichtfeld.'),
-    selectedAttachmentIds: yup.array().of(yup.string())
-      .test(
-        'has-product',
-        'Mindestens ein Produkt muss ausgewählt werden.',
-        (ids) => {
-          // --- DEBUGGING START ---
-          console.log("%c--- Validierungs-Check ---", "color: blue; font-weight: bold;");
-          console.log("1. IDs, die validiert werden:", ids);
-          console.log("2. Alle Anhänge, die zur Prüfung bereitstehen:", allAttachments);
-          
-          if (!ids) return false;
-          
-          const selected = ids.map(id => allAttachments.find(a => a.id === id)).filter(Boolean);
-          
-          console.log("3. Gefundene Anhang-Objekte:", selected);
-          const hasProduct = selected.some(a => a!.type === 'produkt');
-          console.log("4. Ergebnis: Hat es ein Produkt?", hasProduct);
-          console.log("%c--------------------------", "color: blue; font-weight: bold;");
-          // --- DEBUGGING END ---
-
-          return hasProduct;
-        }
-      ).required('Produktauswahl ist ein Pflichtfeld.'),
+    selectedAttachmentIds: yup.array().of(yup.string()).test(
+      'has-product',
+      'Mindestens ein Produkt muss ausgewählt werden.',
+      (ids) => {
+        if (!ids || ids.length === 0) return false;
+        const selected = ids.map(id => allAttachments.find(a => a.id === id)).filter(Boolean);
+        return selected.some(a => a!.type === 'produkt');
+      }
+    ).required('Produktauswahl ist ein Pflichtfeld.'),
   });
 
-  // Wenn der Status NICHT "Entwurf" ist, fügen wir die zusätzlichen Pflichtfelder hinzu.
   if (!isDraft) {
     const requiredFieldsShape: { [key: string]: yup.AnySchema } = {
       start_date: yup.string().required('Startdatum ist ein Pflichtfeld.'),
       end_date: yup.string().required('Enddatum ist ein Pflichtfeld.'),
     };
 
-    // Dynamische Validierung für alle Variablen in den Modulen
-    modules.forEach(module => {
+    selectedModules.forEach(module => {
       if (module) {
-        let moduleJsonVars: any[] = [];
-        if (module.variables) {
-          if (Array.isArray(module.variables)) {
-            moduleJsonVars = module.variables;
-          } else if (typeof module.variables === 'string' && module.variables.trim()) {
-            try {
-              const parsed = JSON.parse(module.variables as string);
-              if (Array.isArray(parsed)) {
-                moduleJsonVars = parsed;
-              }
-            } catch (e) {
-              console.error(`Failed to parse variables for module ${module.key}:`, e);
-            }
-          }
-        }
-        moduleJsonVars.forEach((variable: any) => {
-          if (variable && typeof variable.key === 'string') {
-            requiredFieldsShape[variable.key] = yup.string().required(`Das Feld "${variable.name_de || variable.key}" ist erforderlich.`);
-          }
-        });
-
         const contentVariables = extractVariablesFromContent(module.content_de || '');
         contentVariables.forEach(variableKey => {
           if (!requiredFieldsShape[variableKey]) {
@@ -98,8 +58,7 @@ const getValidationSchema = (
         });
       }
     });
-    
-    // Kombiniere das Basisschema mit den zusätzlichen Regeln
+
     schema = schema.concat(yup.object(requiredFieldsShape));
   }
 
@@ -111,7 +70,6 @@ interface NewContractEditorProps {
   onClose?: () => void;
 }
 
-// Function to extract variables from module content
 const extractVariablesFromContent = (content: string) => {
   if (!content) return [];
   const matches = content.match(/\{\{([^}]+)\}\}/g);
@@ -119,195 +77,118 @@ const extractVariablesFromContent = (content: string) => {
 };
 
 export default function NewContractEditor({ existingContract, onClose }: NewContractEditorProps) {
-  const { contractTypes, contractModules, contractCompositions, globalVariables } = useAdminData();
+  const { contractTypes, contractModules, globalVariables, loading: adminDataLoading } = useAdminData();
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
   const [showDetails, setShowDetails] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [isPdfDialogOpen, setIsPdfDialogOpen] = useState(false);
   const [requiredFields, setRequiredFields] = useState<string[]>([]);
   const [pdfFilename, setPdfFilename] = useState('');
-  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isPanelVisible, setIsPanelVisible] = useState(true);
   const [isOutlineSheetOpen, setIsOutlineSheetOpen] = useState(false);
   const [outline, setOutline] = useState<{ id: string; text: string; level: number }[]>([]);
   const previewRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<ImperativePanelHandle>(null);
-  
-  // Holds all modules for the selected contract type, including attachment info
+  const [isLoadingStructure, setIsLoadingStructure] = useState(false);
+
   const [contractStructure, setContractStructure] = useState<{
     composition: ContractComposition;
     module: ContractModule;
     attachment?: Attachment;
   }[]>([]);
-
   const [selectedAttachmentIds, setSelectedAttachmentIds] = useState<string[]>([]);
 
   const handleTypeChange = (typeKey: string) => {
     setVariableValues(prev => ({
-      // Behalte bestehende Werte, aber setze den neuen Typ und resette die Auswahl
       ...prev,
       contract_type_key: typeKey,
     }));
-    setShowDetails(true); // Zeige den Editor an, nachdem ein Typ gewählt wurde
+    setShowDetails(true);
   }
 
+  // Hook to immediately switch to details view if editing
   useEffect(() => {
-    const initializeEditor = async () => {
-      // WACHE: Führe nichts aus, bis der zu bearbeitende Vertrag und die Admin-Daten geladen sind.
-      if (!existingContract || contractTypes.length === 0 || contractModules.length === 0) {
+    if (existingContract) {
+      setShowDetails(true);
+    }
+  }, [existingContract]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data, error } = await supabase.from('profiles').select('*').order('display_name');
+        if (error) throw error;
+        setUsers(data || []);
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    };
+    loadData();
+  }, []);
+
+  const selectedTypeKey = variableValues.contract_type_key;
+
+  // Effect to load contract structure and initialize form data
+  useEffect(() => {
+    const loadStructureAndInit = async () => {
+      if (!selectedTypeKey || contractTypes.length === 0 || contractModules.length === 0) {
         return;
       }
 
-      // 1. Finde den zugehörigen Vertragstyp anhand der ID
-      const type = contractTypes.find(t => t.id === existingContract.contract_type_id);
-      if (!type) {
-        toast.error("Der zugehörige Vertragstyp konnte nicht gefunden werden.");
-        return;
-      }
-      
-      const typeKey = type.key;
+      setIsLoadingStructure(true);
+      const type = contractTypes.find(t => t.key === selectedTypeKey);
+      if (!type) return;
 
-      // 2. Setze die Basis-Formulardaten
-      setVariableValues({
-        ...existingContract.variables,
-        ...existingContract,
-        contract_type_key: typeKey,
-      });
-
-      // 3. Lade die Vertragsstruktur (Module und Anhänge) für diesen Typ
       const { supabase } = await import('@/integrations/supabase/client');
+
       const { data: compositionsData, error: compositionsError } = await supabase
         .from('contract_compositions')
         .select('*')
-        .eq('contract_type_key', typeKey)
+        .eq('contract_type_key', type.key)
         .order('sort_order');
-
-      if (compositionsError) {
-        toast.error('Fehler beim Laden der Vertragsstruktur.');
-        return;
-      }
 
       const { data: attachmentsData, error: attachmentsError } = await supabase
         .from('attachments')
         .select('*')
         .eq('contract_type_id', type.id);
 
-      if (attachmentsError) {
-        toast.error('Fehler beim Laden der Anhänge.');
-      }
+      if (compositionsError) toast.error('Fehler beim Laden der Vertragsstruktur.');
+      if (attachmentsError) toast.error('Fehler beim Laden der Anhänge.');
 
       const attachmentsMap = new Map<string, Attachment>();
       if (attachmentsData) {
-        for (const att of attachmentsData) {
-          attachmentsMap.set(att.module_id, att);
-        }
+        attachmentsData.forEach(att => attachmentsMap.set(att.module_id, att));
       }
 
-      // 4. Baue die finale Struktur zusammen
       const fullStructure = (compositionsData || []).map(comp => {
         const module = contractModules.find(m => m.key === comp.module_key);
         if (!module) return null;
         const attachment = attachmentsMap.get(module.id);
         return { composition: comp, module, attachment: attachment || undefined };
       }).filter(Boolean) as typeof contractStructure;
-
       setContractStructure(fullStructure);
 
-      // 5. Setze die ausgewählten Anhänge aus dem gespeicherten Vertrag
-      if (existingContract.contract_attachments) {
-         setSelectedAttachmentIds(existingContract.contract_attachments.map((ca: any) => ca.attachment_id));
-      }
-
-      // 6. Zeige den Editor an
-      setShowDetails(true);
-    };
-
-    initializeEditor();
-    
-  }, [existingContract?.id, contractTypes, contractModules]); // Reagiert auf alle relevanten Datenquellen
-
-
-  // Load users on component mount
-  useEffect(() => {
-    const loadData = async () => {
-      const loadUsers = async () => {
-        try {
-          const { supabase } = await import('@/integrations/supabase/client');
-          const { data, error } = await supabase.from('profiles').select('*').order('display_name');
-          if (error) throw error;
-          setUsers(data || []);
-        } catch (error) {
-          console.error('Error loading users:', error);
-        }
-      };
-      loadUsers();
-    };
-    
-    loadData();
-  }, []);
-
-  const selectedTypeKey = variableValues.contract_type_key;
-
-  useEffect(() => {
-    // Nur für NEUE Verträge ausführen
-    if (!existingContract) {
-      const loadDataForNewContract = async () => {
-        if (!selectedTypeKey) {
-          setContractStructure([]);
-          return;
-        }
-  
-        const type = contractTypes.find(t => t.key === selectedTypeKey);
-        if (!type) return;
-  
-        const { supabase } = await import('@/integrations/supabase/client');
-  
-        const { data: compositionsData, error: compositionsError } = await supabase
-          .from('contract_compositions')
-          .select('*')
-          .eq('contract_type_key', type.key)
-          .order('sort_order');
-  
-        if (compositionsError) {
-          toast.error('Fehler beim Laden der Vertragsstruktur.');
-          return;
-        }
-  
-        const { data: attachmentsData, error: attachmentsError } = await supabase
-          .from('attachments')
-          .select('*')
-          .eq('contract_type_id', type.id);
-  
-        if (attachmentsError) {
-          toast.error('Fehler beim Laden der Anhänge.');
-        }
-  
-        const attachmentsMap = new Map<string, Attachment>();
-        if (attachmentsData) {
-          for (const att of attachmentsData) {
-            attachmentsMap.set(att.module_id, att);
-          }
-        }
-  
-        const fullStructure = (compositionsData || []).map(comp => {
-          const module = contractModules.find(m => m.key === comp.module_key);
-          if (!module) return null;
-          const attachment = attachmentsMap.get(module.id);
-          return { composition: comp, module, attachment: attachment || undefined };
-        }).filter(Boolean) as typeof contractStructure;
-  
-        setContractStructure(fullStructure);
-  
-        // Setze die Standard-Auswahl für neue Verträge
+      if (existingContract && existingContract.contract_type_id === type.id) {
+        // Editing: Set values from existing contract
+        setVariableValues({
+          ...existingContract.variables,
+          ...existingContract,
+          contract_type_key: type.key,
+        });
+        setSelectedAttachmentIds(existingContract.contract_attachments.map((ca: any) => ca.attachment_id));
+      } else if (!existingContract) {
+        // New contract: Set default attachments
         const fixedAttachmentIds = fullStructure
           .filter(item => item.attachment?.type === 'fest')
           .map(item => item.attachment!.id);
         setSelectedAttachmentIds(fixedAttachmentIds);
-      };
-  
-      loadDataForNewContract();
-    }
-  }, [selectedTypeKey, existingContract, contractTypes, contractModules]);
+      }
+      setIsLoadingStructure(false);
+    };
+
+    loadStructureAndInit();
+  }, [selectedTypeKey, contractTypes, contractModules, existingContract]);
 
   useEffect(() => {
     if (previewRef.current && showDetails) {
@@ -327,19 +208,21 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     }
   }, [variableValues, contractStructure, selectedAttachmentIds, showDetails, outline]);
 
-  useEffect(() => {
-    const selectedModules = contractStructure.filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id)).map(item => item.module);
-    const status = variableValues.status || 'draft';
-    const schema = getValidationSchema(status, selectedModules, contractModules, globalVariables, contractStructure.map(cs => cs.attachment).filter(Boolean) as Attachment[]);
-    const description = schema.describe();
-    setRequiredFields(Object.keys(description.fields));
-  }, [variableValues.status, contractStructure, selectedAttachmentIds, contractModules, globalVariables]);
+  const allAvailableAttachments = useMemo(() => {
+    return contractStructure.map(cs => cs.attachment).filter(Boolean) as Attachment[];
+  }, [contractStructure]);
 
+  useEffect(() => {
+    const selectedModulesForValidation = contractStructure
+      .filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id))
+      .map(item => item.module);
+    const schema = getValidationSchema(variableValues.status || 'draft', selectedModulesForValidation, allAvailableAttachments);
+    setRequiredFields(Object.keys(schema.describe().fields));
+  }, [variableValues.status, contractStructure, selectedAttachmentIds, allAvailableAttachments]);
 
   const processContent = (content: string, moduleVariables: any[] = []) => {
     let processedContent = content;
-    
-    // Replace global variables with highlighted spans
+
     globalVariables.forEach((variable) => {
       const variableName = variable.key;
       const value = variableValues[variableName] || '';
@@ -347,7 +230,6 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
       processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 px-1 rounded">${value}</span>`);
     });
     
-    // Also process the gueltig_bis variable specifically
     if (variableValues.gueltig_bis) {
       const displayDate = variableValues.gueltig_bis_formatted || variableValues.gueltig_bis;
       const regex = new RegExp(`{{gueltig_bis}}`, 'g');
@@ -355,7 +237,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     }
     
     // Replace module-specific variables with highlighted spans
-    moduleVariables.forEach((variable) => {
+    (moduleVariables || []).forEach((variable) => {
       const variableName = (variable.name || variable.key);
       if (!variableName) return;
       const value = variableValues[variableName] || '';
@@ -366,14 +248,10 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     return processedContent;
   };
 
-  // Generate contract preview with variable substitution
   const generatePreview = () => {
     let preview = '';
-    
     const modulesToRender = contractStructure.filter(item => {
-      // Always include modules that are not selectable attachments
       if (!item.attachment) return true;
-      // Include selectable attachments if their ID is in the selected list
       return selectedAttachmentIds.includes(item.attachment.id);
     });
     
@@ -389,12 +267,9 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
       }
     });
     
-    // Process regular modules first
     regularModules.forEach((module) => {
       preview += renderSimpleModule(module, false, 0);
     });
-    
-    // Process annex modules with proper numbering
     annexModules.forEach((module, index) => {
       const annexNumber = index + 1;
       preview += renderSimpleModule(module, true, annexNumber);
@@ -403,70 +278,6 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     return preview || '<p class="text-gray-500">Keine Inhalte verfügbar</p>';
   };
 
-  // Function to parse content into logical blocks based on paragraph markers
-  const parseContentIntoBlocks = (content: string) => {
-    if (!content || content.trim() === '') return [];
-    
-    // Regex pattern to match paragraph markers like § 1, (1), 1., 3.2, 3.2.1, etc.
-    // This matches:
-    // - § followed by numbers and dots (§ 1, § 3.2)
-    // - Numbers in parentheses ((1), (2))
-    // - Numbers followed by dots (1., 2., 3.2.1.)
-    // - Roman numerals followed by dots (I., II., III.)
-    const paragraphPattern = /^(\s*(?:§\s*\d+(?:\.\d+)*|(\d+(?:\.\d+)*\.?|\([0-9]+\)|[IVX]+\.)))/gm;
-    
-    const blocks = [];
-    let lastIndex = 0;
-    let match;
-    
-    // Reset the regex
-    paragraphPattern.lastIndex = 0;
-    
-    while ((match = paragraphPattern.exec(content)) !== null) {
-      // If there's content before this match, add it as a block
-      if (match.index > lastIndex) {
-        const beforeContent = content.substring(lastIndex, match.index).trim();
-        if (beforeContent) {
-          blocks.push(beforeContent);
-        }
-      }
-      
-      // Find the start of the next paragraph or end of content
-      const nextMatch = paragraphPattern.exec(content);
-      let blockEnd;
-      
-      if (nextMatch) {
-        blockEnd = nextMatch.index;
-        // Reset for next iteration
-        paragraphPattern.lastIndex = nextMatch.index;
-      } else {
-        blockEnd = content.length;
-      }
-      
-      // Extract the complete paragraph block
-      const blockContent = content.substring(match.index, blockEnd).trim();
-      if (blockContent) {
-        blocks.push(blockContent);
-      }
-      
-      lastIndex = blockEnd;
-      
-      if (!nextMatch) break;
-    }
-    
-    // Add any remaining content
-    if (lastIndex < content.length) {
-      const remaining = content.substring(lastIndex).trim();
-      if (remaining) {
-        blocks.push(remaining);
-      }
-    }
-    
-    // If no blocks were found, return the entire content as one block
-    return blocks.length > 0 ? blocks : [content.trim()];
-  };
-
-  // Simplified module rendering function with intelligent paragraph alignment
   const renderSimpleModule = (module: ContractModule, isAnnex: boolean, annexNumber: number) => {
     let moduleVariables = [];
     try {
@@ -489,13 +300,10 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     const hasEnglishContent = (module.content_en || '').trim().length > 0;
     const hasGermanTitle = (module.title_de || '').trim().length > 0;
     const hasEnglishTitle = (module.title_en || '').trim().length > 0;
-    
-    // A module is empty if it has no title and no content, unless it's the special header
+
     if (module.key !== 'Header Sales' && !hasGermanTitle && !hasEnglishTitle && !hasGermanContent && !hasEnglishContent) {
       return '';
     }
-
-    // Special handling for Header Sales module
     const isHeaderModule = module.key === 'Header Sales';
     
     let moduleHtml = '';
@@ -506,12 +314,10 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     } else {
       moduleHtml += `<div class="mb-8">`;
     }
-    
     const isBilingual = (hasGermanContent || hasGermanTitle) && (hasEnglishContent || hasEnglishTitle);
 
     if (isBilingual) {
       moduleHtml += `<div class="grid grid-cols-2 side-by-side-table">`;
-      
       // German column
       let germanColumn = `<div class="german-content pr-4 border-r border-gray-200">`;
       if (!isHeaderModule && hasGermanTitle) {
@@ -523,7 +329,6 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
       }
       germanColumn += `</div>`;
       moduleHtml += germanColumn;
-
       // English column
       let englishColumn = `<div class="pl-4">`;
       if (!isHeaderModule && hasEnglishTitle) {
@@ -535,10 +340,8 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
       }
       englishColumn += `</div>`;
       moduleHtml += englishColumn;
-
       moduleHtml += `</div>`;
-    } else if (hasGermanContent || hasGermanTitle) {
-      // German only
+    } else if (hasGermanContent || hasGermanTitle) { // German only
       moduleHtml += `<div class="german-content">`;
       if (!isHeaderModule && hasGermanTitle) {
         const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
@@ -548,8 +351,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
         moduleHtml += `<div>${processContent(module.content_de, moduleVariables)}</div>`;
       }
       moduleHtml += `</div>`;
-    } else if (hasEnglishContent || hasEnglishTitle) {
-      // English only
+    } else if (hasEnglishContent || hasEnglishTitle) { // English only
       moduleHtml += `<div>`;
       if (!isHeaderModule && hasEnglishTitle) {
         const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en}` : module.title_en;
@@ -562,7 +364,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     }
     
     if (isHeaderModule) {
-      moduleHtml += `</div>`; // Close centering wrapper
+      moduleHtml += `</div>`;
     }
     moduleHtml += `</div>`;
     
@@ -580,28 +382,17 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     }
   };
 
-
   const saveContract = async () => {
-    // --- DEBUGGING START ---
-    console.log("%c--- Speichervorgang gestartet ---", "color: green; font-weight: bold;");
-    console.log("Aktuell ausgewählte Attachment-IDs:", selectedAttachmentIds);
-    const attachmentsForValidation = contractStructure.map(cs => cs.attachment).filter(Boolean) as Attachment[];
-    console.log("Anhänge, die an den Validator gesendet werden:", attachmentsForValidation);
-    console.log("%c----------------------------------", "color: green; font-weight: bold;");
-    // --- DEBUGGING END ---
-    const selectedModules = contractStructure.filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id)).map(item => item.module);
-    const validationSchema = getValidationSchema(
-      variableValues.status || 'draft',
-      selectedModules,
-      contractModules,
-      globalVariables,
-      contractStructure.map(cs => cs.attachment).filter(Boolean) as Attachment[]
-    );
+    const selectedModulesForValidation = contractStructure
+      .filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id))
+      .map(item => item.module);
+
+    const validationSchema = getValidationSchema(variableValues.status || 'draft', selectedModulesForValidation, allAvailableAttachments);
 
     try {
       await validationSchema.validate(
         { ...variableValues, selectedAttachmentIds: selectedAttachmentIds },
-        { abortEarly: false } // Collect all errors
+        { abortEarly: false }
       );
     } catch (err) {
       if (err instanceof yup.ValidationError) {
@@ -623,7 +414,6 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     try {
       const { supabase } = await import('@/integrations/supabase/client');
 
-      // 1. Prepare contract data
       const contractData = {
         title: variableValues.title,
         client: variableValues.client,
@@ -638,8 +428,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
       let contractId = existingContract?.id;
 
       if (contractId) {
-        // --- UPDATE-LOGIK ---
-        // 1. Haupt-Vertragsdaten aktualisieren
+        // UPDATE
         const { error: updateError } = await supabase
           .from('contracts')
           .update(contractData)
@@ -648,9 +437,8 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
         
         // 2. Alte Modul-Verknüpfungen löschen
         await supabase.from('contract_attachments').delete().eq('contract_id', contractId);
-
       } else {
-        // --- INSERT-LOGIK (bestehend) ---
+        // INSERT
         const { data: newContract, error: insertError } = await supabase
           .from('contracts')
           .insert(contractData)
@@ -661,8 +449,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
         contractId = newContract.id;
       }
 
-      // --- GEMEINSAME LOGIK ---
-      // 3. Neue Modul-Verknüpfungen für beide Fälle einfügen
+      // Re-insert attachments for both cases
       if (selectedAttachmentIds.length > 0) {
         const attachmentsData = selectedAttachmentIds.map(attachmentId => ({
           contract_id: contractId!,
@@ -675,8 +462,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
       }
 
       toast.success(`Vertrag erfolgreich ${existingContract ? 'aktualisiert' : 'gespeichert'}!`);
-      
-      // Close modal if callback provided
+
       onClose?.();
       
     } catch (error) {
@@ -685,7 +471,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     }
   };
 
-  if (!showDetails) {
+  if (!showDetails && !existingContract) {
     return (
       <div className="space-y-6 p-6">
         <div className="flex items-center justify-between">
@@ -721,6 +507,19 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     );
   }
 
+  if (isLoadingStructure || (existingContract && contractStructure.length === 0)) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <p className="ml-4 text-muted-foreground">Lade Vertragseditor...</p>
+      </div>
+    );
+  }
+
+  function setSelectedUser(arg0: any) {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <div className="flex flex-col h-full bg-muted/30 rounded-lg overflow-hidden">
       <header className="flex items-center justify-between p-4 border-b bg-background flex-shrink-0">
@@ -744,7 +543,6 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
             onClick={() => {
               setVariableValues(prev => ({ ...prev, contract_type_key: '' }));
               setShowDetails(false);
-              setSelectedUser([]);
               setVariableValues({});
             }}
           >
@@ -752,8 +550,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
             Zurück
           </Button>
           <Button variant="outline" onClick={() => setIsOutlineSheetOpen(true)}>
-            <BookOpen className="mr-2 h-4 w-4" />
-            Gliederung
+            <BookOpen className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"
@@ -762,8 +559,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                 setIsPdfDialogOpen(true);
             }}
           >
-            <FileDown className="mr-2 h-4 w-4" />
-            PDF Export
+            <FileDown className="h-4 w-4" />
           </Button>
           <Button onClick={saveContract}>
             <Save className="mr-2 h-4 w-4" />
@@ -786,7 +582,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
           onCollapse={() => setIsPanelVisible(false)}
           onExpand={() => setIsPanelVisible(true)}
           defaultSize={33}
-          minSize={25}
+          minSize={20}
           className="relative bg-background"
         >
           <ScrollArea className="h-full">
@@ -800,11 +596,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Grunddaten Section */}
                   <div className="space-y-4">
-                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide border-b pb-2">
-                      Grunddaten
-                    </h4>
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="title">Titel {requiredFields.includes('title') && <span className="text-destructive">*</span>}</Label>
@@ -837,8 +629,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                           type="date"
                           value={variableValues.gueltig_bis || ''}
                          onChange={(e) => {
-                            const dateValue = e.target.value;
-                            // Format date as German date string for variable
+                            const dateValue = e.target.value;                            
                             const formattedDate = dateValue ? 
                               new Date(dateValue).toLocaleDateString('de-DE', {
                                 day: '2-digit',
@@ -849,7 +640,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                             setVariableValues(prev => ({
                               ...prev,
                               gueltig_bis: dateValue,
-                              gueltig_bis_formatted: formattedDate // Update the variable value for contract content
+                              gueltig_bis_formatted: formattedDate
                             }));
                           }}
                           placeholder="Gültigkeitsdatum"
@@ -857,19 +648,14 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                       </div>
                     </div>
                   </div>
-
-                  {/* Zuständigkeit Section */}
                   <div className="space-y-4">
-                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide border-b pb-2">
-                      Zuständigkeit
-                    </h4>
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="assigned_to_user_id">Zuständiger Ansprechpartner {requiredFields.includes('assigned_to_profile_id') && <span className="text-destructive">*</span>}</Label>
+                        <Label htmlFor="assigned_to_profile_id">Zuständiger Ansprechpartner {requiredFields.includes('assigned_to_profile_id') && <span className="text-destructive">*</span>}</Label>
                         <Select
                           value={variableValues.assigned_to_profile_id || ''}
                          onValueChange={(value) => {
-                            const user = users.find(u => u.id === value);
+                            const user = users.find(u => u.id === value); 
                             setVariableValues(prev => ({
                               ...prev,
                               assigned_to_profile_id: value,
@@ -883,7 +669,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                           </SelectTrigger>
                           <SelectContent>
                             {users.map(user => (
-                              <SelectItem key={user.id} value={user.user_id}>
+                              <SelectItem key={user.id} value={user.id}>
                                 {user.display_name || user.email || 'Unbekannter Benutzer'}
                               </SelectItem>
                             ))}
@@ -915,7 +701,6 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                 </CardContent>
               </Card>
 
-              {/* Module Variables using VariableInputRenderer */}
               <Card>
                 <CardHeader>
                   <CardTitle>Vertragsbestandteile</CardTitle>
@@ -924,7 +709,6 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Feste Bestandteile */}
                   <div>
                     <h4 className="font-medium text-sm text-muted-foreground mb-2">Feste Bestandteile</h4>
                     <div className="space-y-2">
@@ -943,7 +727,6 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                     </div>
                   </div>
 
-                  {/* Produkte */}
                   <div>
                     <h4 className="font-medium text-sm text-muted-foreground mb-2">Produkte (mindestens eines auswählen)</h4>
                     <div className="space-y-2">
@@ -953,9 +736,6 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                             id={`attachment-${item.attachment!.id}`}
                             checked={selectedAttachmentIds.includes(item.attachment!.id)}
                             onCheckedChange={(checked) => {
-                              // --- NEUER SPION ---
-                              console.log(`%cProdukt-Checkbox geklickt: ${item.module.name}, Checked: ${checked}, ID: ${item.attachment!.id}`, "color: purple; font-weight: bold;");
-                              
                               setSelectedAttachmentIds(prev => 
                                 checked 
                                   ? [...prev, item.attachment!.id] 
@@ -971,7 +751,6 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                     </div>
                   </div>
 
-                  {/* Optionale Zusatzleistungen */}
                   <div>
                     <h4 className="font-medium text-sm text-muted-foreground mb-2">Optionale Zusatzleistungen</h4>
                     <div className="space-y-2">
@@ -999,7 +778,9 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
               </Card>
 
               <VariableInputRenderer
-                selectedModules={contractStructure.filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id)).map(item => item.module)}
+                selectedModules={contractStructure
+                  .filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id))
+                  .map(item => item.module)}
                 globalVariables={globalVariables.filter(v => v.key !== 'gueltig_bis')}
                 variableValues={variableValues}
                 onVariableChange={(key, value) => setVariableValues(prev => ({
@@ -1013,7 +794,6 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
 
         <ResizableHandle withHandle />
 
-        {/* Preview Panel - larger width */}
         <ResizablePanel defaultSize={67}>
           <main className="flex-1 h-full bg-muted/40 flex justify-center">
             <ScrollArea className="h-full w-full">
@@ -1033,7 +813,6 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                       dangerouslySetInnerHTML={{ 
                         __html: `
                         <style>
-                          /* Ensure consistent heading sizes with editor */
                           .contract-preview h1 {
                             font-size: 1.5rem !important; /* text-2xl */
                           }
@@ -1048,42 +827,34 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                             margin-bottom: 0.75rem !important; /* mb-3 */
                           }
 
-                          /* Side-by-side table layout - prose-compatible */
                           .contract-preview .side-by-side-table {
                             width: 100%;
                             margin: 1.5rem 0;
                           }
-                          
                           .contract-preview .table-content-de,
                           .contract-preview .table-content-en {
                             vertical-align: top;
                           }
-                          
-                          /* Ensure prose styles work within table cells */
                           .contract-preview .table-content-de p,
                           .contract-preview .table-content-en p {
                             margin: 0.75rem 0;
                           }
-                          
                           .contract-preview .table-content-de ul,
                           .contract-preview .table-content-en ul {
                             margin: 0.75rem 0;
                             padding-left: 1.5rem;
                             list-style-type: disc;
                           }
-                          
                           .contract-preview .table-content-de ol,
                           .contract-preview .table-content-en ol {
                             margin: 0.75rem 0;
                             padding-left: 1.5rem;
                             list-style-type: decimal;
                           }
-                          
                           .contract-preview .table-content-de li,
                           .contract-preview .table-content-en li {
                             margin: 0.25rem 0;
                           }
-                          /* Header content table styling - unchanged */
                             width: 100%;
                             border-collapse: collapse;
                             margin: 10px 0;
@@ -1161,22 +932,18 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                             color: #6b7280;
                             font-style: italic;
                           }
-                          /* FORCE BLACK BULLETS AND TEXT IN PREVIEW */
-                          .contract-preview ul {
-                            list-style-type: disc !important;
-                            padding-left: 1.5rem !important;
-                            margin: 0.5rem 0 !important;
-                            color: #000000 !important;
-                          }
-                          .contract-preview ul li {
-                            color: #000000 !important;
-                            margin: 0.25rem 0 !important;
-                          }
-                          .contract-preview ul li::marker {
-                            color: #000000 !important;
-                            content: "●" !important;
-                          }
-                          .contract-preview ol {
+                    .contract-preview ul {
+                      list-style-type: disc !important;
+                      padding-left: 1.5rem !important;
+                      margin: 0.5rem 0 !important;
+                      color: #000000 !important;
+                    }
+                    .contract-preview ul li {
+                      color: #000000 !important;
+                      margin: 0.25rem 0 !important;
+                    }
+                    .contract-preview ul li::marker { color: #000000 !important; content: "●" !important; }
+                    .contract-preview ol {
                             padding-left: 1.5rem !important;
                             margin: 0.5rem 0 !important;
                             color: #000000 !important;
@@ -1189,17 +956,14 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                             color: #000000 !important;
                             margin: 0.5rem 0 !important;
                           }
-                          /* Force all content to be black */
-                          .contract-preview * {
-                            color: #000000 !important;
-                          }
-                          /* Override any white or transparent colors */
-                          .contract-preview li::before {
-                            color: #000000 !important;
-                          }
-                          /* Specific override for list markers */
-                          .contract-preview ul > li::marker,
-                          .contract-preview ol > li::marker {
+                    .contract-preview * {
+                      color: #000000 !important;
+                    }
+                    .contract-preview li::before {
+                      color: #000000 !important;
+                    }
+                    .contract-preview ul > li::marker,
+                    .contract-preview ol > li::marker {
                             color: #000000 !important;
                             font-weight: bold !important;
                           }
