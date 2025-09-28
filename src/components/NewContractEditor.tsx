@@ -106,9 +106,25 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     setShowDetails(true);
   }
 
-  // Hook to immediately switch to details view if editing
+  // Dieser Hook initialisiert den Editor mit den Daten des bestehenden Vertrags.
   useEffect(() => {
     if (existingContract) {
+      // Setzt alle variablen Werte aus dem bestehenden Vertrag.
+      // Die `globalVariables` enthalten bereits alle notwendigen Daten dank Schritt 1.
+      setVariableValues({
+        ...existingContract,
+        ...existingContract.globalVariables,
+        contract_type_key: existingContract.contractType,
+      });
+
+      // Stellt die IDs der ausgewählten Anhänge wieder her.
+      if (existingContract.contract_attachments) {
+        setSelectedAttachmentIds(
+          existingContract.contract_attachments.map((ca: any) => ca.attachments?.id).filter(Boolean)
+        );
+      }
+      
+      // Zeigt sofort die Detailansicht des Editors an.
       setShowDetails(true);
     }
   }, [existingContract]);
