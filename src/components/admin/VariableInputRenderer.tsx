@@ -11,12 +11,14 @@ interface VariableInputRendererProps {
   selectedModules: ContractModule[];
   globalVariables: GlobalVariable[];
   variableValues: Record<string, any>;
+  requiredFields: string[];
   onVariableChange: (key: string, value: string) => void;
 }
 
 export function VariableInputRenderer({ 
   selectedModules, 
   globalVariables, 
+  requiredFields,
   variableValues, 
   onVariableChange 
 }: VariableInputRendererProps) {
@@ -110,7 +112,7 @@ export function VariableInputRenderer({
         
         contentVars.forEach(varKey => {
           const globalVar = globalVariables.find(gv => gv.key === varKey);
-          moduleVariables.push({
+          if (varKey !== 'gueltig_bis') moduleVariables.push({
             id: varKey,
             label: globalVar ? globalVar.name_de : varKey,
             isGlobal: !!globalVar,
@@ -164,7 +166,7 @@ export function VariableInputRenderer({
                     <div key={variable.id} className="space-y-2">
                       <Label htmlFor={variable.id}>
                         {variable.label}
-                        {variable.globalVar?.is_required && <span className="text-destructive ml-1">*</span>}
+                        {(variable.globalVar?.is_required || requiredFields.includes(variable.id)) && <span className="text-destructive ml-1">*</span>}
                       </Label>
                       <Input
                         id={variable.id}
@@ -210,7 +212,7 @@ export function VariableInputRenderer({
                     <div key={variable.id} className="space-y-2">
                       <Label htmlFor={variable.id}>
                         {variable.label}
-                        {variable.globalVar?.is_required && <span className="text-destructive ml-1">*</span>}
+                        {(variable.globalVar?.is_required || requiredFields.includes(variable.id)) && <span className="text-destructive ml-1">*</span>}
                       </Label>
                       <Input
                         id={variable.id}

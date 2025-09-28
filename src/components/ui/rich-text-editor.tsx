@@ -7,9 +7,20 @@ import { ListKeymap } from '@tiptap/extension-list-keymap';
 import { TaskList } from '@tiptap/extension-task-list';
 import { TaskItem } from '@tiptap/extension-task-item';
 import Image from '@tiptap/extension-image'; // Import Image extension
+import {
+  Table,
+  TableRow,
+  TableHeader,
+  TableCell,
+} from '@tiptap/extension-table';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Bold, Italic, Strikethrough, List, ListOrdered, Quote, CheckSquare, Indent as IndentIcon, Outdent as OutdentIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify, Variable, Search, ImageIcon } from 'lucide-react';
+import {
+  Bold, Italic, Strikethrough, List, ListOrdered, Quote, CheckSquare,
+  Indent as IndentIcon, Outdent as OutdentIcon, AlignLeft, AlignCenter,
+  AlignRight, AlignJustify, Variable, Search, ImageIcon,
+  Table as TableIcon, Rows, Trash2, Plus, Minus, Combine, Split
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IndentExtension } from '@/lib/indent-extension';
 import { supabase } from '@/integrations/supabase/client';
@@ -169,6 +180,13 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
         minLevel: 0,
         maxLevel: 8,
       }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      }),
       CustomImage.configure({
         // HTMLAttributes are now handled by the NodeView
       }),
@@ -280,6 +298,37 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
           {/* Quote */}
           <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleBlockquote().run()} className={cn("h-8 w-8 p-0", editor.isActive('blockquote') && "bg-primary/20")}>
             <Quote className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zitat</p></TooltipContent></Tooltip>
+
+          <div className="w-px h-6 bg-border mx-1" />
+
+          {/* Table Controls */}
+          <div className="flex items-center gap-1">
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} className="h-8 w-8 p-0">
+              <TableIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Tabelle einfügen</p></TooltipContent></Tooltip>
+            
+            {editor.can().deleteTable() && (
+              <>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addColumnBefore().run()} className="h-8 w-8 p-0">
+                  <div className="flex items-center"><Plus className="h-3 w-3" /><Rows className="h-4 w-4 -rotate-90" /></div></Button></TooltipTrigger><TooltipContent><p>Spalte davor</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addColumnAfter().run()} className="h-8 w-8 p-0">
+                  <div className="flex items-center"><Rows className="h-4 w-4 -rotate-90" /><Plus className="h-3 w-3" /></div></Button></TooltipTrigger><TooltipContent><p>Spalte danach</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().deleteColumn().run()} className="h-8 w-8 p-0">
+                  <div className="flex items-center"><Minus className="h-3 w-3" /><Rows className="h-4 w-4 -rotate-90" /></div></Button></TooltipTrigger><TooltipContent><p>Spalte löschen</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addRowBefore().run()} className="h-8 w-8 p-0">
+                  <div className="flex items-center"><Plus className="h-3 w-3" /><Rows className="h-4 w-4" /></div></Button></TooltipTrigger><TooltipContent><p>Zeile davor</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addRowAfter().run()} className="h-8 w-8 p-0">
+                  <div className="flex items-center"><Rows className="h-4 w-4" /><Plus className="h-3 w-3" /></div></Button></TooltipTrigger><TooltipContent><p>Zeile danach</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().deleteRow().run()} className="h-8 w-8 p-0">
+                  <div className="flex items-center"><Minus className="h-3 w-3" /><Rows className="h-4 w-4" /></div></Button></TooltipTrigger><TooltipContent><p>Zeile löschen</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().mergeCells().run()} className="h-8 w-8 p-0">
+                  <Combine className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zellen verbinden</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().splitCell().run()} className="h-8 w-8 p-0">
+                  <Split className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zellen trennen</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().deleteTable().run()} className="h-8 w-8 p-0">
+                  <Trash2 className="h-4 w-4 text-destructive" /></Button></TooltipTrigger><TooltipContent><p>Tabelle löschen</p></TooltipContent></Tooltip>
+              </>
+            )}
+          </div>
 
           <div className="w-px h-6 bg-border mx-1" />
 

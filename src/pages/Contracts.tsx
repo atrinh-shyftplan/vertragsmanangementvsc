@@ -90,7 +90,7 @@ export default function Contracts() {
     tags: dbContract.tags || [],
     lastModified: dbContract.updated_at,
     progress: dbContract.progress || 0,
-    contractType: dbContract.contract_type_key as 'ep_standard' | 'ep_rollout' | undefined,
+    contractType: dbContract.contract_types?.key as 'ep_standard' | 'ep_rollout' | undefined,
     // Korrektur: Lade alle Variablen aus dem einzelnen 'variables'-Feld.
     templateVariables: dbContract.variables || {},
     globalVariables: dbContract.variables || {},
@@ -104,7 +104,7 @@ export default function Contracts() {
       setLoading(true);
     const { data, error } = await supabase
       .from('contracts')
-      .select('*, assigned_user:profiles!assigned_to_profile_id(*), contract_attachments(attachments(*, contract_modules(*))), contract_types(name_de)')
+      .select('*, assigned_user:profiles!assigned_to_profile_id(*), contract_attachments(attachments(*, contract_modules(*))), contract_types(name_de, key)')
       .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -301,6 +301,9 @@ export default function Contracts() {
               <CardHeader>
                 <div className="flex justify-between items-start gap-2">
                   <CardTitle className="text-lg line-clamp-2 pr-2">{contract.title}</CardTitle>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-medium">{contract.client}</p>
+                  </div>
                   <Badge className={getStatusColor(contract.status)} variant="outline">
                     {statusLabels[contract.status as keyof typeof statusLabels]}
                   </Badge>

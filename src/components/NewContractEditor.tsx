@@ -27,11 +27,11 @@ const getValidationSchema = (
   const isDraft = status === 'draft';
 
   let schema = yup.object({
-    title: yup.string().required('Titel ist ein Pflichtfeld.'),
-    client: yup.string().required('Kunde ist ein Pflichtfeld.'),
-    assigned_to_profile_id: yup.string().required('Zuständiger Ansprechpartner ist ein Pflichtfeld.'),
-    status: yup.string().required('Status ist ein Pflichtfeld.'),
-    selectedAttachmentIds: yup.array().of(yup.string()).test(
+    title: yup.string().required('Titel ist ein Pflichtfeld'),
+    client: yup.string().required('Kunde ist ein Pflichtfeld'),
+    assigned_to_profile_id: yup.string().required('Zuständiger Ansprechpartner ist ein Pflichtfeld'),
+    status: yup.string().required('Status ist ein Pflichtfeld'),
+    selectedAttachmentIds: yup.array().of(yup.string()).min(1, 'Mindestens ein Produkt muss ausgewählt werden.').test(
       'has-product',
       'Mindestens ein Produkt muss ausgewählt werden.',
       (ids) => {
@@ -39,13 +39,13 @@ const getValidationSchema = (
         const selected = ids.map(id => allAttachments.find(a => a.id === id)).filter(Boolean);
         return selected.some(a => a!.type === 'produkt');
       }
-    ).required('Produktauswahl ist ein Pflichtfeld.'),
+    ),
   });
 
   if (!isDraft) {
     const requiredFieldsShape: { [key: string]: yup.AnySchema } = {
-      start_date: yup.string().required('Startdatum ist ein Pflichtfeld.'),
-      end_date: yup.string().required('Enddatum ist ein Pflichtfeld.'),
+      start_date: yup.string().required('Startdatum ist ein Pflichtfeld'),
+      end_date: yup.string().required('Enddatum ist ein Pflichtfeld'),
     };
 
     selectedModules.forEach(module => {
@@ -636,7 +636,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="gueltig_bis">Angebot gültig bis</Label>
+                        <Label htmlFor="gueltig_bis">Angebot gültig bis {requiredFields.includes('gueltig_bis') && <span className="text-destructive">*</span>}</Label>
                         <Input
                           id="gueltig_bis"
                           type="date"
@@ -741,7 +741,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                   </div>
 
                   <div>
-                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Produkte (mindestens eines auswählen)</h4>
+                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Produkte (mindestens eines auswählen) {requiredFields.includes('selectedAttachmentIds') && <span className="text-destructive">*</span>}</h4>
                     <div className="space-y-2">
                       {contractStructure.filter(item => item.attachment?.type === 'produkt').map(item => (
                         <div key={item.attachment!.id} className="flex items-center space-x-2">
@@ -765,7 +765,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                   </div>
 
                   <div>
-                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Optionale Zusatzleistungen</h4>
+                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Optional</h4>
                     <div className="space-y-2">
                       {contractStructure.filter(item => item.attachment?.type === 'zusatz').map(item => (
                         <div key={item.attachment!.id} className="flex items-center space-x-2">
@@ -794,7 +794,8 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                 selectedModules={contractStructure
                   .filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id))
                   .map(item => item.module)}
-                globalVariables={globalVariables.filter(v => v.key !== 'gueltig_bis')}
+                globalVariables={globalVariables}
+                requiredFields={requiredFields}
                 variableValues={variableValues}
                 onVariableChange={(key, value) => setVariableValues(prev => ({
                   ...prev,
