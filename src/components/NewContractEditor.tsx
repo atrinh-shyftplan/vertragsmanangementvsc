@@ -572,8 +572,15 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
       window.URL.revokeObjectURL(url);
 
     } catch (error) {
-      console.error('Fehler beim PDF-Export:', error);
-      toast.error('Fehler beim PDF-Export: ' + (error as Error).message);
+      // 1. Gib das *gesamte* Fehlerobjekt in der Konsole aus.
+      // Das ist der wichtigste Schritt für die Fehlersuche.
+      console.error('Detaillierter Fehler beim PDF-Export:', error);
+
+      // 2. Extrahiere die Nachricht sicher, falls das Fehlerobjekt kein Standard-Error ist.
+      const errorMessage = (error instanceof Error) ? error.message : 'Ein unbekannter Fehler ist aufgetreten.';
+
+      // 3. Zeige dem Benutzer eine saubere und verständliche Nachricht an.
+      toast.error(`Fehler beim PDF-Export: ${errorMessage}`);
     } finally {
       setIsLoading(false);
       setIsPdfDialogOpen(false);

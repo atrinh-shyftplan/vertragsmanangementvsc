@@ -1,33 +1,39 @@
 // supabase/functions/pdf-export/index.ts
 
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import { launch } from 'https://deno.land/x/puppeteer@16.2.0/mod.ts';
-import { corsHeaders } from '../_shared/cors.ts'
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
+
+// CORS-Header für die Antworten
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*', // Erlaube Anfragen von jeder Herkunft
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 serve(async (req) => {
+  // NEU: OPTIONS Preflight-Anfrage behandeln
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // KORREKTUR: Wir lesen jetzt 'htmlContent' statt 'html' aus.
     const { htmlContent } = await req.json();
 
     if (!htmlContent) {
-      return new Response(JSON.stringify({ error: 'Missing html content' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      return new Response(JSON.stringify({ error: "htmlContent is required" }), {
         status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const browser = await launch();
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
     const page = await browser.newPage();
 
-    // Setze den HTML-Inhalt der Seite
     await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 
-    // Generiere das PDF
-    const pdf = await page.pdf({
+    const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
       margin: {
@@ -40,20 +46,20 @@ serve(async (req) => {
 
     await browser.close();
 
-    // Sende das PDF als Antwort zurück
-    return new Response(pdf, {
+    return new Response(pdfBuffer, {
       headers: {
         ...corsHeaders,
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': 'attachment; filename="contract.pdf"',
+        "Content-Type": "application/pdf",
+        "Content-Disposition": "attachment; filename=\"vertragsdokument.pdf\"",
       },
       status: 200,
     });
-  } catch (e) {
-    console.error(e);
-    return new Response(JSON.stringify({ error: e.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-})
+});
