@@ -53,9 +53,9 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
   const renderModule = (moduleKey: string, moduleData: any, numberingStyle?: string, sortOrder?: number) => {
     if (!moduleData) return null;
 
+    // Logik für den Titel
     const title = language === 'de' ? moduleData.title_de : moduleData.title_en;
-    const content = language === 'de' ? moduleData.content_de : (moduleData.content_en || moduleData.content_de);
-    
+
     // Prüfen, ob in den jeweiligen Sprachen Inhalt vorhanden ist.
     const hasGermanContent = moduleData.content_de && moduleData.content_de.trim() !== '';
     const hasEnglishContent = moduleData.content_en && moduleData.content_en.trim() !== '';
@@ -63,6 +63,7 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
     // Das Layout mit voller Breite (1 Spalte) wird verwendet,
     // AUSSER wenn BEIDE Sprachen Inhalt haben.
     const shouldShowFullWidth = !(hasGermanContent && hasEnglishContent);
+    
     const getNumberPrefix = () => {
       if (!numberingStyle || numberingStyle === 'none' || !sortOrder) return '';
       
@@ -75,8 +76,13 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
       }
     };
     
+    // Nur wenn mindestens eine Sprache Inhalt oder einen Titel hat, etwas rendern
+    if (!hasGermanContent && !hasEnglishContent && !title) {
+      return null;
+    }
+    
     return (
-      <div key={moduleKey} className="mb-8">
+      <div key={moduleKey} className="mb-8 break-after-page">
         {title && (
           <h2 className="text-xl font-semibold text-foreground mb-4 border-b border-border pb-2 flex items-center gap-2">
             {getNumberPrefix() && <span className="text-primary">{getNumberPrefix()}</span>}
@@ -84,32 +90,34 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
           </h2>
         )}
         
-        {/* Handle different module types */}
-        {content && (
-          <div 
-            className={`text-muted-foreground leading-relaxed mb-4 prose prose-sm ${shouldShowFullWidth ? 'max-w-full' : 'max-w-none'}`}
-            dangerouslySetInnerHTML={{ 
-              __html: replaceVariables(content)
-            }}
-          />
-        )}
-        
-        {moduleData.paragraphs_de && (
-          <div className="space-y-3">
-            {(language === 'de' ? moduleData.paragraphs_de : moduleData.paragraphs_en).map((paragraph: any, index: number) => (
-              <div key={index} className="flex gap-3">
-                {paragraph.number && (
-                  <span className="text-sm font-medium text-muted-foreground min-w-[20px]">
-                    ({paragraph.number})
-                  </span>
-                )}
-                <p className="text-muted-foreground leading-relaxed">
-                  {replaceVariables(paragraph.text)}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
+        {/*
+          KORREKTUR:
+          Ein Flexbox-Container, der die Spalten-Logik steuert.
+          - `shouldShowFullWidth = true`: Spalten sind untereinander (`flex-col`).
+          - `shouldShowFullWidth = false`: Spalten sind nebeneinander.
+        */}
+        <div className={`flex gap-x-8 ${shouldShowFullWidth ? 'flex-col' : ''}`}>
+          
+          {/* Deutsche Spalte: Wird nur angezeigt, wenn deutscher Inhalt da ist. */}
+          {hasGermanContent && (
+            <div 
+              className="flex-1 text-muted-foreground leading-relaxed prose prose-sm max-w-none contract-preview"
+              dangerouslySetInnerHTML={{ 
+                __html: replaceVariables(moduleData.content_de)
+              }}
+            />
+          )}
+
+          {/* Englische Spalte: Wird nur angezeigt, wenn beide Inhalte da sind (also nicht volle Breite). */}
+          {!shouldShowFullWidth && hasEnglishContent && (
+            <div 
+              className="flex-1 text-muted-foreground leading-relaxed prose prose-sm max-w-none contract-preview"
+              dangerouslySetInnerHTML={{ 
+                __html: replaceVariables(moduleData.content_en)
+              }}
+            />
+          )}
+        </div>
       </div>
     );
   };
