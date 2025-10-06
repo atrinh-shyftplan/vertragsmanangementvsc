@@ -51,12 +51,17 @@ export function ContractHeader({ variableValues, contractType, offerNumber, date
               {formatDate(date || variableValues.datum)}
             </span>
           </div>
-          <div className="text-sm">
+          <div className="text-sm text-right">
             <div className="font-medium">Ansprechpartner:in shyftplan</div>
-            <div>{assignedUser ? 
-              `${assignedUser.display_name || assignedUser.email}, ${assignedUser.email}, ${assignedUser.phone_number || 'Telefonnummer nicht verfügbar'}` :
-              (variableValues.ansprechpartner || 'Max Mustermann, xxx@shyftplan.com, +49 xxx')
-            }</div>
+            <p className="text-muted-foreground">
+              {variableValues?.ansprechpartner_name || 'Nicht zugewiesen'}
+            </p>
+            <p className="text-muted-foreground">
+              {variableValues?.ansprechpartner_email || '-'}
+            </p>
+            <p className="text-muted-foreground">
+              {variableValues?.ansprechpartner_telefon || '-'}
+            </p>
           </div>
           <div className="text-sm">
             <div className="font-medium">Bankverbindung</div>

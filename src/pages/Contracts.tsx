@@ -301,15 +301,16 @@ export default function Contracts() {
               <CardHeader>
                 <div className="flex justify-between items-start gap-2">
                   <CardTitle className="text-lg line-clamp-2 pr-2">{contract.title}</CardTitle>
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-sm font-medium">{contract.client}</p>
-                  </div>
                   <Badge className={getStatusColor(contract.status)} variant="outline">
                     {statusLabels[contract.status as keyof typeof statusLabels]}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 flex-grow">
+                <div>
+                  <p className="text-xs text-muted-foreground">Kunde</p>
+                  <p className="text-sm font-medium">{contract.client}</p>
+                </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Zugewiesen an</p>
                   <p className="text-sm font-medium">{contract.assignedTo}</p>

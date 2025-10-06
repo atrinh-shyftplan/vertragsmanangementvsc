@@ -127,6 +127,30 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
   }, [existingContract, adminDataLoading]);
 
   useEffect(() => {
+    // Finde den aktuell ausgewählten Benutzer in der Liste aller Benutzer.
+    const selectedUser = users.find(user => user.id === variableValues.assigned_to_profile_id);
+
+    // Wenn ein Benutzer ausgewählt wurde, aktualisiere die Ansprechpartner-Variablen.
+    if (selectedUser) {
+      setVariableValues(prevData => {
+        // Prüfe, ob die Daten sich tatsächlich geändert haben, um Endlosschleifen zu vermeiden.
+        if (prevData.ansprechpartner_name !== selectedUser.display_name ||
+            prevData.ansprechpartner_email !== selectedUser.email ||
+            prevData.ansprechpartner_telefon !== selectedUser.phone_number) {
+          
+          return {
+            ...prevData,
+            ansprechpartner_name: selectedUser.display_name,
+            ansprechpartner_email: selectedUser.email,
+            ansprechpartner_telefon: selectedUser.phone_number,
+          };
+        }
+        return prevData;
+      });
+    }
+  }, [variableValues.assigned_to_profile_id, users]);
+
+  useEffect(() => {
     const loadData = async () => {
       try {
         const { supabase } = await import('@/integrations/supabase/client');
@@ -626,7 +650,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="client">Kunde {requiredFields.includes('client') && <span className="text-destructive">*</span>}</Label>
+                        <Label htmlFor="client">Name des Unternehmens {requiredFields.includes('client') && <span className="text-destructive">*</span>}</Label>
                         <Input
                           id="client"
                           value={variableValues.client || ''}
@@ -670,13 +694,10 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                         <Select
                           value={variableValues.assigned_to_profile_id || ''}
                          onValueChange={(value) => {
-                            const user = users.find(u => u.id === value); 
                             setVariableValues(prev => ({
                               ...prev,
                               assigned_to_profile_id: value,
-                              assigned_to: user?.display_name || prev.assigned_to || ''
                             }));
-                            setSelectedUser(user || null);
                           }}
                         >
                           <SelectTrigger>
