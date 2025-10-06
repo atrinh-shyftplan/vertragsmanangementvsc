@@ -432,7 +432,7 @@
 
 /* --- Tiptap Table Styling --- */
 
-/* 1. Stil für den EDITOR: Dünne, graue Hilfslinien */
+/* 1. Stil für den EDITOR: Dünne, graue Hilfslinien zur Orientierung */
 .ProseMirror table {
   width: 100%;
   border-collapse: collapse;
@@ -452,12 +452,11 @@
 .contract-preview table,
 .contract-preview th,
 .contract-preview td {
-  border: 1px solid transparent; /* Rahmen unsichtbar machen */
+  border: 1px solid transparent; /* Macht Rahmen unsichtbar */
 }
 
 /* 3. Spezialfall für UNTERSCHRIFTEN: Leere Zellen in der Vorschau bekommen eine untere Linie */
 .contract-preview td:empty {
     border-bottom: 1px solid black;
-    min-height: 2em;
-}
+    min-height: 2em; /* Stellt sicher, dass die Linie sichtbar ist */
 }

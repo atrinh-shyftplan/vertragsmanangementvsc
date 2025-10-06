@@ -6,7 +6,7 @@ import { TextAlign } from '@tiptap/extension-text-align';
 import { ListKeymap } from '@tiptap/extension-list-keymap';
 import { TaskList } from '@tiptap/extension-task-list';
 import { TaskItem } from '@tiptap/extension-task-item';
-import Image from '@tiptap/extension-image'; // Import Image extension
+import Image from '@tiptap/extension-image';
 import {
   Table,
   TableRow,
@@ -186,7 +186,6 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
       TableRow,
       TableHeader,
       TableCell,
-      }),
       CustomImage.configure({
         // HTMLAttributes are now handled by the NodeView
       }),
