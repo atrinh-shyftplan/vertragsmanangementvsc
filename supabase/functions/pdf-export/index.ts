@@ -8,6 +8,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Dieser Token wird jetzt sicher aus den Secrets geladen
+const BROWSERLESS_TOKEN = Deno.env.get('BROWSERLESS_TOKEN');
+const BROWSERLESS_URL = `wss://chrome.browserless.io?token=${BROWSERLESS_TOKEN}`;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -22,13 +26,9 @@ serve(async (req) => {
       });
     }
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage', // Oft in Cloud-Umgebungen nötig
-      ],
+    // Verbindet sich mit dem externen Browserless-Dienst
+    const browser = await puppeteer.connect({
+      browserWSEndpoint: BROWSERLESS_URL,
     });
 
     const page = await browser.newPage();
