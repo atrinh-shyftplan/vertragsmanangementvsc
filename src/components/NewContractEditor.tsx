@@ -10,6 +10,7 @@ import { FileText, ArrowLeft, Save, X, PanelLeftClose, PanelRightClose, BookOpen
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import type { ImperativePanelHandle } from "react-resizable-panels";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { supabase } from '@/integrations/supabase/client';
 import { useAdminData } from '@/hooks/useAdminData';
 import { toast } from 'sonner';
 import { VariableInputRenderer } from '@/components/admin/VariableInputRenderer';
@@ -89,6 +90,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
   const [outline, setOutline] = useState<{ id: string; text: string; level: number }[]>([]);
   const previewRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<ImperativePanelHandle>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [isLoadingStructure, setIsLoadingStructure] = useState(false);
 
   const [contractStructure, setContractStructure] = useState<{
@@ -507,6 +509,74 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     } catch (error) {
       console.error('Error saving contract:', error);
       toast.error('Fehler beim Speichern des Vertrags');
+    }
+  };
+
+  const handleExportPdf = async () => {
+    setIsLoading(true);
+
+    // 1. Finde den Container mit dem Vertragsinhalt
+    const viewerElement = document.getElementById('contract-viewer-for-export');
+    if (!viewerElement) {
+      console.error('Export-Container nicht gefunden.');
+      setIsLoading(false);
+      return;
+    }
+
+    // 2. Erstelle eine saubere Kopie des HTMLs
+    const cleanHtml = viewerElement.innerHTML
+      .replace(/class="variable-highlight"/g, '');
+
+    // 3. Lade unsere speziellen Druck-Styles (als rohen Text)
+    const printStyles = await import('../print-styles.css?raw');
+
+    // 4. Bereite das finale HTML-Dokument für den Server vor
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>${printStyles.default}</style>
+          <style>
+            /* Basis-Stile, um ein sauberes Layout zu gewährleisten */
+            body { font-family: sans-serif; line-height: 1.6; }
+            .prose { max-width: 100%; }
+            img { max-width: 100%; height: auto; }
+            table { width: 100%; border-collapse: collapse; }
+            td, th { border: 1px solid #e2e8f0; padding: 8px; }
+          </style>
+        </head>
+        <body>
+          <div class="prose">${cleanHtml}</div>
+        </body>
+      </html>
+    `;
+
+    try {
+      // 5. Rufe die Supabase Edge Function auf
+      const { data, error } = await supabase.functions.invoke('pdf-export', {
+        body: { htmlContent: fullHtml },
+      });
+
+      if (error) throw error;
+
+      // 6. Starte den Download der erhaltenen PDF-Datei
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${variableValues.title || 'vertrag'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error('Fehler beim PDF-Export:', error);
+      toast.error('Fehler beim PDF-Export: ' + (error as Error).message);
+    } finally {
+      setIsLoading(false);
+      setIsPdfDialogOpen(false);
     }
   };
 
