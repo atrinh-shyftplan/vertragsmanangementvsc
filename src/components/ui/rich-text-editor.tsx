@@ -18,8 +18,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import {
   Bold, Italic, Strikethrough, List, ListOrdered, Quote, CheckSquare,
   Indent as IndentIcon, Outdent as OutdentIcon, AlignLeft, AlignCenter,
-  AlignRight, AlignJustify, Variable, Search, ImageIcon,
-  Table as TableIcon, Rows, Trash2, Plus, Minus, Combine, Split
+  AlignRight, AlignJustify, Variable, Search, ImageIcon, Table as TableIcon,
+  Trash2, Combine, Split, Pilcrow, Heading1, Heading2, Heading3,
+  Columns, Rows, ArrowLeftToLine, ArrowRightToLine, ArrowUpToLine, ArrowDownToLine,
+  Trash
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IndentExtension } from '@/lib/indent-extension';
@@ -248,10 +250,10 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
           <div className="flex items-center gap-1">
             <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setHeading({ level: 1 }).run()} className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 1 }) && "bg-primary/20")}>
               H1</Button></TooltipTrigger><TooltipContent><p>Überschrift 1</p></TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setHeading({ level: 2 }).run()} className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 2 }) && "bg-primary/20")}>
-              H2</Button></TooltipTrigger><TooltipContent><p>Überschrift 2</p></TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setHeading({ level: 3 }).run()} className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 3 }) && "bg-primary/20")}>
-              H3</Button></TooltipTrigger><TooltipContent><p>Überschrift 3</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setHeading({ level: 2 }).run()} className={cn("h-8 w-8 p-0", editor.isActive('heading', { level: 2 }) && "bg-primary/20")}>
+              <Heading2 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Überschrift 2</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setHeading({ level: 3 }).run()} className={cn("h-8 w-8 p-0", editor.isActive('heading', { level: 3 }) && "bg-primary/20")}>
+              <Heading3 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Überschrift 3</p></TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setParagraph().run()} className={cn("h-8 px-2 text-xs", !editor.isActive('heading') && !editor.isActive('blockquote') && "bg-primary/20")}>
               P</Button></TooltipTrigger><TooltipContent><p>Absatz</p></TooltipContent></Tooltip>
           </div>
@@ -300,25 +302,27 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
 
           <div className="w-px h-6 bg-border mx-1" />
 
-          {/* Table Controls */}
+          {/* Table Controls - Grouped */}
           <div className="flex items-center gap-1">
             <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} className="h-8 w-8 p-0">
               <TableIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Tabelle einfügen</p></TooltipContent></Tooltip>
             
             {editor.can().deleteTable() && (
               <>
-                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addColumnBefore().run()} className="h-8 w-8 p-0">
-                  <div className="flex items-center"><Plus className="h-3 w-3" /><Rows className="h-4 w-4 -rotate-90" /></div></Button></TooltipTrigger><TooltipContent><p>Spalte davor</p></TooltipContent></Tooltip>
-                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addColumnAfter().run()} className="h-8 w-8 p-0">
-                  <div className="flex items-center"><Rows className="h-4 w-4 -rotate-90" /><Plus className="h-3 w-3" /></div></Button></TooltipTrigger><TooltipContent><p>Spalte danach</p></TooltipContent></Tooltip>
-                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().deleteColumn().run()} className="h-8 w-8 p-0">
-                  <div className="flex items-center"><Minus className="h-3 w-3" /><Rows className="h-4 w-4 -rotate-90" /></div></Button></TooltipTrigger><TooltipContent><p>Spalte löschen</p></TooltipContent></Tooltip>
-                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addRowBefore().run()} className="h-8 w-8 p-0">
-                  <div className="flex items-center"><Plus className="h-3 w-3" /><Rows className="h-4 w-4" /></div></Button></TooltipTrigger><TooltipContent><p>Zeile davor</p></TooltipContent></Tooltip>
-                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addRowAfter().run()} className="h-8 w-8 p-0">
-                  <div className="flex items-center"><Rows className="h-4 w-4" /><Plus className="h-3 w-3" /></div></Button></TooltipTrigger><TooltipContent><p>Zeile danach</p></TooltipContent></Tooltip>
-                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().deleteRow().run()} className="h-8 w-8 p-0">
-                  <div className="flex items-center"><Minus className="h-3 w-3" /><Rows className="h-4 w-4" /></div></Button></TooltipTrigger><TooltipContent><p>Zeile löschen</p></TooltipContent></Tooltip>
+                {/* Column Operations */}
+                <div className="w-px h-6 bg-border mx-1" />
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addColumnBefore().run()} className="h-8 w-8 p-0"><ArrowLeftToLine className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Spalte davor einfügen</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addColumnAfter().run()} className="h-8 w-8 p-0"><ArrowRightToLine className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Spalte danach einfügen</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().deleteColumn().run()} className="h-8 w-8 p-0"><Trash className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Spalte löschen</p></TooltipContent></Tooltip>
+
+                {/* Row Operations */}
+                <div className="w-px h-6 bg-border mx-1" />
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addRowBefore().run()} className="h-8 w-8 p-0"><ArrowUpToLine className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zeile davor einfügen</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addRowAfter().run()} className="h-8 w-8 p-0"><ArrowDownToLine className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zeile danach einfügen</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().deleteRow().run()} className="h-8 w-8 p-0"><Trash className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zeile löschen</p></TooltipContent></Tooltip>
+
+                {/* Cell & Table Operations */}
+                <div className="w-px h-6 bg-border mx-1" />
                 <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().mergeCells().run()} className="h-8 w-8 p-0">
                   <Combine className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zellen verbinden</p></TooltipContent></Tooltip>
                 <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().splitCell().run()} className="h-8 w-8 p-0">
