@@ -460,3 +460,8 @@
     border-bottom: 1px solid black;
     min-height: 2em; /* Stellt sicher, dass die Linie sichtbar ist */
 }
+/* Eigene Anpassung: Sichtbaren Abstand für alle leeren Absätze erzwingen */
+.contract-preview p:empty::before {
+  content: "";
+  display: inline-block;
+}

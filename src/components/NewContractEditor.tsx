@@ -327,7 +327,9 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     } else {
       moduleHtml += `<div class="mb-8">`;
     }
-    const isBilingual = (hasGermanContent || hasGermanTitle) && (hasEnglishContent || hasEnglishTitle);
+    // Finale Korrektur: Ein Modul ist nur dann zweisprachig, wenn BEIDE Inhaltsfelder (content_de und content_en)
+    // Text enthalten. Titel allein lösen die zweispaltige Ansicht nicht mehr aus.
+    const isBilingual = hasGermanContent && hasEnglishContent;
 
     if (isBilingual) {
       moduleHtml += `<div class="grid grid-cols-2 side-by-side-table">`;
