@@ -1,18 +1,19 @@
 // supabase/functions/pdf-export/index.ts
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { serve } from "std/http/server.ts";
 import puppeteer from "puppeteer";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': '*', // Erlaubt Anfragen von allen Quellen
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS', // Wichtig: OPTIONS hinzufügen
 };
 
-// Dieser Token wird jetzt sicher aus den Secrets geladen
 const BROWSERLESS_TOKEN = Deno.env.get('BROWSERLESS_TOKEN');
 const BROWSERLESS_URL = `wss://chrome.browserless.io?token=${BROWSERLESS_TOKEN}`;
 
 serve(async (req) => {
+  // Stelle sicher, dass auf OPTIONS-Anfragen korrekt geantwortet wird
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -26,7 +27,6 @@ serve(async (req) => {
       });
     }
 
-    // Verbindet sich mit dem externen Browserless-Dienst
     const browser = await puppeteer.connect({
       browserWSEndpoint: BROWSERLESS_URL,
     });
