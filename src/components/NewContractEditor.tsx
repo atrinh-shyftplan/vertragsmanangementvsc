@@ -845,6 +845,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                   <CardContent>
                       <div 
                       ref={previewRef}
+                      id="contract-viewer-for-export"
                       className="prose prose-sm sm:prose-base max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
                       style={{ lineHeight: '1.6', fontFamily: 'Arial, sans-serif' }}
                       dangerouslySetInnerHTML={{ 
@@ -1027,25 +1028,12 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
           </AlertDialogHeader>
           <div className="py-4">
             <Label htmlFor="pdf-filename">Dateiname</Label>
-            <Input
-              id="pdf-filename"
-              value={pdfFilename}
-              onChange={(e) => setPdfFilename(e.target.value)}
-              placeholder="Dateiname.pdf"
-            />
+            <p className="text-sm font-medium p-2 bg-muted rounded-md mt-1">{variableValues.title || 'vertrag'}.pdf</p>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                const previewElement = previewRef.current;
-                if (previewElement && pdfFilename) {
-                  const { generatePdf: exportToPdf } = await import('@/lib/pdf-export');
-                  await exportToPdf(previewElement, pdfFilename);
-                }
-              }}
-            >
-              Exportieren
+            <AlertDialogAction onClick={handleExportPdf} disabled={isLoading}>
+              {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Exportiere...</> : 'Exportieren'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

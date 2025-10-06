@@ -1,31 +1,22 @@
-/* Diese Klassen nutzen wir für den unsichtbaren Klon während des Exports */
-.pdf-render-container {
-  position: absolute !important;
-  left: -9999px !important; /* Aus dem sichtbaren Bereich schieben */
-  top: 0 !important;
-  background: white !important;
-  font-size: 10pt !important; /* Sorgt für eine konsistente Basis-Schriftgröße */
-  width: 180mm !important; /* Druckbreite einer A4-Seite (210mm - 15mm Rand links/rechts) */
-  padding: 0 !important;
-  margin: 0 !important;
-  box-shadow: none !important;
-  border: none !important;
-}
+/* src/lib/print-styles.css */
 
-.pdf-render-container .unfilled-variable {
-  background-color: transparent !important;
-  color: inherit !important;
-  border-bottom: 1px dotted #cccccc; /* Optional: Leere Felder dezent andeuten */
-}
+@media print {
+  body {
+    font-family: sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-.pdf-render-container .bg-yellow-200 {
-  background-color: transparent !important;
-  border: none !important;
-  padding: 0 !important;
-}
+  /* Versteckt die gelben Markierungen der Variablen im PDF */
+  .variable-highlight {
+    background-color: transparent !important;
+    color: inherit !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+  }
 
-/* Sorgt dafür, dass Bilder sich an die Seitenbreite anpassen */
-.pdf-render-container img {
-  max-width: 100% !important;
-  height: auto !important;
+  /* Sorgt für einen sauberen Seitenumbruch nach jedem Modul */
+  .break-after-page {
+    page-break-after: always;
+  }
 }
