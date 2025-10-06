@@ -528,7 +528,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
       .replace(/class="variable-highlight"/g, '');
 
     // 3. Lade unsere speziellen Druck-Styles (als rohen Text)
-    const printStyles = await import('../print-styles.css?raw');
+    const printStyles = await import('../lib/print-styles.css?raw');
 
     // 4. Bereite das finale HTML-Dokument für den Server vor
     const fullHtml = `
