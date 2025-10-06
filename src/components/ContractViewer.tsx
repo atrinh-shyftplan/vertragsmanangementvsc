@@ -56,11 +56,13 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
     const title = language === 'de' ? moduleData.title_de : moduleData.title_en;
     const content = language === 'de' ? moduleData.content_de : (moduleData.content_en || moduleData.content_de);
     
-    // Special handling for "Anhang 5" - no language separation if no English content
-    const isAnhang5 = moduleKey.includes('anhang_5') || moduleKey.includes('attachment_5');
+    // Prüfen, ob in den jeweiligen Sprachen Inhalt vorhanden ist.
+    const hasGermanContent = moduleData.content_de && moduleData.content_de.trim() !== '';
     const hasEnglishContent = moduleData.content_en && moduleData.content_en.trim() !== '';
-    const shouldShowFullWidth = isAnhang5 && !hasEnglishContent;
     
+    // Das Layout mit voller Breite (1 Spalte) wird verwendet,
+    // AUSSER wenn BEIDE Sprachen Inhalt haben.
+    const shouldShowFullWidth = !(hasGermanContent && hasEnglishContent);
     const getNumberPrefix = () => {
       if (!numberingStyle || numberingStyle === 'none' || !sortOrder) return '';
       
