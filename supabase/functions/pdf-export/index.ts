@@ -18,6 +18,7 @@ serve(async (req) => {
     console.log(`🕵️ Spion: Daten erhalten - ContractID: ${contractId}, UserID: ${userId}`);
 
     const browserlessApiKey = Deno.env.get('BROWSERLESS_API_KEY');
+    console.log('Gelesener BROWSERLESS_API_KEY:', browserlessApiKey ? 'Schlüssel gefunden' : 'Kein Schlüssel (undefined)');
     if (!browserlessApiKey) {
       console.error('🔥 FEHLER: BROWSERLESS_API_KEY nicht gefunden!');
       throw new Error('BROWSERLESS_API_KEY is not set in environment variables.');
