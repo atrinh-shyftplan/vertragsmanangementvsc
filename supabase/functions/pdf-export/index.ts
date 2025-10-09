@@ -1,23 +1,33 @@
 // supabase/functions/pdf-export/index.ts
 
-import { serve } from "std/http/server.ts";
-import puppeteer from "puppeteer";
+// Wir verwenden wieder die vollen URLs, um Fehler mit der import_map zu vermeiden
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import puppeteer from "https://deno.land/x/puppeteer@v10.0.0/mod.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*', // Erlaubt Anfragen von allen Quellen
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS', // Wichtig: OPTIONS hinzufügen
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 const BROWSERLESS_TOKEN = Deno.env.get('BROWSERLESS_TOKEN');
+if (!BROWSERLESS_TOKEN) {
+  // Im Fehlerfall eine klare Fehlermeldung zurückgeben
+  const errorResponse = { error: "BROWSERLESS_TOKEN is not set in Supabase secrets." };
+  return new Response(JSON.stringify(errorResponse), {
+    status: 500,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 const BROWSERLESS_URL = `wss://chrome.browserless.io?token=${BROWSERLESS_TOKEN}`;
 
 serve(async (req) => {
-  // Stelle sicher, dass auf OPTIONS-Anfragen korrekt geantwortet wird
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  let browser;
   try {
     const { htmlContent } = await req.json();
     if (!htmlContent) {
@@ -27,7 +37,7 @@ serve(async (req) => {
       });
     }
 
-    const browser = await puppeteer.connect({
+    browser = await puppeteer.connect({
       browserWSEndpoint: BROWSERLESS_URL,
     });
 
@@ -45,8 +55,6 @@ serve(async (req) => {
       },
     });
 
-    await browser.close();
-
     return new Response(pdfBuffer, {
       headers: {
         ...corsHeaders,
@@ -62,5 +70,9 @@ serve(async (req) => {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 });
