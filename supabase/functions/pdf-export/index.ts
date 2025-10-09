@@ -1,7 +1,7 @@
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import { corsHeaders } from '../_shared/cors.ts'
-// RICHTIGER IMPORT: Wir nutzen den Alias aus der deno.json
-import puppeteer from 'puppeteer'
+import { serve } from "std/http/server.ts"; // Nutzt den "std/" Alias
+import { corsHeaders } from "../_shared/cors.ts";
+// @deno-types="npm:@types/puppeteer"
+import puppeteer from "puppeteer"; // Nutzt den "puppeteer" Alias
 
 console.log('🕵️ Spion: Funktion wird initialisiert.');
 
