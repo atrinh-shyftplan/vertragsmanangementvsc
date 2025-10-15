@@ -621,7 +621,7 @@ export interface CompositionWithModuleAndAttachment extends ContractComposition 
  * Represents a single editable module in the frontend TemplateBuilder.
  * The `id` is a temporary client-side identifier for React keys.
  */
-export interface ContractModule {
+export interface EditableModule {
   id: string;
   title: string;
   content: string;

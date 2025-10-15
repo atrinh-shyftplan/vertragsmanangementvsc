@@ -7,26 +7,12 @@ import { Plus, Trash2, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
-import { ContractModule } from '@/integrations/supabase/types';
-// Annahme: Sie haben eine RichTextEditor-Komponente
-// import RichTextEditor from './RichTextEditor'; 
-
-/**
- * A placeholder for a rich text editor component.
- * Replace this with your actual RichTextEditor implementation.
- */
-const RichTextEditor = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
-  <textarea
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
-    className="w-full h-40 p-2 border rounded-md"
-    placeholder="Modul-Inhalt hier eingeben..."
-  />
-);
+import { EditableModule } from '@/integrations/supabase/types';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 
 export function TemplateBuilder() {
   const [templateTitle, setTemplateTitle] = useState('');
-  const [modules, setModules] = useState<ContractModule[]>([]);
+  const [modules, setModules] = useState<EditableModule[]>([]);
   const { toast } = useToast();
 
   const addModule = () => {
@@ -54,8 +40,8 @@ export function TemplateBuilder() {
       .from('contract_templates')
       .insert({
         name: templateTitle,
-        // 'modules' is the new JSONB column
-        modules: modulesToSave,
+        // Korrekter Spaltenname ist 'template_data'
+        template_data: modulesToSave,
         // You might need a contract_type_key or other fields here
         // For now, we focus on the modules
         contract_type_key: 'default_template' // Placeholder
