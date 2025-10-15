@@ -22,6 +22,9 @@ serve(async (req) => {
   try {
     const { modules, title = "Vertrag" }: RequestBody = await req.json();
 
+    // --- HIER DIE SPION-ZEILE EINFÜGEN ---
+    console.log("Empfangene Module:", JSON.stringify(modules, null, 2));
+
     if (!modules || !Array.isArray(modules)) {
       throw new Error('"modules" ist erforderlich und muss ein Array sein.');
     }
@@ -51,9 +54,8 @@ serve(async (req) => {
       throw new Error('BROWSERLESS_API_KEY is not set.');
     }
 
-    // **DIE NEUE, STABILE LOGIK**
-    // Sende das HTML an die Browserless REST API
-    const response = await fetch(`https://chrome.browserless.io/pdf?token=${browserlessApiKey}`, {
+    // **DIE NEUE, STABILE LOGIK via REST API**
+    const response = await fetch(`https://production-sfo.browserless.io/pdf?token=${browserlessApiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

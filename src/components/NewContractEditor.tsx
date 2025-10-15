@@ -552,10 +552,10 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     try {
       // Rufe die Supabase Edge Function auf
       const { data, error } = await supabase.functions.invoke('pdf-export', {
-        body: { 
+        body: JSON.stringify({
           modules: finalModules,
           title: variableValues.title || 'Vertrag'
-        },
+        }),
       });
 
       if (error) throw error;
