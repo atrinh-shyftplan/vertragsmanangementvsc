@@ -1,5 +1,4 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import puppeteer from 'puppeteer'
 
 interface ContractModule {
   title: string;
@@ -12,6 +11,7 @@ interface RequestBody {
 }
 
 serve(async (req) => {
+  // CORS Header für PREFLIGHT und die Hauptanfrage
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: {
       'Access-Control-Allow-Origin': '*',
@@ -26,6 +26,7 @@ serve(async (req) => {
       throw new Error('"modules" ist erforderlich und muss ein Array sein.');
     }
 
+    // Erstelle das saubere HTML (unverändert)
     const tableOfContents = modules.map((module, index) => `<li>${index + 1}. ${module.title}</li>`).join('');
     const mainContent = modules.map((module, index) => `
       <section class="module">
@@ -44,29 +45,38 @@ serve(async (req) => {
       </style></head><body><h1>${title}</h1><div class="toc"><h2>Inhaltsverzeichnis</h2><ul>${tableOfContents}</ul></div>${mainContent}</body></html>
     `;
 
+    // Hole den API Key aus den Secrets
     const browserlessApiKey = Deno.env.get('BROWSERLESS_API_KEY');
     if (!browserlessApiKey) {
       throw new Error('BROWSERLESS_API_KEY is not set.');
     }
 
-    // Verbinde dich mit Browserless statt einen lokalen Browser zu starten
-    const browser = await puppeteer.connect({
-        browserWSEndpoint: `wss://connect.browserless.io?token=${browserlessApiKey}`,
+    // **DIE NEUE, STABILE LOGIK**
+    // Sende das HTML an die Browserless REST API
+    const response = await fetch(`https://chrome.browserless.io/pdf?token=${browserlessApiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        html: cleanHtml,
+        options: {
+          format: 'A4',
+          printBackground: true,
+          margin: { top: '40px', right: '20px', bottom: '40px', left: '20px' },
+          displayHeaderFooter: true,
+          footerTemplate: `<div style="font-size: 9px; text-align: center; width: 100%;">Seite <span class="pageNumber"></span> von <span class="totalPages"></span></div>`,
+          headerTemplate: '<div></div>'
+        }
+      })
     });
 
-    const page = await browser.newPage();
-    await page.setContent(cleanHtml, { waitUntil: 'networkidle0' });
+    if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`Browserless API Error (${response.status}): ${errorBody}`);
+    }
 
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: '40px', right: '20px', bottom: '40px', left: '20px' },
-      displayHeaderFooter: true,
-      footerTemplate: `<div style="font-size: 9px; text-align: center; width: 100%;">Seite <span class="pageNumber"></span> von <span class="totalPages"></span></div>`,
-      headerTemplate: '<div></div>'
-    });
-
-    await browser.close();
+    const pdfBuffer = await response.arrayBuffer();
 
     return new Response(pdfBuffer, {
       headers: {
