@@ -169,6 +169,8 @@ export type Database = {
       }
       contract_modules: {
         Row: {
+          content: string
+          title: string | number | readonly string[]
           category: string | null
           content_de: string
           content_en: string | null
