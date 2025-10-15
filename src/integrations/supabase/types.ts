@@ -614,3 +614,13 @@ export interface CompositionWithModuleAndAttachment extends ContractComposition 
   contract_modules: ContractModule | null; // nested module
   attachments: Attachment | null; // nested attachment
 }
+
+/**
+ * Represents a single editable module in the frontend TemplateBuilder.
+ * The `id` is a temporary client-side identifier for React keys.
+ */
+export interface ContractModule {
+  id: string;
+  title: string;
+  content: string;
+}
