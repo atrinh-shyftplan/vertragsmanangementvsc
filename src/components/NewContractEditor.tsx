@@ -13,12 +13,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminData } from '@/hooks/useAdminData';
 import { toast } from 'sonner';
-import { VariableInputRenderer } from '@/components/admin/VariableInputRenderer';
 import { Checkbox } from '@/components/ui/checkbox';
 import * as yup from 'yup';
-import type { Attachment, ContractModule, Database } from '@/integrations/supabase/types';
+import { v4 as uuidv4 } from 'uuid';
+import type { Attachment, ContractModule, Database, EditableModule } from '@/integrations/supabase/types';
 
 type ContractComposition = Database['public']['Tables']['contract_compositions']['Row'];
+type ContractTemplate = Database['public']['Tables']['contract_templates']['Row'];
 
 const getValidationSchema = (
   status: string,
@@ -79,6 +80,8 @@ const extractVariablesFromContent = (content: string) => {
 
 export default function NewContractEditor({ existingContract, onClose }: NewContractEditorProps) {
   const { contractTypes, contractModules, globalVariables, loading: adminDataLoading } = useAdminData();
+  const [template, setTemplate] = useState<ContractTemplate | null>(null);
+  const [modules, setModules] = useState<EditableModule[]>([]);
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
   const [showDetails, setShowDetails] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
@@ -99,6 +102,33 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     attachment?: Attachment;
   }[]>([]);
   const [selectedAttachmentIds, setSelectedAttachmentIds] = useState<string[]>([]);
+
+  // Lade-Logik für eine spezifische Vorlage
+  useEffect(() => {
+    const loadTemplate = async () => {
+      // Für dieses Beispiel laden wir eine Vorlage mit einem bekannten Namen.
+      // In einer echten Anwendung würde dies dynamisch geschehen (z.B. über eine ID).
+      const { data, error } = await supabase
+        .from('contract_templates')
+        .select('*')
+        .eq('name', 'Standard-Dienstleistungsvertrag') // Beispiel-Name
+        .single();
+
+      if (error) {
+        toast.error('Fehler beim Laden der Vertragsvorlage.');
+        console.error(error);
+        return;
+      }
+
+      if (data && data.template_data && Array.isArray(data.template_data)) {
+        setTemplate(data);
+        // Füge jedem Modul eine client-seitige ID für React hinzu
+        const modulesWithIds = (data.template_data as any[]).map(mod => ({ ...mod, id: uuidv4() }));
+        setModules(modulesWithIds);
+      }
+    };
+    loadTemplate();
+  }, []);
 
   const handleTypeChange = (typeKey: string) => {
     setVariableValues(prev => ({
@@ -247,6 +277,20 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     }
   }, [variableValues, contractStructure, selectedAttachmentIds, showDetails, outline]);
 
+  // Extrahiere alle einzigartigen Variablen aus den geladenen Modulen
+  const uniqueVariables = useMemo(() => {
+    const allVars = new Set<string>();
+    modules.forEach(module => {
+      const content = module.content || '';
+      const regex = /{{\s*(\w+)\s*}}/g;
+      let match;
+      while ((match = regex.exec(content)) !== null) {
+        allVars.add(match[1]);
+      }
+    });
+    return Array.from(allVars);
+  }, [modules]);
+
   const allAvailableAttachments = useMemo(() => {
     return contractStructure.map(cs => cs.attachment).filter(Boolean) as Attachment[];
   }, [contractStructure]);
@@ -259,31 +303,14 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     setRequiredFields(Object.keys(schema.describe().fields));
   }, [variableValues.status, contractStructure, selectedAttachmentIds, allAvailableAttachments]);
 
-  const processContent = (content: string, moduleVariables: any[] = []) => {
+  // Hilfsfunktion, um Variablen im Content zu ersetzen
+  const renderContent = (content: string) => {
     let processedContent = content;
-
-    globalVariables.forEach((variable) => {
-      const variableName = variable.key;
-      const value = variableValues[variableName] || '';
-      const regex = new RegExp(`{{${variableName}}}`, 'g');
+    for (const key in variableValues) {
+      const value = variableValues[key] || '';
+      const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
       processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 px-1 rounded">${value}</span>`);
-    });
-    
-    if (variableValues.gueltig_bis) {
-      const displayDate = variableValues.gueltig_bis_formatted || variableValues.gueltig_bis;
-      const regex = new RegExp(`{{gueltig_bis}}`, 'g');
-      processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 px-1 rounded">${displayDate}</span>`);
     }
-    
-    // Replace module-specific variables with highlighted spans
-    (moduleVariables || []).forEach((variable) => {
-      const variableName = (variable.name || variable.key);
-      if (!variableName) return;
-      const value = variableValues[variableName] || '';
-      const regex = new RegExp(`{{${variableName}}}`, 'g');
-      processedContent = processedContent.replace(regex, `<span class="bg-yellow-200 px-1 rounded">${value}</span>`);
-    });
-    
     return processedContent;
   };
 
@@ -366,7 +393,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
         germanColumn += `<h3>${displayTitleDe}</h3>`;
       }
       if (hasGermanContent) {
-        germanColumn += `<div>${processContent(module.content_de, moduleVariables)}</div>`;
+        germanColumn += `<div>${renderContent(module.content_de)}</div>`;
       }
       germanColumn += `</div>`;
       moduleHtml += germanColumn;
@@ -377,7 +404,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
         englishColumn += `<h3>${displayTitleEn}</h3>`;
       }
       if (hasEnglishContent) {
-        englishColumn += `<div>${processContent(module.content_en, moduleVariables)}</div>`;
+        englishColumn += `<div>${renderContent(module.content_en)}</div>`;
       }
       englishColumn += `</div>`;
       moduleHtml += englishColumn;
@@ -389,7 +416,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
         moduleHtml += `<h3>${displayTitle}</h3>`;
       }
       if (hasGermanContent) {
-        moduleHtml += `<div>${processContent(module.content_de, moduleVariables)}</div>`;
+        moduleHtml += `<div>${renderContent(module.content_de)}</div>`;
       }
       moduleHtml += `</div>`;
     } else if (hasEnglishContent || hasEnglishTitle) { // English only
@@ -399,7 +426,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
         moduleHtml += `<h3>${displayTitle}</h3>`;
       }
       if (hasEnglishContent) {
-        moduleHtml += `<div>${processContent(module.content_en, moduleVariables)}</div>`;
+        moduleHtml += `<div>${renderContent(module.content_en)}</div>`;
       }
       moduleHtml += `</div>`;
     }
@@ -516,51 +543,24 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
     setIsLoading(true);
 
     // 1. Finde den Container mit dem Vertragsinhalt
-    const viewerElement = document.getElementById('contract-viewer-for-export');
-    if (!viewerElement) {
-      console.error('Export-Container nicht gefunden.');
-      setIsLoading(false);
-      return;
-    }
-
-    // 2. Erstelle eine saubere Kopie des HTMLs
-    const cleanHtml = viewerElement.innerHTML
-      .replace(/class="variable-highlight"/g, '');
-
-    // 3. Lade unsere speziellen Druck-Styles (als rohen Text)
-    const printStyles = await import('../lib/print-styles.css?raw');
-
-    // 4. Bereite das finale HTML-Dokument für den Server vor
-    const fullHtml = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <style>${printStyles.default}</style>
-          <style>
-            /* Basis-Stile, um ein sauberes Layout zu gewährleisten */
-            body { font-family: sans-serif; line-height: 1.6; }
-            .prose { max-width: 100%; }
-            img { max-width: 100%; height: auto; }
-            table { width: 100%; border-collapse: collapse; }
-            td, th { border: 1px solid #e2e8f0; padding: 8px; }
-          </style>
-        </head>
-        <body>
-          <div class="prose">${cleanHtml}</div>
-        </body>
-      </html>
-    `;
+    // Ersetze Variablen im Content für den PDF-Export
+    const finalModules = modules.map(module => ({
+      title: module.title,
+      content: renderContent(module.content).replace(/<span class="bg-yellow-200 px-1 rounded">/g, '').replace(/<\/span>/g, '') // Entferne das Highlighting
+    }));
 
     try {
-      // 5. Rufe die Supabase Edge Function auf
+      // Rufe die Supabase Edge Function auf
       const { data, error } = await supabase.functions.invoke('pdf-export', {
-        body: { htmlContent: fullHtml },
+        body: { 
+          modules: finalModules,
+          title: variableValues.title || 'Vertrag'
+        },
       });
 
       if (error) throw error;
 
-      // 6. Starte den Download der erhaltenen PDF-Datei
+      // Starte den Download der erhaltenen PDF-Datei
       const blob = new Blob([data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -890,18 +890,24 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                 </CardContent>
               </Card>
 
-              <VariableInputRenderer
-                selectedModules={contractStructure
-                  .filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id))
-                  .map(item => item.module)}
-                globalVariables={globalVariables}
-                requiredFields={requiredFields}
-                variableValues={variableValues}
-                onVariableChange={(key, value) => setVariableValues(prev => ({
-                  ...prev,
-                  [key]: value
-                }))}
-              />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Variablen</CardTitle>
+                  <CardDescription>Füllen Sie die Platzhalter für den Vertrag aus.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {uniqueVariables.map(variableKey => (
+                    <div key={variableKey} className="space-y-2">
+                      <Label htmlFor={`var-${variableKey}`}>{variableKey}</Label>
+                      <Input
+                        id={`var-${variableKey}`}
+                        value={variableValues[variableKey] || ''}
+                        onChange={(e) => setVariableValues(prev => ({ ...prev, [variableKey]: e.target.value }))}
+                      />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
             </div>
           </ScrollArea>
         </ResizablePanel>
