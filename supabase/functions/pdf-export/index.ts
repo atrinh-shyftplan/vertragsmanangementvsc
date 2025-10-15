@@ -1,5 +1,29 @@
+// supabase/functions/pdf-export/index.ts
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import puppeteer from 'https://deno.land/x/puppeteer@16.2.0/mod.ts';
+import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
+import { install } from "https://deno.land/x/puppeteer-install@v1.0.0/mod.ts";
+
+// ... deine interfaces ...
+
+serve(async (req) => {
+    // ... deine CORS und try/catch Blöcke ...
+
+    // innerhalb des try-Blocks:
+    const { modules, title = "Vertrag" }: RequestBody = await req.json();
+
+    // ... deine Logik zum HTML-Erstellen ...
+
+    // Die wichtigen neuen Zeilen:
+    const executablePath = await install();
+    const browser = await puppeteer.launch({
+        executablePath,
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+
+    // ... der Rest deines Codes bleibt gleich ...
+});
 
 // Definiere die erwartete Struktur eines Moduls
 interface ContractModule {

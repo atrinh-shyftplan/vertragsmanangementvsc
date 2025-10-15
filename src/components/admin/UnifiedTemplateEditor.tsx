@@ -49,7 +49,7 @@ export function UnifiedTemplateEditor() {
   const [isAddModuleOpen, setAddModuleOpen] = useState(false);
   const [modulesToAdd, setModulesToAdd] = useState<string[]>([]);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string>('');
   const { toast } = useToast();
 
   const sensors = useSensors(useSensor(PointerSensor));
