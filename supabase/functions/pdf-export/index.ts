@@ -86,12 +86,16 @@ serve(async (req) => {
     `;
 
     // Erstelle für jedes Modul eine eigene Seite (Logik bleibt unverändert).
-    const pagesHtml = modules.map(module => `
-      <div class="page">
-        ${module.title ? `<h2 class="module-title">${module.title}</h2>` : ''}
-        <div class="content">${module.content}</div>
-      </div>
-    `).join('');
+    const pagesHtml = modules.map(module => {
+      // Entferne testweise alle <img>-Tags, da sie das Rendering blockieren könnten.
+      const cleanContent = module.content.replace(/<img[^>]*>/g, "");
+      return `
+        <div class="page">
+          ${module.title ? `<h2 class="module-title">${module.title}</h2>` : ''}
+          <div class="content">${cleanContent}</div>
+        </div>
+      `;
+    }).join('');
 
     // Setze das finale HTML-Dokument zusammen.
     const cleanHtml = `<!DOCTYPE html>
