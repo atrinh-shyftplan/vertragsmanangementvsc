@@ -542,18 +542,25 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
   const handleExportPdf = async () => {
     setIsLoading(true);
 
-    // 1. Finde den Container mit dem Vertragsinhalt
-    // Ersetze Variablen im Content für den PDF-Export
-    const finalModules = modules.map(module => ({
-      title: module.title,
-      content: renderContent(module.content).replace(/<span class="bg-yellow-200 px-1 rounded">/g, '').replace(/<\/span>/g, '') // Entferne das Highlighting
+    // KORREKTUR: Verwende die `contractStructure` und `selectedAttachmentIds`, um die
+    // finalen Module für den Export zu bestimmen, anstatt des veralteten `modules`-States.
+    const finalModulesForPdf = contractStructure
+      .filter(item => {
+        // Schließe alle Module ein, die keine Anhänge sind, oder deren Anhang ausgewählt ist.
+        if (!item.attachment) return true;
+        return selectedAttachmentIds.includes(item.attachment.id);
+      })
+      .map(item => ({
+      title: item.module.title_de,
+      // Ersetze die Variablen und entferne das gelbe Highlighting für das finale PDF.
+      content: renderContent(item.module.content_de).replace(/<span class="bg-yellow-200 px-1 rounded">/g, '').replace(/<\/span>/g, '')
     }));
 
     try {
       // Rufe die Supabase Edge Function auf
       const { data, error } = await supabase.functions.invoke('pdf-export', {
         body: JSON.stringify({
-          modules: finalModules,
+          modules: finalModulesForPdf,
           title: variableValues.title || 'Vertrag'
         }),
       });

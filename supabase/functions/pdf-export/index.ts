@@ -29,24 +29,56 @@ serve(async (req) => {
       throw new Error('"modules" ist erforderlich und muss ein Array sein.');
     }
 
-    // Erstelle das saubere HTML (unverändert)
-    const tableOfContents = modules.map((module, index) => `<li>${index + 1}. ${module.title}</li>`).join('');
-    const mainContent = modules.map((module, index) => `
-      <section class="module">
-        <h2>${index + 1}. ${module.title}</h2>
-        <div>${module.content}</div>
-      </section>
+    // Definiere die CSS-Stile für den Druck und das seitenbasierte Layout.
+    const printStyles = `
+      @page {
+        size: A4;
+        margin: 0;
+      }
+      body {
+        margin: 0;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+      .page {
+        width: 210mm;
+        min-height: 297mm; /* Stellt sicher, dass die Seite immer voll ist */
+        padding: 20mm;
+        box-sizing: border-box;
+        page-break-after: always; /* Erzwingt einen Seitenumbruch nach jedem Modul */
+      }
+      .module-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 1em;
+        color: #333;
+      }
+      .content {
+        /* Stile für den Inhaltsbereich, falls benötigt */
+      }
+    `;
+
+    // Erstelle für jedes Modul eine eigene Seite.
+    const pagesHtml = modules.map(module => `
+      <div class="page">
+        ${module.title ? `<h2 class="module-title">${module.title}</h2>` : ''}
+        <div class="content">${module.content}</div>
+      </div>
     `).join('');
 
-    const cleanHtml = `
-      <!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
-      <style>
-        body { font-family: sans-serif; font-size: 12px; line-height: 1.5; }
-        h1, h2 { page-break-after: avoid; } h1 { font-size: 24px; text-align: center; margin-bottom: 40px; }
-        .module { page-break-inside: avoid; margin-bottom: 20px; } .toc { margin-bottom: 40px; border-bottom: 1px solid #ccc; padding-bottom: 20px; }
-        .toc h2 { font-size: 18px; } .toc ul { list-style: none; padding: 0; }
-      </style></head><body><h1>${title}</h1><div class="toc"><h2>Inhaltsverzeichnis</h2><ul>${tableOfContents}</ul></div>${mainContent}</body></html>
-    `;
+    // Setze das finale HTML-Dokument zusammen.
+    const cleanHtml = `<!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>${title}</title>
+          <style>${printStyles}</style>
+        </head>
+        <body>
+          ${pagesHtml}
+        </body>
+      </html>`;
 
     // Hole den API Key aus den Secrets
     const browserlessApiKey = Deno.env.get('BROWSERLESS_API_KEY');
