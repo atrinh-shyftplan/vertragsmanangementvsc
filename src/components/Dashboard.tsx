@@ -55,7 +55,7 @@ export default function Dashboard() {
             Überblick über Ihre Verträge und wichtige Kennzahlen
           </p>
         </div>
-        <Button className="sm:w-auto w-full">
+        <Button className="sm:w-auto w-full" style={{ backgroundColor: '#8C5AF5', color: 'white' }}>
           <Plus className="mr-2 h-4 w-4" />
           Neuer Vertrag
         </Button>

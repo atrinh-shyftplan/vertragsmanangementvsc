@@ -228,7 +228,7 @@ export default function Contracts() {
             Verwalten Sie alle Ihre Verträge an einem Ort
           </p>
         </div>
-        <Button className="sm:w-auto w-full" onClick={handleNewContract}>
+        <Button className="sm:w-auto w-full" onClick={handleNewContract} style={{ backgroundColor: '#8C5AF5', color: 'white' }}>
           <Plus className="mr-2 h-4 w-4" />
           Neuer Vertrag
         </Button>
@@ -250,6 +250,7 @@ export default function Contracts() {
             <div className="flex flex-wrap gap-2">
               <Button
                 variant={filterStatus === 'all' ? 'default' : 'outline'}
+              style={filterStatus === 'all' ? { backgroundColor: '#8C5AF5', color: 'white' } : {}}
                 size="sm"
                 onClick={() => setFilterStatus('all')}
               >
@@ -257,6 +258,7 @@ export default function Contracts() {
               </Button>
               <Button
                 variant={filterStatus === 'draft' ? 'default' : 'outline'}
+              style={filterStatus === 'draft' ? { backgroundColor: '#8C5AF5', color: 'white' } : {}}
                 size="sm"
                 onClick={() => setFilterStatus('draft')}
               >
@@ -264,6 +266,7 @@ export default function Contracts() {
               </Button>
               <Button
                 variant={filterStatus === 'ready_for_review' ? 'default' : 'outline'}
+              style={filterStatus === 'ready_for_review' ? { backgroundColor: '#8C5AF5', color: 'white' } : {}}
                 size="sm"
                 onClick={() => setFilterStatus('ready_for_review')}
               >
@@ -271,6 +274,7 @@ export default function Contracts() {
               </Button>
               <Button
                 variant={filterStatus === 'active' ? 'default' : 'outline'}
+              style={filterStatus === 'active' ? { backgroundColor: '#8C5AF5', color: 'white' } : {}}
                 size="sm"
                 onClick={() => setFilterStatus('active')}
               >
@@ -278,6 +282,7 @@ export default function Contracts() {
               </Button>
               <Button
                 variant={filterStatus === 'archived' ? 'default' : 'outline'}
+              style={filterStatus === 'archived' ? { backgroundColor: '#8C5AF5', color: 'white' } : {}}
                 size="sm"
                 onClick={() => setFilterStatus('archived')}
               >
@@ -333,7 +338,7 @@ export default function Contracts() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full" onClick={() => handleEditContract(contract)}>
+                <Button className="w-full" onClick={() => handleEditContract(contract)} style={{ backgroundColor: '#8C5AF5', color: 'white' }}>
                   <Edit className="mr-2 h-3 w-3" />
                   Bearbeiten
                 </Button>

@@ -279,17 +279,37 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
 
   // Extrahiere alle einzigartigen Variablen aus den geladenen Modulen
   const uniqueVariables = useMemo(() => {
-    const allVars = new Set<string>();
-    modules.forEach(module => {
-      const content = module.content || '';
+    const allVarKeys = new Set<string>();
+    const modulesToScan = contractStructure
+      .filter(item => !item.attachment || selectedAttachmentIds.includes(item.attachment.id))
+      .map(item => item.module);
+
+    modulesToScan.forEach(module => {
+      const content = module.content_de || '';
       const regex = /{{\s*(\w+)\s*}}/g;
       let match;
       while ((match = regex.exec(content)) !== null) {
-        allVars.add(match[1]);
+        allVarKeys.add(match[1]);
       }
     });
-    return Array.from(allVars);
-  }, [modules]);
+
+    // Definiere Schlüssel, die bereits in den "Vertragsdaten" bearbeitet werden und hier nicht mehr erscheinen sollen.
+    const excludedKeys = [
+      'title', 
+      'client', 
+      'gueltig_bis', 
+      'gueltig_bis_formatted', 
+      'ansprechpartner_name', 
+      'ansprechpartner_email', 
+      'ansprechpartner_telefon'
+    ];
+
+    // Mappe die gefundenen Schlüssel zu Objekten mit Schlüssel und dem deutschen Anzeigenamen.
+    return Array.from(allVarKeys).filter(key => !excludedKeys.includes(key)).map(key => {
+      const variable = globalVariables.find(v => v.key === key);
+      return { key, name: variable?.name_de || key }; // Fallback auf den Schlüssel, falls kein Name gefunden wird.
+    });
+  }, [contractStructure, selectedAttachmentIds, globalVariables]);
 
   const allAvailableAttachments = useMemo(() => {
     return contractStructure.map(cs => cs.attachment).filter(Boolean) as Attachment[];
@@ -644,10 +664,10 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
   }
 
   return (
-    <div className="flex flex-col h-full bg-muted/30 rounded-lg overflow-hidden">
-      <header className="flex items-center justify-between p-4 border-b bg-background flex-shrink-0">
+    <div className="flex flex-col h-full bg-white rounded-lg overflow-hidden" style={{ fontFamily: 'Inter, sans-serif' }}>
+      <header className="flex items-center justify-between p-4 border-b bg-white flex-shrink-0">
         <div>
-          <h2 className="text-xl font-bold">Vertrag erstellen</h2>
+          <h2 className="text-xl font-bold text-black">Vertrag erstellen</h2>
           <p className="text-sm text-muted-foreground">
             Typ: {contractTypes.find(t => t.key === selectedTypeKey)?.name_de}
           </p>
@@ -684,7 +704,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
           >
             <FileDown className="h-4 w-4" />
           </Button>
-          <Button onClick={saveContract}>
+          <Button onClick={saveContract} style={{ backgroundColor: '#8C5AF5', color: 'white' }}>
             <Save className="mr-2 h-4 w-4" />
             Speichern
           </Button>
@@ -711,7 +731,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
           <ScrollArea className="h-full">
             <div className="space-y-6 p-6">
               {/* Basic Contract Fields with better structure */}
-              <Card>
+              <Card style={{ borderRadius: 0, border: 'none', backgroundColor: '#F6F8FF', borderTop: '4px solid #77A0F6' }}>
                 <CardHeader>
                   <CardTitle>Vertragsdaten</CardTitle>
                   <CardDescription>
@@ -722,7 +742,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                   <div className="space-y-4">
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="title">Titel {requiredFields.includes('title') && <span className="text-destructive">*</span>}</Label>
+                        <Label htmlFor="title" style={{ color: 'black' }}>Titel {requiredFields.includes('title') && <span className="text-destructive">*</span>}</Label>
                         <Input
                           id="title"
                           value={variableValues.title || ''}
@@ -734,7 +754,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="client">Name des Unternehmens {requiredFields.includes('client') && <span className="text-destructive">*</span>}</Label>
+                        <Label htmlFor="client" style={{ color: 'black' }}>Name des Unternehmens {requiredFields.includes('client') && <span className="text-destructive">*</span>}</Label>
                         <Input
                           id="client"
                           value={variableValues.client || ''}
@@ -746,7 +766,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="gueltig_bis">Angebot gültig bis {requiredFields.includes('gueltig_bis') && <span className="text-destructive">*</span>}</Label>
+                        <Label htmlFor="gueltig_bis" style={{ color: 'black' }}>Angebot gültig bis {requiredFields.includes('gueltig_bis') && <span className="text-destructive">*</span>}</Label>
                         <Input
                           id="gueltig_bis"
                           type="date"
@@ -774,7 +794,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                   <div className="space-y-4">
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="assigned_to_profile_id">Zuständiger Ansprechpartner {requiredFields.includes('assigned_to_profile_id') && <span className="text-destructive">*</span>}</Label>
+                        <Label htmlFor="assigned_to_profile_id" style={{ color: 'black' }}>Zuständiger Ansprechpartner {requiredFields.includes('assigned_to_profile_id') && <span className="text-destructive">*</span>}</Label>
                         <Select
                           value={variableValues.assigned_to_profile_id || ''}
                          onValueChange={(value) => {
@@ -797,7 +817,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="status">Status {requiredFields.includes('status') && <span className="text-destructive">*</span>}</Label>
+                        <Label htmlFor="status" style={{ color: 'black' }}>Status {requiredFields.includes('status') && <span className="text-destructive">*</span>}</Label>
                         <Select 
                           value={variableValues.status || 'draft'} 
                           onValueChange={(value) => setVariableValues(prev => ({
@@ -821,7 +841,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card style={{ borderRadius: 0, border: 'none', backgroundColor: '#F6F8FF', borderTop: '4px solid #8C5AF5' }}>
                 <CardHeader>
                   <CardTitle>Vertragsbestandteile</CardTitle>
                   <CardDescription>
@@ -830,7 +850,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
-                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Feste Bestandteile</h4>
+                    <h4 className="font-medium text-sm mb-2" style={{ color: 'black' }}>Feste Bestandteile</h4>
                     <div className="space-y-2">
                       {contractStructure.filter(item => item.attachment?.type === 'fest').map(item => (
                         <div key={item.attachment!.id} className="flex items-center space-x-2 opacity-70">
@@ -839,7 +859,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                             checked={true}
                             disabled={true}
                           />
-                          <Label htmlFor={`attachment-${item.attachment!.id}`} className="cursor-not-allowed">
+                          <Label htmlFor={`attachment-${item.attachment!.id}`} className="cursor-not-allowed" style={{ color: 'black' }}>
                             {item.module.name}
                           </Label>
                         </div>
@@ -848,7 +868,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                   </div>
 
                   <div>
-                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Produkte (mindestens eines auswählen) {requiredFields.includes('selectedAttachmentIds') && <span className="text-destructive">*</span>}</h4>
+                    <h4 className="font-medium text-sm mb-2" style={{ color: 'black' }}>Produkte (mindestens eines auswählen) {requiredFields.includes('selectedAttachmentIds') && <span className="text-destructive">*</span>}</h4>
                     <div className="space-y-2">
                       {contractStructure.filter(item => item.attachment?.type === 'produkt').map(item => (
                         <div key={item.attachment!.id} className="flex items-center space-x-2">
@@ -863,7 +883,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                               );
                             }}
                           />
-                          <Label htmlFor={`attachment-${item.attachment!.id}`}>
+                          <Label htmlFor={`attachment-${item.attachment!.id}`} style={{ color: 'black' }}>
                             {item.module.name}
                           </Label>
                         </div>
@@ -872,7 +892,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                   </div>
 
                   <div>
-                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Optional</h4>
+                    <h4 className="font-medium text-sm mb-2" style={{ color: 'black' }}>Optional</h4>
                     <div className="space-y-2">
                       {contractStructure.filter(item => item.attachment?.type === 'zusatz').map(item => (
                         <div key={item.attachment!.id} className="flex items-center space-x-2">
@@ -887,7 +907,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                               );
                             }}
                           />
-                          <Label htmlFor={`attachment-${item.attachment!.id}`}>
+                          <Label htmlFor={`attachment-${item.attachment!.id}`} style={{ color: 'black' }}>
                             {item.module.name}
                           </Label>
                         </div>
@@ -897,19 +917,19 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card style={{ borderRadius: 0, border: 'none', backgroundColor: '#F6F8FF', borderTop: '4px solid #FF8EB7' }}>
                 <CardHeader>
                   <CardTitle>Variablen</CardTitle>
                   <CardDescription>Füllen Sie die Platzhalter für den Vertrag aus.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {uniqueVariables.map(variableKey => (
-                    <div key={variableKey} className="space-y-2">
-                      <Label htmlFor={`var-${variableKey}`}>{variableKey}</Label>
+                  {uniqueVariables.map(variable => (
+                    <div key={variable.key} className="space-y-2">
+                      <Label htmlFor={`var-${variable.key}`} style={{ color: 'black' }}>{variable.name}</Label>
                       <Input
-                        id={`var-${variableKey}`}
-                        value={variableValues[variableKey] || ''}
-                        onChange={(e) => setVariableValues(prev => ({ ...prev, [variableKey]: e.target.value }))}
+                        id={`var-${variable.key}`}
+                        value={variableValues[variable.key] || ''}
+                        onChange={(e) => setVariableValues(prev => ({ ...prev, [variable.key]: e.target.value }))}
                       />
                     </div>
                   ))}
@@ -923,11 +943,11 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
 
         <ResizablePanel defaultSize={67}>
           <main className="flex-1 h-full bg-muted/40 flex justify-center">
-            <ScrollArea className="h-full w-full">
+            <ScrollArea className="h-full w-full" style={{ backgroundColor: 'white' }}>
               <div className="w-full max-w-4xl mx-auto my-6">
-                <Card className="shadow-lg">
+                <Card className="shadow-lg" style={{ borderRadius: 0, border: 'none' }}>
                   <CardHeader>
-                    <CardTitle>Live-Vorschau</CardTitle>
+                    <CardTitle style={{ color: 'black' }}>Live-Vorschau</CardTitle>
                     <CardDescription>
                       Vorschau des generierten Vertrags - Variable Felder sind gelb markiert
                     </CardDescription>
@@ -936,8 +956,8 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                       <div 
                       ref={previewRef}
                       id="contract-viewer-for-export"
-                      className="prose prose-sm sm:prose-base max-w-none bg-white p-6 rounded-lg h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
-                      style={{ lineHeight: '1.6', fontFamily: 'Arial, sans-serif' }}
+                      className="prose prose-sm sm:prose-base max-w-none bg-white p-6 h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
+                      style={{ lineHeight: '1.6', fontFamily: 'Inter, sans-serif' }}
                       dangerouslySetInnerHTML={{ 
                         __html: `
                         <style>
@@ -949,7 +969,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                           }
                           .contract-preview h3 {
                             font-size: 1.125rem !important; /* text-lg */
-                            font-weight: 700 !important;
+                            font-weight: 700 !important; 
                             color: #1f2937 !important;
                             margin-top: 0 !important;
                             margin-bottom: 0.75rem !important; /* mb-3 */
@@ -1037,7 +1057,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                             padding: 6px 10px;
                             background-color: #f8fafc;
                             border-radius: 4px;
-                            border-left: 4px solid #3b82f6;
+                            border-left: 4px solid #8C5AF5;
                           }
                           .header-content .info-label {
                             font-weight: 600;
@@ -1122,7 +1142,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction onClick={handleExportPdf} disabled={isLoading}>
+            <AlertDialogAction onClick={handleExportPdf} disabled={isLoading} style={{ backgroundColor: '#8C5AF5', color: 'white' }}>
               {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Exportiere...</> : 'Exportieren'}
             </AlertDialogAction>
           </AlertDialogFooter>

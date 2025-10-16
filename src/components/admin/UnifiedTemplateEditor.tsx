@@ -311,9 +311,9 @@ export function UnifiedTemplateEditor() {
   };
 
   return (
-    <Card>
+    <Card style={{ fontFamily: 'Inter, sans-serif', backgroundColor: 'white', border: 'none', borderRadius: 0 }}>
       <CardHeader>
-        <CardTitle>Unified Template Editor</CardTitle>
+        <CardTitle style={{ color: 'black' }}>Unified Template Editor</CardTitle>
         <CardDescription>
           Verwalten Sie die feste Struktur und die wählbaren Anhänge für einen Vertragstyp an einem Ort.
         </CardDescription>
@@ -321,7 +321,7 @@ export function UnifiedTemplateEditor() {
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 items-end">
           <div className="space-y-2">
-            <Label>Vertragstyp auswählen</Label>
+            <Label style={{ color: 'black' }}>Vertragstyp auswählen</Label>
             <Select value={selectedContractTypeKey} onValueChange={setSelectedContractTypeKey}>
               <SelectTrigger><SelectValue placeholder="Vertragstyp wählen" /></SelectTrigger>
               <SelectContent>
@@ -335,7 +335,7 @@ export function UnifiedTemplateEditor() {
             <Button variant="outline" onClick={() => setIsPreviewOpen(true)} disabled={!selectedContractTypeKey}>
               <Eye className="h-4 w-4 mr-2" /> Vollständige Vorschau
             </Button>
-            <Button variant="default" onClick={() => setAddModuleOpen(true)} disabled={!selectedContractTypeKey}>
+            <Button style={{ backgroundColor: '#8C5AF5', color: 'white' }} onClick={() => setAddModuleOpen(true)} disabled={!selectedContractTypeKey}>
               <Plus className="h-4 w-4 mr-2" /> Modul hinzufügen
             </Button>
           </div>
@@ -347,8 +347,8 @@ export function UnifiedTemplateEditor() {
           ) : compositions.length > 0 ? (
             <div className="space-y-8">
               {/* Section 1: Module Order */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Reihenfolge aller Bausteine</h3>
+              <div style={{ backgroundColor: '#F6F8FF', padding: '1rem', borderTop: '4px solid #77A0F6' }}>
+                <h3 className="text-lg font-semibold mb-4" style={{ color: 'black' }}>Reihenfolge aller Bausteine</h3>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={compositions} strategy={verticalListSortingStrategy}>
                     <div className="space-y-2">
@@ -361,40 +361,51 @@ export function UnifiedTemplateEditor() {
               </div>
 
               {/* Section 2: Attachment Configuration */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Konfiguration der wählbaren Anhänge</h3>
+              <div style={{ backgroundColor: '#F6F8FF', padding: '1rem', borderTop: '4px solid #8C5AF5' }}>
+                <h3 className="text-lg font-semibold mb-4" style={{ color: 'black' }}>Konfiguration der wählbaren Anhänge</h3>
                 <div className="space-y-2">
-                  {attachmentConfigurations.map((composition) => (
-                    <div key={composition.id} className="flex items-center justify-between p-3 border rounded-lg bg-slate-50">
-                      <span className="font-medium text-slate-800">{composition.contract_modules?.name}</span>
-                      <Select
-                        value={composition.attachments?.type || 'none'}
-                        onValueChange={(value) =>
-                          handleAttachmentTypeChange(
-                            composition.module_key,
-                            value as 'fest' | 'produkt' | 'zusatz' | 'none'
-                          )
-                        }
+                  {attachmentConfigurations.map((composition, index) => {
+                    const colors = ['#77A0F6', '#8C5AF5', '#FF8EB7', '#367CC1'];
+                    const borderColor = colors[index % colors.length];
+                    return (
+                      <div 
+                        key={composition.id} 
+                        className="flex items-center justify-between p-3" 
+                        style={{ 
+                          backgroundColor: '#F6F8FF', 
+                          borderLeft: `4px solid ${borderColor}` 
+                        }}
                       >
-                        <SelectTrigger className="w-[240px] bg-white">
-                          <SelectValue placeholder="Anhang-Typ festlegen..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Kein Anhang (Standard)</SelectItem>
-                          <SelectItem value="fest">Fester Bestandteil</SelectItem>
-                          <SelectItem value="produkt">Produkt (wählbar)</SelectItem>
-                          <SelectItem value="zusatz">Zusatzleistung (optional)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ))}
+                        <span className="font-medium" style={{ color: 'black' }}>{composition.contract_modules?.name}</span>
+                        <Select
+                          value={composition.attachments?.type || 'none'}
+                          onValueChange={(value) =>
+                            handleAttachmentTypeChange(
+                              composition.module_key,
+                              value as 'fest' | 'produkt' | 'zusatz' | 'none'
+                            )
+                          }
+                        >
+                          <SelectTrigger className="w-[240px] bg-white">
+                            <SelectValue placeholder="Anhang-Typ festlegen..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Kein Anhang (Standard)</SelectItem>
+                            <SelectItem value="fest">Fester Bestandteil</SelectItem>
+                            <SelectItem value="produkt">Produkt (wählbar)</SelectItem>
+                            <SelectItem value="zusatz">Zusatzleistung (optional)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
           ) : (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">Für diesen Vertragstyp wurden noch keine Module hinzugefügt.</p>
-              <Button onClick={() => setAddModuleOpen(true)}>
+              <Button style={{ backgroundColor: '#8C5AF5', color: 'white' }} onClick={() => setAddModuleOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" /> Modul hinzufügen
               </Button>
             </div>
@@ -420,7 +431,7 @@ export function UnifiedTemplateEditor() {
           </ScrollArea>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddModuleOpen(false)}>Abbrechen</Button>
-            <Button onClick={() => handleAddModules(modulesToAdd)} disabled={modulesToAdd.length === 0}>Hinzufügen</Button>
+            <Button style={{ backgroundColor: '#8C5AF5', color: 'white' }} onClick={() => handleAddModules(modulesToAdd)} disabled={modulesToAdd.length === 0}>Hinzufügen</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

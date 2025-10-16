@@ -115,7 +115,7 @@ export function TemplateBuilder() {
               <Plus className="h-4 w-4 mr-2" />
               Modul hinzufügen
             </Button>
-            <Button onClick={handleSaveTemplate} disabled={modules.length === 0}>
+            <Button onClick={handleSaveTemplate} disabled={modules.length === 0} style={{ backgroundColor: '#8C5AF5', color: 'white' }}>
               <Save className="h-4 w-4 mr-2" />
               Vorlage speichern
             </Button>

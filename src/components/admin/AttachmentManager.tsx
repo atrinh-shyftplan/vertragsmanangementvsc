@@ -135,7 +135,7 @@ export function AttachmentManager() {
             <CardTitle>Vertragsanhänge verwalten</CardTitle>
             <CardDescription>Definieren Sie hier die globalen Vertragsbestandteile pro Vertragstyp.</CardDescription>
           </div>
-          <Button onClick={() => handleOpenModal()} disabled={!selectedContractTypeId || loadingAttachments}>
+          <Button onClick={() => handleOpenModal()} disabled={!selectedContractTypeId || loadingAttachments} style={{ backgroundColor: '#8C5AF5', color: 'white' }}>
             <Plus className="mr-2 h-4 w-4" /> Neuer Anhang
           </Button>
         </div>
@@ -182,7 +182,7 @@ export function AttachmentManager() {
                 <h3 className="mt-2 text-sm font-medium">Keine Anhänge</h3>
                 <p className="mt-1 text-sm">Für diesen Vertragstyp sind noch keine Anhänge vorhanden.</p>
                 <div className="mt-6">
-                  <Button onClick={() => handleOpenModal()}>
+                  <Button onClick={() => handleOpenModal()} style={{ backgroundColor: '#8C5AF5', color: 'white' }}>
                     <Plus className="mr-2 h-4 w-4" /> Ersten Anhang erstellen
                   </Button>
                 </div>
@@ -243,7 +243,7 @@ export function AttachmentManager() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>Abbrechen</Button>
-            <Button onClick={handleSave}>Speichern</Button>
+            <Button onClick={handleSave} style={{ backgroundColor: '#8C5AF5', color: 'white' }}>Speichern</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

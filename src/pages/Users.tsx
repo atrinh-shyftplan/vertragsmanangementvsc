@@ -133,7 +133,7 @@ export default function Users() {
         
         <AlertDialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
           <AlertDialogTrigger asChild>
-            <Button className="flex items-center gap-2">
+            <Button className="flex items-center gap-2" style={{ backgroundColor: '#8C5AF5', color: 'white' }}>
               <UserPlus className="h-4 w-4" />
               Benutzer einladen
             </Button>
@@ -161,7 +161,7 @@ export default function Users() {
             </div>
             <AlertDialogFooter>
               <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-              <AlertDialogAction onClick={inviteUser}>
+              <AlertDialogAction onClick={inviteUser} style={{ backgroundColor: '#8C5AF5', color: 'white' }}>
                 Einladung senden
               </AlertDialogAction>
             </AlertDialogFooter>
