@@ -97,7 +97,6 @@ serve(async (req) => {
         options: {
           format: 'A4',
           printBackground: true,
-          margin: { top: '40px', right: '20px', bottom: '40px', left: '20px' },
           displayHeaderFooter: true,
           footerTemplate: `<div style="font-size: 9px; text-align: center; width: 100%;">Seite <span class="pageNumber"></span> von <span class="totalPages"></span></div>`,
           headerTemplate: '<div></div>'
