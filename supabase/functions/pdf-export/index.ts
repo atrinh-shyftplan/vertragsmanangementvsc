@@ -30,17 +30,32 @@ serve(async (req) => {
     }
 
     // Definiere die CSS-Stile für den Druck und das seitenbasierte Layout.
+    // Diese Version enthält einen Reset und überschreibt explizit Stile,
+    // um Konflikte mit dem eingehenden HTML (z.B. von Tailwind) zu vermeiden.
     const printStyles = `
+      /* CSS Reset für eine saubere Basis */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      /* Seitendefinition */
       @page {
         size: A4;
         margin: 0;
       }
+
+      /* Grundlegende Body-Stile */
       body {
         margin: 0;
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         font-size: 12px;
         line-height: 1.6;
+        color: #000 !important; /* Erzwingt schwarze Schriftfarbe */
       }
+
+      /* Seiten-Container, der den Seitenumbruch erzwingt */
       .page {
         width: 210mm;
         min-height: 297mm; /* Stellt sicher, dass die Seite immer voll ist */
@@ -48,18 +63,29 @@ serve(async (req) => {
         box-sizing: border-box;
         page-break-after: always; /* Erzwingt einen Seitenumbruch nach jedem Modul */
       }
+
+      /* Modul-Titel */
       .module-title {
         font-size: 18px;
         font-weight: bold;
         margin-bottom: 1em;
-        color: #333;
+        color: #000 !important;
       }
+
+      /* Inhalts-Container mit expliziten Stilen */
       .content {
-        /* Stile für den Inhaltsbereich, falls benötigt */
+        color: #000 !important;
+      }
+      .content h1, .content h2, .content h3, .content p, .content div, .content ul, .content ol {
+        margin-bottom: 0.8em;
+      }
+      .content img {
+        max-width: 100%;
+        height: auto;
       }
     `;
 
-    // Erstelle für jedes Modul eine eigene Seite.
+    // Erstelle für jedes Modul eine eigene Seite (Logik bleibt unverändert).
     const pagesHtml = modules.map(module => `
       <div class="page">
         ${module.title ? `<h2 class="module-title">${module.title}</h2>` : ''}
