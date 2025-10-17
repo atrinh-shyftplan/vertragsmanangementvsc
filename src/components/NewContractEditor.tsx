@@ -573,7 +573,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
       .map(item => ({
       title: item.module.title_de,
       // Ersetze die Variablen und entferne das gelbe Highlighting für das finale PDF.
-      content: renderContent(item.module.content_de).replace(/<span class="bg-yellow-200 px-1 rounded">/g, '').replace(/<\/span>/g, '')
+      content: renderContent(item.module.content_de || '').replace(/<span class="bg-yellow-200 px-1 rounded">/g, '').replace(/<\/span>/g, '')
     }));
 
     try {
