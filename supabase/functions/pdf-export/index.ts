@@ -47,79 +47,13 @@ serve(async (req) => {
       throw new Error('"modules" ist erforderlich und muss ein Array sein.');
     }
 
-    // Wandle alle Bild-URLs in Base64 um
-    let contentWithBase64Images = '';
-    for (const module of modules) {
-      let moduleContent = module.content;
-      const imgRegex = /<img[^>]+src="([^">]+)"/g;
-      const matches = moduleContent.matchAll(imgRegex);
-
-      for (const match of matches) {
-        const originalSrc = match[1];
-        if (originalSrc && originalSrc.startsWith('http')) {
-          const dataUrl = await imageToDataUrl(originalSrc);
-          if (dataUrl) {
-            moduleContent = moduleContent.replace(originalSrc, dataUrl);
-          }
-        }
-      }
-      contentWithBase64Images += `
-        <div class="page">
-          ${module.title ? `<h2 class="module-title">${module.title}</h2>` : ''}
-          <div class="content">${moduleContent}</div>
-        </div>
-      `;
-    }
-
-
-    const printStyles = `
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      @page {
-        size: A4;
-        margin: 0;
-      }
-      body {
-        margin: 0;
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        font-size: 12px;
-        line-height: 1.6;
-        color: #000 !important;
-      }
-      .page {
-        width: 210mm;
-        min-height: 297mm;
-        padding: 20mm;
-        box-sizing: border-box;
-        page-break-after: always;
-      }
-      .module-title {
-        font-size: 18px;
-        font-weight: bold;
-        margin-bottom: 1em;
-        color: #000 !important;
-      }
-      .content {
-        color: #000 !important;
-      }
-      .content img {
-        max-width: 100% !important;
-        height: auto !important;
-      }
-    `;
-
+    // TEMPORÄRER DEBUGGING-SCHRITT: Ersetze das komplexe HTML durch ein minimales Test-HTML.
     const cleanHtml = `<!DOCTYPE html>
       <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>${title}</title>
-          <style>${printStyles}</style>
-        </head>
-        <body>
-          ${contentWithBase64Images}
+        <head><title>Test</title></head>
+        <body style="border: 5px solid red; padding: 20px;">
+          <h1 style="color: blue;">Hallo Welt!</h1>
+          <p>Wenn dieser Text im PDF erscheint, funktioniert die Basis-Kommunikation mit browserless.io.</p>
         </body>
       </html>`;
 
@@ -128,7 +62,7 @@ serve(async (req) => {
       throw new Error('BROWSERLESS_API_KEY is not set.');
     }
 
-    const response = await fetch(`https://production-sfo.browserless.io/pdf?token=${browserlessApiKey}`, {
+    const response = await fetch(`https://production-sfo.browserless.io/screenshot?token=${browserlessApiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -136,30 +70,45 @@ serve(async (req) => {
       body: JSON.stringify({
         html: cleanHtml,
         options: {
-          format: 'A4',
-          printBackground: true,
+          fullPage: true, // Macht einen Screenshot der gesamten Seite
+          type: 'png'     // Wir wollen ein PNG-Bild
         }
       })
     });
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(`Browserless API Error (${response.status}): ${errorBody}`);
+      console.error('Browserless API Error Response:', errorBody); // Wichtig für Server-Logs
+      // Gib den Fehler als strukturierte JSON-Antwort an den Client zurück
+      return new Response(JSON.stringify({ 
+        error: 'Fehler von browserless.io API.',
+        details: {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorBody
+        }
+      }), {
+        status: 502, // Bad Gateway - passender Fehler für ein Upstream-Problem
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      });
     }
 
-    const pdfBuffer = await response.arrayBuffer();
+    const imageBuffer = await response.arrayBuffer(); // Umbenennen für Klarheit
 
-    return new Response(pdfBuffer, {
+    return new Response(imageBuffer, {
       headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${title}.pdf"`,
+        'Content-Type': 'image/png',
+        'Content-Disposition': `inline; filename="debug_screenshot.png"`,
         'Access-Control-Allow-Origin': '*',
       },
     });
 
   } catch (error) {
-    console.error(error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Allgemeiner Fehler in der Edge Function:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Ein interner Fehler ist aufgetreten.',
+      details: error.message 
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     });
