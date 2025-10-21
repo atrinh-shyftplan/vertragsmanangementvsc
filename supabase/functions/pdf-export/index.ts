@@ -122,7 +122,7 @@ serve(async (req) => {
           ${contentWithBase64Images}
         </body>
       </html>`;
-
+      
     const browserlessApiKey = Deno.env.get('BROWSERLESS_API_KEY');
     if (!browserlessApiKey) {
       throw new Error('BROWSERLESS_API_KEY is not set.');
