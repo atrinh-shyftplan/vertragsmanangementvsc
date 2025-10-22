@@ -1,12 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { Buffer } from 'https://deno.land/std@0.168.0/io/buffer.ts';
 
-// Globale CORS-Header für alle Antworten
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
- 
 interface ContractModule {
   title: string;
   content: string;
@@ -17,9 +10,34 @@ interface RequestBody {
   title?: string;
 }
 
+// Hilfsfunktion zum Laden und Konvertieren von Bildern
+const imageToDataUrl = async (url: string): Promise<string> => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
+    }
+    const blob = await response.blob();
+    const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error(`Could not convert image ${url}:`, error);
+    return ''; // Bei Fehler leeren String zurückgeben
+  }
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: CORS_HEADERS });
+    return new Response('ok', {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      }
+    });
   }
 
   try {
@@ -33,14 +51,26 @@ serve(async (req) => {
       throw new Error('"modules" ist erforderlich und muss ein Array sein.');
     }
 
-    // Erstelle den HTML-Inhalt direkt aus den Modulen.
-    // Die Base64-Umwandlung wird entfernt; browserless lädt die Bilder von der URL.
-    let htmlContent = '';
+    // Wandle alle Bild-URLs in Base64 um
+    let contentWithBase64Images = '';
     for (const module of modules) {
-      htmlContent += `
+      let moduleContent = module.content;
+      const imgRegex = /<img[^>]+src="([^">]+)"/g;
+      const matches = moduleContent.matchAll(imgRegex);
+
+      for (const match of matches) {
+        const originalSrc = match[1];
+        if (originalSrc && originalSrc.startsWith('http')) {
+          const dataUrl = await imageToDataUrl(originalSrc);
+          if (dataUrl) {
+            moduleContent = moduleContent.replace(originalSrc, dataUrl);
+          }
+        }
+      }
+      contentWithBase64Images += `
         <div class="page">
           ${module.title ? `<h2 class="module-title">${module.title}</h2>` : ''}
-          <div class="content">${module.content}</div>
+          <div class="content">${moduleContent}</div>
         </div>
       `;
     }
@@ -93,7 +123,7 @@ serve(async (req) => {
           <style>${printStyles}</style>
         </head>
         <body>
-          ${htmlContent}
+          ${contentWithBase64Images}
         </body>
       </html>`;
       
@@ -107,36 +137,16 @@ serve(async (req) => {
       throw new Error('BROWSERLESS_API_KEY is not set.');
     }
 
-    // Wir wechseln zum /function Endpunkt, da /pdf die "waitFor" Option mit HTML nicht unterstützt.
-    // Dies ist der korrekte Weg, um sicherzustellen, dass alle Ressourcen (Bilder) geladen werden.
-    const code = `
-      module.exports = async ({ page, context }) => {
-        // Setze den HTML-Inhalt der Seite
-        await page.setContent(context.html, {
-          // Warte, bis das Netzwerk für 500ms inaktiv ist. Das stellt sicher, dass Bilder etc. geladen sind.
-          waitUntil: 'networkidle0',
-        });
-
-        // Generiere das PDF mit den Optionen direkt hier.
-        const pdf = await page.pdf({
-          format: 'A4',
-          printBackground: true,
-          margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
-        });
-
-        return pdf;
-      };
-    `;
-
-    const response = await fetch(`https://production-sfo.browserless.io/function?token=${browserlessApiKey}`, {
+    const response = await fetch(`https://production-sfo.browserless.io/pdf?token=${browserlessApiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        code: code,
-        context: {
-          html: cleanHtml,
+        html: cleanHtml,
+        options: {
+          format: 'A4',
+          printBackground: true,
         }
       })
     });
@@ -150,9 +160,9 @@ serve(async (req) => {
 
     return new Response(pdfBuffer, {
       headers: {
-        ...CORS_HEADERS,
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${title}.pdf"`,
+        'Access-Control-Allow-Origin': '*',
       },
     });
 
@@ -160,7 +170,7 @@ serve(async (req) => {
     console.error(error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     });
   }
 });
