@@ -1,5 +1,12 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { Buffer } from 'https://deno.land/std@0.168.0/io/buffer.ts';
 
+// Globale CORS-Header für alle Antworten
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+ 
 interface ContractModule {
   title: string;
   content: string;
@@ -10,34 +17,25 @@ interface RequestBody {
   title?: string;
 }
 
-// Hilfsfunktion zum Laden und Konvertieren von Bildern
+// Hilfsfunktion zum Laden und Konvertieren von Bildern zu Base64 Data URLs
 const imageToDataUrl = async (url: string): Promise<string> => {
   try {
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
-    const blob = await response.blob();
-    const reader = new FileReader();
-    return new Promise((resolve, reject) => {
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+    const imageBuffer = await response.arrayBuffer();
+    const base64 = btoa(new Uint8Array(imageBuffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+    const contentType = response.headers.get('content-type') || 'image/png';
+    return `data:${contentType};base64,${base64}`;
   } catch (error) {
     console.error(`Could not convert image ${url}:`, error);
     return ''; // Bei Fehler leeren String zurückgeben
   }
 };
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-      }
-    });
+    return new Response('ok', { headers: CORS_HEADERS });
   }
 
   try {
@@ -147,6 +145,8 @@ serve(async (req) => {
         options: {
           format: 'A4',
           printBackground: true,
+          // Gib dem Browser 1 Sekunde Zeit, um alles zu rendern (wichtig für Bilder)
+          waitFor: 1000, 
         }
       })
     });
@@ -160,9 +160,9 @@ serve(async (req) => {
 
     return new Response(pdfBuffer, {
       headers: {
+        ...CORS_HEADERS,
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${title}.pdf"`,
-        'Access-Control-Allow-Origin': '*',
       },
     });
 
@@ -170,7 +170,7 @@ serve(async (req) => {
     console.error(error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     });
   }
 });
