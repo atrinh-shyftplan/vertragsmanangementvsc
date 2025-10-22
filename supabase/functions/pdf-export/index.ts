@@ -17,22 +17,6 @@ interface RequestBody {
   title?: string;
 }
 
-// Hilfsfunktion zum Laden und Konvertieren von Bildern zu Base64 Data URLs
-const imageToDataUrl = async (url: string): Promise<string> => {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.statusText}`);
-    }
-    const imageBuffer = await response.arrayBuffer();
-    const base64 = btoa(new Uint8Array(imageBuffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
-    const contentType = response.headers.get('content-type') || 'image/png';
-    return `data:${contentType};base64,${base64}`;
-  } catch (error) {
-    console.error(`Could not convert image ${url}:`, error);
-    return ''; // Bei Fehler leeren String zurückgeben
-  }
-};
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS });
@@ -49,26 +33,14 @@ serve(async (req) => {
       throw new Error('"modules" ist erforderlich und muss ein Array sein.');
     }
 
-    // Wandle alle Bild-URLs in Base64 um
-    let contentWithBase64Images = '';
+    // Erstelle den HTML-Inhalt direkt aus den Modulen.
+    // Die Base64-Umwandlung wird entfernt; browserless lädt die Bilder von der URL.
+    let htmlContent = '';
     for (const module of modules) {
-      let moduleContent = module.content;
-      const imgRegex = /<img[^>]+src="([^">]+)"/g;
-      const matches = moduleContent.matchAll(imgRegex);
-
-      for (const match of matches) {
-        const originalSrc = match[1];
-        if (originalSrc && originalSrc.startsWith('http')) {
-          const dataUrl = await imageToDataUrl(originalSrc);
-          if (dataUrl) {
-            moduleContent = moduleContent.replace(originalSrc, dataUrl);
-          }
-        }
-      }
-      contentWithBase64Images += `
+      htmlContent += `
         <div class="page">
           ${module.title ? `<h2 class="module-title">${module.title}</h2>` : ''}
-          <div class="content">${moduleContent}</div>
+          <div class="content">${module.content}</div>
         </div>
       `;
     }
@@ -121,7 +93,7 @@ serve(async (req) => {
           <style>${printStyles}</style>
         </head>
         <body>
-          ${contentWithBase64Images}
+          ${htmlContent}
         </body>
       </html>`;
       
@@ -135,18 +107,36 @@ serve(async (req) => {
       throw new Error('BROWSERLESS_API_KEY is not set.');
     }
 
-    const response = await fetch(`https://production-sfo.browserless.io/pdf?token=${browserlessApiKey}`, {
+    // Wir wechseln zum /function Endpunkt, da /pdf die "waitFor" Option mit HTML nicht unterstützt.
+    // Dies ist der korrekte Weg, um sicherzustellen, dass alle Ressourcen (Bilder) geladen werden.
+    const code = `
+      module.exports = async ({ page, context }) => {
+        // Setze den HTML-Inhalt der Seite
+        await page.setContent(context.html, {
+          // Warte, bis das Netzwerk für 500ms inaktiv ist. Das stellt sicher, dass Bilder etc. geladen sind.
+          waitUntil: 'networkidle0',
+        });
+
+        // Generiere das PDF mit den Optionen direkt hier.
+        const pdf = await page.pdf({
+          format: 'A4',
+          printBackground: true,
+          margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
+        });
+
+        return pdf;
+      };
+    `;
+
+    const response = await fetch(`https://production-sfo.browserless.io/function?token=${browserlessApiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        html: cleanHtml,
-        options: {
-          format: 'A4',
-          printBackground: true,
-          // Gib dem Browser 1 Sekunde Zeit, um alles zu rendern (wichtig für Bilder)
-          waitFor: 1000, 
+        code: code,
+        context: {
+          html: cleanHtml,
         }
       })
     });
