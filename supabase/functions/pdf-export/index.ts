@@ -43,6 +43,10 @@ serve(async (req) => {
   try {
     const { modules, title = "Vertrag" }: RequestBody = await req.json();
 
+    console.log('--- PDF Export: Request erhalten ---');
+    console.log(`Anzahl der Module: ${modules ? modules.length : 0}`);
+
+
     if (!modules || !Array.isArray(modules)) {
       throw new Error('"modules" ist erforderlich und muss ein Array sein.');
     }
@@ -123,6 +127,11 @@ serve(async (req) => {
         </body>
       </html>`;
       
+    console.log('--- PDF Export: Generiertes HTML (Anfang) ---');
+    console.log(cleanHtml.substring(0, 500)); 
+    console.log('--- PDF Export: HTML Ende ---');
+
+
     const browserlessApiKey = Deno.env.get('BROWSERLESS_API_KEY');
     if (!browserlessApiKey) {
       throw new Error('BROWSERLESS_API_KEY is not set.');

@@ -16,10 +16,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 26% 14%;
 
-    /* Professional Blue Palette */
-    --primary: 220 91% 48%;
-    --primary-foreground: 220 9% 98%;
-    --primary-hover: 220 91% 42%;
+    /* Brand Purple Palette */
+    --primary: 258 88% 66%; /* Lila Hauptfarbe */
+    --primary-foreground: 258 96% 98%; /* Sehr helles Lila für Text auf lila Hintergrund */
+    --primary-hover: 258 88% 60%; /* Etwas dunkleres Lila für Hover-Effekte */
 
     /* Success Green */
     --success: 142 76% 36%;
@@ -88,8 +88,8 @@
     --card-foreground: 220 9% 98%;
     --popover: 220 26% 14%;
     --popover-foreground: 220 9% 98%;
-    --primary: 220 91% 48%;
-    --primary-foreground: 220 9% 98%;
+    --primary: 258 88% 66%; /* Lila Hauptfarbe (Dark Mode) */
+    --primary-foreground: 258 96% 98%; /* Sehr helles Lila für Text (Dark Mode) */
     --secondary: 220 26% 18%;
     --secondary-foreground: 220 9% 98%;
     --muted: 220 26% 18%;
