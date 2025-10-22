@@ -128,7 +128,7 @@ serve(async (req) => {
       </html>`;
       
     console.log('--- PDF Export: Generiertes HTML (Anfang) ---');
-    console.log(cleanHtml.substring(0, 500)); 
+    console.log(cleanHtml.substring(0, 5000)); 
     console.log('--- PDF Export: HTML Ende ---');
 
 
