@@ -113,10 +113,6 @@ serve(async (req) => {
       // 1. Der HTML-Inhalt
       html: cleanHtml,
       
-      // 2. Das Job-Timeout (60s in Millisekunden)
-      // Wichtig: 'timeout' ist hier im Body, nicht mehr in der URL!
-      timeout: 60000, 
-
       // 3. Die PDF-Druckoptionen (ersetzt die 'page.pdf' Einstellungen)
       options: {
         format: 'A4',
@@ -130,7 +126,7 @@ serve(async (req) => {
       }
     };
 
-    const response = await fetch(`https://production-sfo.browserless.io/pdf?token=${browserlessApiKey}`, {
+    const response = await fetch(`https://production-sfo.browserless.io/pdf?token=${browserlessApiKey}&timeout=60`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
