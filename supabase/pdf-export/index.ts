@@ -116,11 +116,12 @@ serve(async (req) => {
       // 3. Die PDF-Druckoptionen (ersetzt die 'page.pdf' Einstellungen)
       options: {
         format: 'A4',
-        printBackground: true,
+        printBackground: true, // Wichtig für farbige Hintergründe
         margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
       },
 
       // 4. Das Warten auf Bilder (ersetzt 'page.setContent' mit 'waitUntil')
+      // Erhöhtes Timeout für Netzwerk-Ressourcen, um das Laden von Bildern sicherzustellen.
       gotoOptions: {
         waitUntil: 'networkidle2', // 'networkidle2' ist effizient
       }
@@ -136,8 +137,8 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error('Browserless API Error:', response.status, errorBody.substring(0, 300));
-      throw new Error(`Browserless API Error (${response.status}): ${errorBody.substring(0, 300)}`);
+      console.error('Browserless API Error:', response.status, errorBody);
+      throw new Error(`Browserless API Error (${response.status}): ${errorBody}`);
     }
 
     // Der /pdf-Endpunkt gibt direkt den rohen PDF-Buffer zurück.

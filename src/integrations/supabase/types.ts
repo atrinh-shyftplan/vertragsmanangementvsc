@@ -12,47 +12,65 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       attachments: {
         Row: {
+          contract_type_id: string | null
+          created_at: string | null
           id: string
-          created_at: string
-          name: string
-          type: "fest" | "produkt" | "zusatz"
-          description: string | null
+          is_optional: boolean | null
           module_id: string | null
+          name: string | null
           sort_order: number | null
-          contract_type_key: string
+          type: string | null
         }
         Insert: {
+          contract_type_id?: string | null
+          created_at?: string | null
           id?: string
-          created_at?: string
-          name: string
-          type: "fest" | "produkt" | "zusatz"
-          description?: string | null
-          module_id: string | null
+          is_optional?: boolean | null
+          module_id?: string | null
+          name?: string | null
           sort_order?: number | null
-          contract_type_id: string
+          type?: string | null
         }
         Update: {
+          contract_type_id?: string | null
+          created_at?: string | null
           id?: string
-          created_at?: string
-          name?: string
-          type?: "fest" | "produkt" | "zusatz"
-          description?: string | null
+          is_optional?: boolean | null
           module_id?: string | null
+          name?: string | null
           sort_order?: number | null
-          contract_type_id?: string
+          type?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "attachments_module_id_fkey"
-            columns: ["module_id"]
-            isOneToOne: false
-            referencedRelation: "contract_modules"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "attachments_contract_type_id_fkey"
             columns: ["contract_type_id"]
@@ -60,21 +78,47 @@ export type Database = {
             referencedRelation: "contract_types"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "attachments_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "contract_modules"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contract_attachments: {
         Row: {
-          contract_id: string
           attachment_id: string
-          created_at: string
+          contract_id: string
+          created_at: string | null
         }
         Insert: {
-          contract_id: string
           attachment_id: string
-          created_at?: string
+          contract_id: string
+          created_at?: string | null
         }
-        Update: {}
-        Relationships: []
+        Update: {
+          attachment_id?: string
+          contract_id?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_attachments_attachment_id_fkey"
+            columns: ["attachment_id"]
+            isOneToOne: false
+            referencedRelation: "attachments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_attachments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contract_categories: {
         Row: {
@@ -120,7 +164,6 @@ export type Database = {
       }
       contract_compositions: {
         Row: {
-          contract_type_id: string
           contract_type_key: string
           created_at: string
           id: string
@@ -130,7 +173,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          contract_type_id: string
           contract_type_key: string
           created_at?: string
           id?: string
@@ -140,37 +182,26 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          contract_type_id?: string
           contract_type_key?: string
           created_at?: string
           id?: string
           is_active?: boolean | null
-          module_id?: string
           module_key?: string
           sort_order?: number | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "contract_compositions_contract_type_id_fkey"
-            columns: ["contract_type_id"]
-            isOneToOne: false
-            referencedRelation: "contract_types"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "contract_compositions_module_id_fkey"
-            columns: ["module_id"]
+            foreignKeyName: "contract_compositions_module_key_fkey"
+            columns: ["module_key"]
             isOneToOne: false
             referencedRelation: "contract_modules"
-            referencedColumns: ["id"]
+            referencedColumns: ["key"]
           },
         ]
       }
       contract_modules: {
         Row: {
-          content: string
-          title: string | number | readonly string[]
           category: string | null
           content_de: string
           content_en: string | null
@@ -179,7 +210,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           key: string
-          name: string
+          name: string | null
           sort_order: number | null
           title_de: string
           title_en: string | null
@@ -195,7 +226,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           key: string
-          name: string
+          name?: string | null
           sort_order?: number | null
           title_de: string
           title_en?: string | null
@@ -211,7 +242,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           key?: string
-          name?: string
+          name?: string | null
           sort_order?: number | null
           title_de?: string
           title_en?: string | null
@@ -236,6 +267,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_default: boolean | null
+          modules: Json | null
           name: string
           template_data: Json
           updated_at: string
@@ -247,6 +279,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_default?: boolean | null
+          modules?: Json | null
           name: string
           template_data: Json
           updated_at?: string
@@ -258,6 +291,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_default?: boolean | null
+          modules?: Json | null
           name?: string
           template_data?: Json
           updated_at?: string
@@ -302,61 +336,51 @@ export type Database = {
       }
       contracts: {
         Row: {
-          assigned_to: string | null
-          client: string
-          assigned_to_user_id: string | null
-          contract_type_key: string | null
-          created_at: string
-          description: string | null
-          end_date: string
-          global_variables: Json | null
+          assigned_to_profile_id: string | null
+          client: string | null
+          contract_type_id: string | null
+          created_at: string | null
           id: string
-          progress: number | null
-          start_date: string
           status: string
-          tags: string[] | null
-          template_variables: Json | null
-          title: string
-          updated_at: string
-          value: number
+          title: string | null
+          variables: Json | null
         }
         Insert: {
-          assigned_to?: string | null
-          assigned_to_user_id?: string | null
-          contract_type_key?: string | null
-          created_at?: string
-          description?: string | null
-          end_date: string
-          global_variables?: Json | null
+          assigned_to_profile_id?: string | null
+          client?: string | null
+          contract_type_id?: string | null
+          created_at?: string | null
           id?: string
-          progress?: number | null
-          start_date: string
           status?: string
-          tags?: string[] | null
-          template_variables?: Json | null
-          title: string
-          updated_at?: string
-          value?: number
+          title?: string | null
+          variables?: Json | null
         }
         Update: {
-          assigned_to?: string | null
-          assigned_to_user_id?: string | null
-          contract_type_key?: string | null
-          created_at?: string
-          description?: string | null
-          end_date?: string
-          global_variables?: Json | null
+          assigned_to_profile_id?: string | null
+          client?: string | null
+          contract_type_id?: string | null
+          created_at?: string | null
           id?: string
-          progress?: number | null
-          start_date?: string
           status?: string
-          tags?: string[] | null
-          template_variables?: Json | null
-          title?: string
-          updated_at?: string
-          value?: number
+          title?: string | null
+          variables?: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contracts_assigned_to_user_id_fkey"
+            columns: ["assigned_to_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_contract_type_id_fkey"
+            columns: ["contract_type_id"]
+            isOneToOne: false
+            referencedRelation: "contract_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       global_variables: {
         Row: {
@@ -408,8 +432,10 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          email: string | null
           id: string
-          role: string | null
+          phone_number: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string
           user_id: string
         }
@@ -417,8 +443,10 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id?: string
-          role?: string | null
+          phone_number?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
           user_id: string
         }
@@ -426,8 +454,10 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id?: string
-          role?: string | null
+          phone_number?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
           user_id?: string
         }
@@ -468,10 +498,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_my_role: { Args: never; Returns: string }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "ae"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -597,32 +627,12 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  public: {
+  graphql_public: {
     Enums: {},
   },
+  public: {
+    Enums: {
+      user_role: ["admin", "ae"],
+    },
+  },
 } as const
-export type ContractModule = Database["public"]["Tables"]["contract_modules"]["Row"];
-export type Attachment = Database["public"]["Tables"]["attachments"]["Row"];
-export type AttachmentInsert = Database["public"]["Tables"]["attachments"]["Insert"];
-
-// Definiert die kombinierte Struktur eines Anhangs mit seinem optional verknüpften Textmodul
-export interface AttachmentWithModule extends Attachment {
-  contract_modules: ContractModule | null;
-}
-
-export type ContractComposition = Database["public"]["Tables"]["contract_compositions"]["Row"];
-
-export interface CompositionWithModuleAndAttachment extends ContractComposition {
-  contract_modules: ContractModule | null; // nested module
-  attachments: Attachment | null; // nested attachment
-}
-
-/**
- * Represents a single editable module in the frontend TemplateBuilder.
- * The `id` is a temporary client-side identifier for React keys.
- */
-export interface EditableModule {
-  id: string;
-  title: string;
-  content: string;
-}
