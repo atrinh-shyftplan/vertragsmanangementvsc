@@ -294,6 +294,9 @@ export default function Contracts() {
         </CardContent>
       </Card>
 
+      {/* NEU: PDF Job Status Liste */}
+      <PdfGenerationJobs />
+
       {/* Contracts Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredContracts.map((contract) => {
