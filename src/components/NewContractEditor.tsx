@@ -562,55 +562,40 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
   const handleExportPdf = async () => {
     setIsLoading(true);
 
-    // KORREKTUR: Verwende die `contractStructure` und `selectedAttachmentIds`, um die
-    // finalen Module für den Export zu bestimmen, anstatt des veralteten `modules`-States.
-    const finalModulesForPdf = contractStructure
-      .filter(item => {
-        // Schließe alle Module ein, die keine Anhänge sind, oder deren Anhang ausgewählt ist.
-        if (!item.attachment) return true;
-        return selectedAttachmentIds.includes(item.attachment.id);
-      })
-      .map(item => ({
-      title: item.module.title_de,
-      // Ersetze die Variablen und entferne das gelbe Highlighting für das finale PDF.
-      content: renderContent(item.module.content_de || '').replace(/<span class="bg-yellow-200 px-1 rounded">/g, '').replace(/<\/span>/g, '')
-    }));
+    // 1. Bereite den sauberen HTML-Inhalt vor, ohne die gelben Markierungen.
+    // Wir nehmen den gesamten Preview-Inhalt und bereinigen ihn.
+    const previewHtml = generatePreview();
+    const cleanHtml = previewHtml.replace(/<span class="bg-yellow-200 px-1 rounded">/g, '').replace(/<\/span>/g, '');
+    const filename = `${variableValues.title || 'vertrag'}.pdf`;
 
     try {
-      // Rufe die Supabase Edge Function auf
-      const { data, error } = await supabase.functions.invoke('pdf-export', {
+      // 2. Rufe die neue asynchrone Supabase Function auf, um den PDF-Generierungsjob zu starten.
+      const { error } = await supabase.functions.invoke('request-pdf-generation', {
         body: JSON.stringify({
-          modules: finalModulesForPdf,
-          title: variableValues.title || 'Vertrag'
+          html_content: cleanHtml,
+          filename: filename
         }),
       });
 
       if (error) throw error;
 
-      // Starte den Download der erhaltenen PDF-Datei
-      const blob = new Blob([data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${variableValues.title || 'vertrag'}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      // 3. Bei Erfolg: Informiere den Benutzer und schließe den Dialog.
+      // Der Download-Teil wird entfernt, da der Prozess jetzt asynchron ist.
+      toast.success("PDF-Generierung gestartet. Sie werden benachrichtigt, sobald der Download bereitsteht.");
+      setIsPdfDialogOpen(false);
 
     } catch (error) {
       // 1. Gib das *gesamte* Fehlerobjekt in der Konsole aus.
       // Das ist der wichtigste Schritt für die Fehlersuche.
-      console.error('Detaillierter Fehler beim PDF-Export:', error);
+      console.error('Fehler beim Starten des PDF-Generierungsjobs:', error);
 
       // 2. Extrahiere die Nachricht sicher, falls das Fehlerobjekt kein Standard-Error ist.
       const errorMessage = (error instanceof Error) ? error.message : 'Ein unbekannter Fehler ist aufgetreten.';
 
       // 3. Zeige dem Benutzer eine saubere und verständliche Nachricht an.
-      toast.error(`Fehler beim PDF-Export: ${errorMessage}`);
+      toast.error(`Fehler beim Starten der PDF-Generierung: ${errorMessage}`);
     } finally {
       setIsLoading(false);
-      setIsPdfDialogOpen(false);
     }
   };
 
