@@ -85,7 +85,7 @@ serve(async (req) => {
       formData.append('margin_right', '20mm');
       formData.append('margin_bottom', '20mm');
       formData.append('margin_left', '20mm');
-      // formData.append('test', '1'); // Zum Testen ohne Credits zu verbrauchen (entfernen für Produktion)
+      formData.append('delay', '3000');
 
       const response = await fetch(apiUrl, {
         method: 'POST',

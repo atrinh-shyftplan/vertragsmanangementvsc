@@ -1,13 +1,68 @@
 /* src/lib/print-styles.css */
 
+/* Wir verwenden @media print, da pdflayer diesen Kontext 
+  für die PDF-Generierung nutzt.
+*/
 @media print {
+  
+  /* 1. Schriftart (Inter) und Rendering-Optimierung */
   body {
-    font-family: sans-serif;
+    /* Setzt 'Inter' als Ziel-Schriftart. Die @import-Anweisung 
+      in deiner index.css lädt die Schriftart, und der 'delay' 
+      in der Supabase Function gibt dem Browser Zeit dafür.
+    */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    
+    /* WICHTIG: Zwingt den Browser, Hintergrundfarben 
+      (z.B. in Tabellenköpfen) zu drucken.
+    */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
-  /* Versteckt die gelben Markierungen der Variablen im PDF */
+  /* 2. Dein 2-Spalten-Layout 
+    (zuverlässiger als Tailwind's 'grid-cols-2' für den Druck)
+  */
+  .pdf-two-column-layout {
+    column-count: 2;
+    column-gap: 25px; /* Passe den Spaltenabstand hier an */
+  }
+
+  /* 3. Bild-Steuerung 
+    (Damit Bilder die Größe behalten, die sie im HTML haben)
+  */
+  .pdf-image {
+    max-width: 100% !important; /* Verhindert, dass Bilder über die Seite ragen */
+    height: auto !important;     /* Behält die Proportionen bei */
+    display: block;             /* Sauberes Rendering */
+    break-inside: avoid;        /* Verhindert Seitenumbruch IN einem Bild */
+  }
+
+  /* 4. Tabellen-Optimierung (wird im Druck oft zurückgesetzt) */
+  table {
+    width: 100%;
+    border-collapse: collapse; /* Saubere Ränder */
+    break-inside: avoid;      /* Verhindert Seitenumbruch IN Tabellen */
+  }
+  
+  th, td {
+    border: 1px solid #e2e8f0; /* Beispiel: Tailwind 'gray-200' */
+    padding: 8px 12px;
+    text-align: left;
+  }
+  
+  th {
+    background-color: #f8fafc; /* Beispiel: Tailwind 'slate-50' */
+  }
+
+  /* 5. Seitenumbruch-Logik (hattest du schon) */
+  .break-after-page {
+    page-break-after: always;
+  }
+
+  /* 6. Variablen-Highlight (hattest du schon) */
   .variable-highlight {
     background-color: transparent !important;
     color: inherit !important;
@@ -15,8 +70,17 @@
     border-radius: 0 !important;
   }
 
-  /* Sorgt für einen sauberen Seitenumbruch nach jedem Modul */
-  .break-after-page {
-    page-break-after: always;
+  /* 7. Seitenumbruch-Kontrolle (verhindert "Hurenkinder" & "Schusterjungen") */
+  h1, h2, h3, h4, h5, p, ul, ol, table {
+     orphans: 3; 
+     widows: 3; 
+  }
+
+  h1, h2, h3 {
+    page-break-after: avoid; /* Verhindert Seitenumbruch direkt nach einer Überschrift */
+  }
+
+  a, span {
+    break-inside: avoid; /* Verhindert, dass Text innerhalb eines Links/Spans getrennt wird */
   }
 }
