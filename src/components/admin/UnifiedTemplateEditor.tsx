@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -14,7 +14,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import type { Database, Attachment, ContractModule, CompositionWithModuleAndAttachment, ContractComposition } from '@/integrations/supabase/types';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Toggle } from '@/components/ui/toggle';
 import { CSS } from '@dnd-kit/utilities';
 
 type ContractType = Database['public']['Tables']['contract_types']['Row'];
@@ -50,7 +49,6 @@ export function UnifiedTemplateEditor() {
   const [isAddModuleOpen, setAddModuleOpen] = useState(false);
   const [modulesToAdd, setModulesToAdd] = useState<string[]>([]);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [isLayoutPopoverOpen, setIsLayoutPopoverOpen] = useState(false);
   const [error, setError] = useState<string>('');
   const { toast } = useToast();
 

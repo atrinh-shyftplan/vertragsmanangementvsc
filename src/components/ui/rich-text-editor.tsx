@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import {
   Bold, Italic, Strikethrough, List, ListOrdered, Quote, CheckSquare,
   Indent as IndentIcon, Outdent as OutdentIcon, AlignLeft, AlignCenter,
-  AlignRight, AlignJustify, Variable, Search, ImageIcon, Table as TableIcon, Columns,
+  AlignRight, AlignJustify, Variable, Search, ImageIcon, Table as TableIcon,
   Trash2, Combine, Split, Pilcrow, Heading1, Heading2, Heading3,
   Columns, Rows, ArrowLeftToLine, ArrowRightToLine, ArrowUpToLine, ArrowDownToLine,
   Trash
@@ -61,22 +61,6 @@ const CustomImage = Image.extend({
       },
       'data-align': {
         default: 'center', // Standardmäßig zentriert
-      },
-      // Füge 'pdf-image' zur bestehenden 'class'-Liste hinzu
-      class: {
-        default: 'pdf-image',
-        parseHTML: (element) => {
-          const existingClasses = element.getAttribute('class') || '';
-          // Verhindere doppelte Klassen
-          const classes = new Set(existingClasses.split(' ').filter(Boolean));
-          classes.add('pdf-image');
-          return Array.from(classes).join(' ');
-        },
-        renderHTML: (attributes) => {
-          // Die `className` in der ImageView-Komponente und die `class` hier werden kombiniert.
-          // Wir stellen sicher, dass `pdf-image` immer Teil der Attribute ist.
-          return { class: attributes.class };
-        },
       },
     };
   },
@@ -135,12 +119,8 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file && editor) {
         try {
-          const src = await uploadImage(file);
-          // Füge das Bild mit den Standard-Tailwind-Klassen und der PDF-Klasse hinzu
-          editor.chain().focus().setImage({ 
-            src, 
-            class: 'w-full h-auto pdf-image' 
-          }).run();
+          const imageUrl = await uploadImage(file);
+          editor.chain().focus().setImage({ src: imageUrl }).run();
         } catch (error) {
           console.error('Failed to upload image:', error);
         }
@@ -299,19 +279,6 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
             <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().indent().run()} className="h-8 w-8 p-0">
               <IndentIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Einrücken</p></TooltipContent></Tooltip>
           </div>
-
-          <div className="w-px h-6 bg-border mx-1" />
-
-          {/* 2-Column Layout */}
-          <Tooltip><TooltipTrigger asChild><Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleWrap('div', { class: 'grid grid-cols-2 gap-4 pdf-two-column-layout' }).run()}
-            className={cn("h-8 w-8 p-0", editor.isActive('div', { class: 'grid grid-cols-2 gap-4 pdf-two-column-layout' }) && "bg-primary/20")}
-          >
-            <Columns className="h-4 w-4" />
-          </Button></TooltipTrigger><TooltipContent><p>2-Spalten-Layout</p></TooltipContent></Tooltip>
 
           <div className="w-px h-6 bg-border mx-1" />
 
