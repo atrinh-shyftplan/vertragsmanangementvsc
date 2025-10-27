@@ -1,24 +1,33 @@
+// supabase/functions/process-pdf-job/index.ts
+
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { corsHeaders } from '../_shared/cors.ts'; // Wir brauchen CORS für den Trigger
+import { corsHeaders } from '../_shared/cors.ts';
 
 console.log(`Function 'process-pdf-job' starting up.`);
 
 // Erstelle einen Supabase-Admin-Client
-// Dieser Client nutzt den Service Role Key, um RLS zu umgehen
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')! // WICHTIG: Service Role Key!
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
-serve(async (req) => {
-  // Diese Funktion sollte idealerweise durch einen Cronjob oder Webhook getriggert werden.
-  // Wir fügen eine einfache Autorisierung hinzu, falls sie manuell aufgerufen wird.
-  // Für einen echten Cronjob-Trigger ist das ggf. anzupassen.
+// Definiere den Typ für die Job-Datenbankzeile (passe dies an deine Tabelle an)
+interface PdfGenerationJob {
+  id: string;
+  html_content: string;
+  filename: string; 
+  user_id: string;
+  // ... ggf. andere Felder
+}
 
+serve(async (req) => {
   // CORS Preflight Handling
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
+
+  let jobId: string | null = null; // Job-ID für die Fehlerbehandlung
 
   try {
     console.log('--- process-pdf-job: searching for new job ---');
@@ -28,118 +37,142 @@ serve(async (req) => {
       .from('pdf_generation_jobs')
       .select('*')
       .eq('status', 'pending')
-      .order('created_at', { ascending: true }) // Ältesten zuerst
+      .order('created_at', { ascending: true }) 
       .limit(1)
-      .single(); // Nimm nur einen
+      .maybeSingle<PdfGenerationJob>(); // Erlaube null, wenn nichts gefunden wird
 
-    if (fetchError || !job) {
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = "No rows found"
-        console.error('Error fetching job:', fetchError.message);
-      } else {
-        console.log('No pending jobs found.');
-      }
+    // Fehler beim Abrufen (außer "nichts gefunden")
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.error('Error fetching job:', fetchError.message);
+      throw fetchError;
+    }
+
+    // Nichts zu tun
+    if (!job) {
+      console.log('No pending jobs found.');
       return new Response(JSON.stringify({ message: 'No pending jobs.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       });
     }
 
-    console.log(`Processing job ID: ${job.id}`);
+    jobId = job.id; // Speichere die Job-ID für die Fehlerbehandlung
+    console.log(`Processing job ID: ${jobId}`);
 
-    // 2. Setze Status auf 'processing', damit er nicht nochmal geholt wird
+    // 2. Setze Status auf 'processing'
     await supabaseAdmin
       .from('pdf_generation_jobs')
       .update({ status: 'processing', updated_at: new Date().toISOString() })
-      .eq('id', job.id);
+      .eq('id', jobId);
 
     try {
-      // --- HIER STARTET DEINE ALTE PDF-EXPORT LOGIK ---
-      const browserlessApiKey = Deno.env.get('BROWSERLESS_API_KEY');
-      if (!browserlessApiKey) {
-        throw new Error('BROWSERLESS_API_KEY is not set.');
+      // --- PDFLAYER API LOGIK ---
+      const pdflayerApiKey = Deno.env.get('PDFLAYER_ACCESS_KEY');
+      if (!pdflayerApiKey) {
+        throw new Error('PDFLAYER_ACCESS_KEY is not set in Supabase Secrets.');
       }
 
-      const browserlessPayload = {
-        html: job.html_content, // HTML aus dem Job holen
-        options: {
-          format: 'A4',
-          printBackground: true,
-          margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
-        },
-        gotoOptions: {
-          waitUntil: 'networkidle2',
-        }
-      };
+      // 1. URL auf HTTPS geändert
+      const apiUrl = `https://api.pdflayer.com/api/convert?access_key=${pdflayerApiKey}`;
+      console.log(`Calling pdflayer (HTTPS) for job ${jobId}...`);
 
-      console.log(`Calling Browserless for job ${job.id}...`);
+      const formData = new FormData();
+      formData.append('document_html', job.html_content);
+      
+      // -- Optionen (wie von dir gewünscht, erstmal minimal) --
+      formData.append('page_size', 'A4');
+      formData.append('margin_top', '20mm');
+      formData.append('margin_right', '20mm');
+      formData.append('margin_bottom', '20mm');
+      formData.append('margin_left', '20mm');
+      // formData.append('test', '1'); // Zum Testen ohne Credits zu verbrauchen (entfernen für Produktion)
 
-      const response = await fetch(`https://production-sfo.browserless.io/pdf?token=${browserlessApiKey}&timeout=60`, {
+      const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(browserlessPayload),
+        body: formData,
       });
 
       if (!response.ok) {
         const errorBody = await response.text();
-        console.error(`Browserless API Error for job ${job.id}:`, response.status, errorBody.substring(0, 300));
-        throw new Error(`Browserless Error (${response.status}): ${errorBody.substring(0, 300)}`);
+        console.error(`pdflayer API Error for job ${jobId}:`, response.status, errorBody.substring(0, 300));
+        try {
+          const errorJson = JSON.parse(errorBody);
+          if (errorJson?.error?.info) {
+             throw new Error(`pdflayer Error (${response.status}): ${errorJson.error.info}`);
+          }
+        } catch (parseError) {
+          throw new Error(`pdflayer Error (${response.status}): ${errorBody.substring(0, 300)}`);
+        }
       }
 
-      // 3. PDF-Buffer von Browserless erhalten
-      const pdfBuffer = await response.arrayBuffer();
-      console.log(`PDF Buffer received for job ${job.id}. Size: ${pdfBuffer.byteLength} bytes`);
+      const pdfBlob = await response.blob();
+      console.log(`PDF Blob received for job ${jobId}. Size: ${pdfBlob.size} bytes`);
 
       // 4. PDF in Supabase Storage hochladen
-      const storagePath = `generated-pdfs/${job.user_id}/${job.id}_${job.filename}`;
+      // 2. Bucket-Name auf 'pdf_files' geändert
+      const storagePath = `user_pdfs/${job.user_id}/${job.id}_${job.filename}`;
       const { error: storageError } = await supabaseAdmin.storage
-        .from('pdf_files') // Sicherstellen, dass dieser Bucket existiert!
-        .upload(storagePath, pdfBuffer, {
+        .from('pdf_files') // <-- DEIN BUCKET NAME
+        .upload(storagePath, pdfBlob, {
           contentType: 'application/pdf',
-          upsert: true // Überschreiben, falls Job neu gestartet wurde
+          upsert: true
         });
 
       if (storageError) {
-        console.error(`Storage Upload Error for job ${job.id}:`, storageError);
+        console.error(`Storage Upload Error for job ${jobId}:`, storageError);
         throw new Error(`Storage Error: ${storageError.message}`);
       }
 
-      console.log(`PDF for job ${job.id} uploaded to Storage:`, storagePath);
+      console.log(`PDF for job ${jobId} uploaded to Storage:`, storagePath);
 
-      // 5. Job als 'completed' markieren
+      // 5. Job als 'completed' markieren (mit storage_path)
       await supabaseAdmin
         .from('pdf_generation_jobs')
-        .update({ 
-          status: 'completed', 
-          storage_path: storagePath, 
-          updated_at: new Date().toISOString() 
+        .update({
+          status: 'completed',
+          storage_path: storagePath, // Hier speichern wir den Pfad
+          updated_at: new Date().toISOString()
         })
-        .eq('id', job.id);
+        .eq('id', jobId);
 
-      console.log(`--- Job ${job.id} COMPLETED ---`);
+      console.log(`--- Job ${jobId} COMPLETED ---`);
 
     } catch (processingError) {
-      // --- FEHLERBEHANDLUNG (Browserless oder Storage) ---
-      console.error(`Failed to process job ${job.id}:`, processingError.message);
-      // Job als 'failed' markieren
+      // --- FEHLERBEHANDLUNG (pdflayer oder Storage) ---
+      console.error(`Failed to process job ${jobId}:`, processingError.message);
       await supabaseAdmin
         .from('pdf_generation_jobs')
-        .update({ 
-          status: 'failed', 
-          error_message: processingError.message, 
-          updated_at: new Date().toISOString() 
+        .update({
+          status: 'failed',
+          error_message: processingError.message,
+          updated_at: new Date().toISOString()
         })
-        .eq('id', job.id);
+        .eq('id', jobId);
     }
 
-    // Erfolg der *Funktion* melden (nicht des PDF-Jobs)
-    return new Response(JSON.stringify({ success: true, processedJobId: job.id }), {
+    // Erfolg der *Funktion* melden
+    return new Response(JSON.stringify({ success: true, processedJobId: jobId }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
 
   } catch (error) {
-    // Genereller Fehler beim Start der Funktion
+    // Genereller Fehler (z.B. DB-Verbindung)
     console.error('Fatal error in process-pdf-job:', error);
+    if (jobId) {
+      try {
+        await supabaseAdmin
+          .from('pdf_generation_jobs')
+          .update({
+            status: 'failed',
+            error_message: `Fatal function error: ${error.message}`,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', jobId);
+      } catch (updateError) {
+         console.error(`Failed to mark job ${jobId} as failed after fatal error:`, updateError);
+      }
+    }
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
