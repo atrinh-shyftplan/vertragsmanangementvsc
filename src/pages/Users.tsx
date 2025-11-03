@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -90,7 +90,10 @@ export default function Users() {
 
     try {
       const { data, error } = await supabase.functions.invoke('invite-user', {
-        body: { email: inviteEmail.trim() }
+        body: { 
+          email: inviteEmail.trim(),
+          redirect_to: 'https://shyftcontract.netlify.app/' // Explizit Ihre Netlify URL
+        }
       });
 
       if (error) throw error;
@@ -113,6 +116,32 @@ export default function Users() {
       toast({
         title: "Fehler",
         description: error.message || "Einladung konnte nicht versendet werden.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('delete-user', {
+        body: { user_id: userId }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Erfolg",
+        description: "Benutzer wurde gelöscht.",
+      });
+
+      // Refresh users list
+      fetchUsers();
+
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Fehler",
+        description: error.message || "Benutzer konnte nicht gelöscht werden.",
         variant: "destructive",
       });
     }
@@ -184,6 +213,7 @@ export default function Users() {
                 <TableHead>E-Mail</TableHead>
                 <TableHead>Telefon</TableHead>
                 <TableHead>Rolle</TableHead>
+                <TableHead className="text-right">Aktionen</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -210,11 +240,32 @@ export default function Users() {
                       </SelectContent>
                     </Select>
                   </TableCell>
+                  <TableCell className="text-right">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Benutzer wirklich löschen?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Diese Aktion kann nicht rückgängig gemacht werden. Der Benutzer und alle zugehörigen Daten werden dauerhaft gelöscht.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteUser(profile.user_id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Löschen</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
                 </TableRow>
               ))}
               {profiles.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
                     Keine Benutzer gefunden.
                   </TableCell>
                 </TableRow>

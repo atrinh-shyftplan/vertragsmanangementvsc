@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trainerübung & Feedback</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --c1: #6f42c1; /* Lila - Feedback geben */
+        --c2: #779ff6; /* Blau - Feedback empfangen */
+        --c3: #f88eb7; /* Pink */
+        --red: #ef4444;
+        --green: #22c55e;
+      }
+
+      /* Stile für die Ablauf-Karten (von dieser Seite) */
+      .step-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        text-align: left;
+        height: 100%;
+      }
+
+      /* Stile für die Regel-Karten (aus dem Modal-Inhalt) */
+      /* ANGEPASST: Icon über Text, kein Hover, feste Höhe */
+      .rule-card {
+        position: relative;
+        transition: all 0.2s ease;
+        overflow: hidden;
+        border: 1px solid #e2e8f0; /* border-slate-200 */
+        display: flex;
+        flex-direction: column; /* Icon ÜBER Text */
+        align-items: center; /* Horizontal zentrieren */
+        justify-content: center; /* Vertikal zentrieren */
+        padding: 1.5rem; /* p-6 */
+        padding-bottom: 2rem;
+        border-radius: 1rem; /* rounded-2xl */
+        text-align: center; /* Text zentrieren */
+        min-height: 140px; /* Einheitliche Höhe */
+      }
+      .rule-card:focus {
+        outline: none;
+      }
+      .rule-card:hover,
+      .rule-card:focus {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+          0 4px 6px -4px rgb(0 0 0 / 0.1);
+      }
+      /* Hover-Text-Stile entfernt */
+
+      .left-bar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 6px;
+      }
+
+      /* Stile für das Modal */
+      .modal {
+        display: none; /* Standardmäßig versteckt */
+        position: fixed;
+        z-index: 50;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.6);
+      }
+      .modal-content {
+        background-color: #f8fafc; /* bg-slate-50 */
+        margin: 4% auto;
+        padding: 2.5rem; /* p-10 */
+        border-radius: 1rem;
+        width: 90%;
+        max-width: 72rem; /* max-w-7xl */
+        position: relative;
+        animation: fadeIn 0.3s;
+      }
+      .modal-close {
+        color: #94a3b8; /* slate-400 */
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        font-size: 2rem;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+        transition: color 0.2s;
+      }
+      .modal-close:hover {
+        color: #0f172a; /* slate-900 */
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+
+  <body class="bg-slate-50 text-slate-800 font-sans antialiased">
+    <div class="max-w-7xl mx-auto py-8 px-6">
+      <header class="mb-7 flex flex-row items-start gap-4">
+        <div
+          class="w-16 h-16 bg-violet-100 text-[color:var(--c1)] rounded-full flex items-center justify-center flex-shrink-0"
+        >
+          <i data-lucide="presentation" class="w-8 h-8"></i>
+        </div>
+        <div>
+          <h1 class="text-3xl font-bold text-slate-900 text-left">
+            Trainerübung & Feedback
+          </h1>
+          <p class="text-lg text-slate-600 mt-2 max-w-2xl text-left">
+            Jetzt sind Sie dran! Wir üben das Gelernte in einer kurzen Lehrprobe
+            und geben uns gegenseitig Feedback.
+          </p>
+        </div>
+      </header>
+
+      <section class="mb-7">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4 text-left">
+          Der Ablauf
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="step-card bg-white shadow-sm">
+            <div class="left-bar bg-[color:var(--c1)]"></div>
+            <div class="flex flex-row items-center gap-4 mb-3">
+              <div
+                class="p-3 rounded-full bg-violet-100 w-12 h-12 flex items-center justify-center flex-shrink-0"
+              >
+                <i
+                  data-lucide="user-check"
+                  class="w-6 h-6 text-[color:var(--c1)]"
+                ></i>
+              </div>
+              <h3 class="font-semibold text-xl">1. Präsentieren</h3>
+            </div>
+            <p class="text-sm text-slate-600">
+              Eine Person trägt einen 5-10 minütigen Schulungsteil vor (Ihre
+              "Lehrprobe").
+            </p>
+          </div>
+
+          <div class="step-card bg-white shadow-sm">
+            <div class="left-bar bg-[color:var(--c2)]"></div>
+            <div class="flex flex-row items-center gap-4 mb-3">
+              <div
+                class="p-3 rounded-full bg-blue-100 w-12 h-12 flex items-center justify-center flex-shrink-0"
+              >
+                <i
+                  data-lucide="messages-square"
+                  class="w-6 h-6 text-[color:var(--c2)]"
+                ></i>
+              </div>
+              <h3 class="font-semibold text-xl">2. Feedback geben</h3>
+            </div>
+            <p class="text-sm text-slate-600">
+              Eine zugewiesene Person gibt dem Präsentierenden ein
+              strukturiertes Feedback.
+            </p>
+          </div>
+
+          <div class="step-card bg-white shadow-sm">
+            <div class="left-bar bg-[color:var(--c3)]"></div>
+            <div class="flex flex-row items-center gap-4 mb-3">
+              <div
+                class="p-3 rounded-full bg-pink-100 w-12 h-12 flex items-center justify-center flex-shrink-0"
+              >
+                <i
+                  data-lucide="refresh-cw"
+                  class="w-6 h-6 text-[color:var(--c3)]"
+                ></i>
+              </div>
+              <h3 class="font-semibold text-xl">3. Rollen tauschen</h3>
+            </div>
+            <p class="text-sm text-slate-600">
+              Danach werden die Rollen getauscht, bis jeder Teilnehmer einmal
+              präsentiert und Feedback gegeben hat.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="mb-9">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4 text-left">
+          Struktur für das Feedback
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div
+            class="bg-green-50 p-6 rounded-2xl border border-green-200"
+          >
+            <h3
+              class="font-semibold text-xl text-green-800 mb-4 flex items-center"
+            >
+              <i
+                data-lucide="check-circle-2"
+                class="w-6 h-6 mr-2 text-green-600"
+              ></i>
+              Was war gut und warum?
+            </h3>
+            <p class="text-slate-700">
+              Beginnen Sie immer mit den positiven Aspekten. Was hat Ihnen
+              besonders gut gefallen? War die Erklärung klar? Wurde das Ziel
+              erreicht? Seien Sie konkret.
+            </p>
+          </div>
+
+          <div
+            class="bg-blue-50 p-6 rounded-2xl border border-blue-200"
+          >
+            <h3
+              class="font-semibold text-xl text-blue-800 mb-4 flex items-center"
+            >
+              <i
+                data-lucide="lightbulb"
+                class="w-6 h-6 mr-2 text-[color:var(--c2)]"
+              ></i>
+              Verbesserungsvorschläge?
+            </h3>
+            <p class="text-slate-700">
+              Was könnte die Person beim nächsten Mal noch besser machen? Geben
+              Sie 1-2 konkrete, umsetzbare Tipps, die der Person wirklich
+              weiterhelfen.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div
+          id="openModalButton"
+          class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between gap-4 cursor-pointer transition-all hover:shadow-lg hover:border-violet-300"
+        >
+          <div class="flex items-center gap-4">
+            <div
+              class="p-3 rounded-full bg-violet-100 w-12 h-12 flex items-center justify-center flex-shrink-0"
+            >
+              <i
+                data-lucide="shield-check"
+                class="w-6 h-6 text-[color:var(--c1)]"
+              ></i>
+            </div>
+            <div>
+              <h3 class="font-semibold text-lg text-slate-900">
+                Unsere Feedback-Regeln gelten!
+              </h3>
+              <p class="text-slate-600 text-sm">
+                Denken Sie daran: Das gesamte Feedback folgt unseren 5 Regeln (sachlich, konstruktiv, Ich-Perspektive, ausreden lassen, nachfragen). 
+                <p class="text-slate-600 text-sm">
+                Klicken Sie hier, um die 5 Regeln für konstruktives Feedback zu öffnen.
+              </p>
+            </div>
+          </div>
+          <div class="text-violet-400 flex-shrink-0">
+            <i data-lucide="arrow-up-right" class="w-6 h-6"></i>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="feedbackModal" class="modal">
+      <div class="modal-content">
+        <span id="closeModalButton" class="modal-close">&times;</span>
+        <div class="modal-body">
+          
+          <header class="mb-7 flex flex-row items-start gap-4">
+            <div
+              class="w-16 h-16 bg-violet-100 text-[color:var(--c1)] rounded-full flex items-center justify-center flex-shrink-0"
+            >
+              <i data-lucide="message-circle-heart" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <h1 class="text-3xl font-bold text-slate-900 text-left">
+                Unsere Feedback-Regeln
+              </h1>
+              <p class="text-lg text-slate-600 mt-2 max-w-2xl text-left">
+                Hier sind die 5 Regeln, an die wir uns bei der Übung halten.
+              </p>
+            </div>
+          </header>
+
+          <section
+            class="flex flex-wrap justify-center gap-x-8 gap-y-2 mb-7 text-sm text-slate-600"
+          >
+            <div class="flex items-center">
+              <span
+                class="w-4 h-4 rounded-md mr-2 shadow-sm"
+                style="background-color: var(--c1)"
+              ></span>
+              Feedback geben
+            </div>
+            <div class="flex items-center">
+              <span
+                class="w-4 h-4 rounded-md mr-2 shadow-sm"
+                style="background-color: var(--c2)"
+              ></span>
+              Feedback empfangen & verarbeiten
+            </div>
+          </section>
+
+          <section class="mb-9">
+            <div
+              class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
+            >
+              <div class="rule-card bg-white shadow-sm" tabindex="0">
+                <div class="left-bar bg-[color:var(--c1)]"></div>
+                <div
+                  class="p-3 rounded-full bg-violet-100 w-12 h-12 flex items-center justify-center flex-shrink-0 mb-3"
+                >
+                  <i
+                    data-lucide="check-check"
+                    class="w-6 h-6 text-[color:var(--c1)]"
+                  ></i>
+                </div>
+                <h3 class="font-semibold text-xl">1. Konstruktiv formulieren</h3>
+              </div>
+              <div class="rule-card bg-white shadow-sm" tabindex="0">
+                <div class="left-bar bg-[color:var(--c1)]"></div>
+                <div
+                  class="p-3 rounded-full bg-violet-100 w-12 h-12 flex items-center justify-center flex-shrink-0 mb-3"
+                >
+                  <i
+                    data-lucide="user-round"
+                    class="w-6 h-6 text-[color:var(--c1)]"
+                  ></i>
+                </div>
+                <h3 class="font-semibold text-xl">
+                  2. Aus der Ich-Perspektive
+                </h3>
+              </div>
+              <div class="rule-card bg-white shadow-sm" tabindex="0">
+                <div class="left-bar bg-[color:var(--c1)]"></div>
+                <div
+                  class="p-3 rounded-full bg-violet-100 w-12 h-12 flex items-center justify-center flex-shrink-0 mb-3"
+                >
+                  <i
+                    data-lucide="file-text"
+                    class="w-6 h-6 text-[color:var(--c1)]"
+                  ></i>
+                </div>
+                <h3 class="font-semibold text-xl">3. Sachlich argumentieren</h3>
+              </div>
+              <div class="rule-card bg-white shadow-sm" tabindex="0">
+                <div class="left-bar bg-[color:var(--c2)]"></div>
+                <div
+                  class="p-3 rounded-full bg-blue-100 w-12 h-12 flex items-center justify-center flex-shrink-0 mb-3"
+                >
+                  <i
+                    data-lucide="mic-off"
+                    class="w-6 h-6 text-[color:var(--c2)]"
+                  ></i>
+                </div>
+                <h3 class="font-semibold text-xl">4. Ausreden lassen</h3>
+              </div>
+              <div class="rule-card bg-white shadow-sm" tabindex="0">
+                <div class="left-bar bg-[color:var(--c2)]"></div>
+                <div
+                  class="p-3 rounded-full bg-blue-100 w-12 h-12 flex items-center justify-center flex-shrink-0 mb-3"
+                >
+                  <i
+                    data-lucide="message-circle-question"
+                    class="w-6 h-6 text-[color:var(--c2)]"
+                  ></i>
+                </div>
+                <h3 class="font-semibold text-xl">
+                  5. Nachfragen statt annehmen
+                </h3>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 text-left">
+              Beispiele: So geht's
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div
+                class="bg-red-50 p-6 rounded-2xl border border-red-200"
+              >
+                <h3
+                  class="font-semibold text-xl text-red-800 mb-4 flex items-center"
+                >
+                  <i
+                    data-lucide="x-circle"
+                    class="w-6 h-6 mr-2 text-red-600"
+                  ></i>
+                  Nicht so:
+                </h3>
+                <div classs="space-y-3">
+                  <blockquote
+                    class="border-l-4 border-red-300 pl-4 text-slate-700 italic text-lg mb-3"
+                  >
+                    "Das ist doch alles viel zu umständlich.<br />
+                    So kommen wir doch nie ans Ziel!"
+                    <span
+                      class="block not-italic text-sm text-red-700 mt-1"
+                      >→ (Nicht konstruktiv, greift die Sache an.)</span
+                    >
+                    <div
+                      class="flex flex-row gap-2 mt-2 items-center"
+                    >
+                      <span
+                        class="text-xs text-red-700 font-semibold"
+                        >Nicht beachtete Regel:</span
+                      >
+                      <div
+                        class="p-1 rounded-full bg-red-200 w-6 h-6 flex items-center justify-center"
+                        title="Nicht konstruktiv"
+                      >
+                        <i
+                          data-lucide="check-check"
+                          class="w-4 h-4 text-red-700"
+                        ></i>
+                      </div>
+                    </div>
+                  </blockquote>
+                  <blockquote
+                    class="border-l-4 border-red-300 pl-4 text-slate-700 italic text-lg"
+                  >
+                    "Du erklärst das viel zu kompliziert.<br />
+                    Keiner versteht das."
+                    <span
+                      class="block not-italic text-sm text-red-700 mt-1"
+                      >→ (Eine "Du"-Botschaft, die angreift.)</span
+                    >
+                    <div
+                      class="flex flex-row gap-2 mt-2 items-center"
+                    >
+                      <span
+                        class="text-xs text-red-700 font-semibold"
+                        >Nicht beachtete Regel:</span
+                      >
+                      <div
+                        class="p-1 rounded-full bg-red-200 w-6 h-6 flex items-center justify-center"
+                        title="Keine Ich-Perspektive"
+                      >
+                        <i
+                          data-lucide="user-round"
+                          class="w-4 h-4 text-red-700"
+                        ></i>
+                      </div>
+                    </div>
+                  </blockquote>
+                </div>
+              </div>
+              <div
+                class="bg-green-50 p-6 rounded-2xl border border-green-200"
+              >
+                <h3
+                  class="font-semibold text-xl text-green-800 mb-4 flex items-center"
+                >
+                  <i
+                    data-lucide="check-circle-2"
+                    class="w-6 h-6 mr-2 text-green-600"
+                  ></i>
+                  Besser so:
+                </h3>
+                <div class="space-y-3">
+                  <blockquote
+                    class="border-l-4 border-green-300 pl-4 text-slate-700 italic text-lg"
+                  >
+                    "Ich habe da einen anderen Punkt. Wie wäre es, wenn wir es
+                    so machen...?"
+                    <span
+                      class="block not-italic text-sm text-green-700 mt-1"
+                      >→ (Bleibt bei der Sache und macht einen
+                      Vorschlag.)</span
+                    >
+                    <div
+                      class="flex flex-row gap-2 mt-2 items-center"
+                    >
+                      <span
+                        class="text-xs text-green-700 font-semibold"
+                        >Angewendete Regeln:</span
+                      >
+                      <div
+                        class="p-1 rounded-full bg-green-200 w-6 h-6 flex items-center justify-center"
+                        title="Konstruktiv"
+                      >
+                        <i
+                          data-lucide="check-check"
+                          class="w-4 h-4 text-green-700"
+                        ></i>
+                      </div>
+                      <div
+                        class="p-1 rounded-full bg-green-200 w-6 h-6 flex items-center justify-center"
+                        title="Sachlich"
+                      >
+                        <i
+                          data-lucide="file-text"
+                          class="w-4 h-4 text-green-700"
+                        ></i>
+                      </div>
+                    </div>
+                  </blockquote>
+                  <blockquote
+                    class="border-l-4 border-green-300 pl-4 text-slate-700 italic text-lg"
+                  >
+                    "Ich habe das noch nicht verstanden. Könntest du mir das bitte nochmal erklären?"
+                    <span
+                      class="block not-italic text-sm text-green-700 mt-1"
+                      >→ (Eine "Ich"-Botschaft, die niemanden
+                      angreift.)</s
+                    >
+                    <div
+                      class="flex flex-row gap-2 mt-2 items-center"
+                    >
+                      <span
+                        class="text-xs text-green-700 font-semibold"
+                        >Angewendete Regeln:</span
+                      >
+                      <div
+                        class="p-1 rounded-full bg-green-200 w-6 h-6 flex items-center justify-center"
+                        title="Ich-Perspektive"
+                      >
+                        <i
+                          data-lucide="user-round"
+                          class="w-4 h-4 text-green-700"
+                        ></i>
+                      </div>
+                      <div
+                        class="p-1 rounded-full bg-green-200 w-6 h-6 flex items-center justify-center"
+                        title="Nachfragen"
+                      >
+                        <i
+                          data-lucide="message-circle-question"
+                          class="w-4 h-4 text-green-700"
+                        ></i>
+                      </div>
+                    </div>
+                  </blockquote>
+                </div>
+              </div>
+            </div>
+          </section>
+          </div>
+      </div>
+    </div>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+      // 1. Initialen Icon-Render für die Hauptseite durchführen
+      lucide.createIcons();
+
+      // 2. Modal-Logik einrichten
+      const modal = document.getElementById("feedbackModal");
+      const openBtn = document.getElementById("openModalButton");
+      const closeBtn = document.getElementById("closeModalButton");
+
+      if (openBtn && modal && closeBtn) {
+        
+        // Modal öffnen
+        openBtn.addEventListener("click", () => {
+          modal.style.display = "block";
+          // WICHTIG: Icons im Modal neu erstellen
+          lucide.createIcons();
+        });
+
+        // Modal schließen (per X-Knopf)
+        closeBtn.addEventListener("click", () => {
+          modal.style.display = "none";
+        });
+
+        // Modal schließen (per Klick außerhalb)
+        window.addEventListener("click", (event) => {
+          if (event.target == modal) {
+            modal.style.display = "none";
+          }
+        });
+
+      } else {
+        console.error("Modal-Elemente wurden nicht gefunden. Überprüfen Sie die IDs.");
+      }
+
+      // 3. Tastatur-Navigation für die Regel-Karten im Modal
+      // (Kein Hover-Text mehr, daher wird 'keypress' nicht mehr benötigt)
+      // Wir lassen die :focus Stile trotzdem, falls Sie sie später brauchen.
+      
+    </script>
+  </body>
+</html>

@@ -1,68 +1,80 @@
 /* src/lib/print-styles.css */
 
-/* Wir verwenden @media print, da pdflayer diesen Kontext 
-  für die PDF-Generierung nutzt.
-*/
 @media print {
-  
-  /* 1. Schriftart (Inter) und Rendering-Optimierung */
+
+  /* --- Grundlegende Seiteneinstellungen --- */
   body {
-    /* Setzt 'Inter' als Ziel-Schriftart. Die @import-Anweisung 
-      in deiner index.css lädt die Schriftart, und der 'delay' 
-      in der Supabase Function gibt dem Browser Zeit dafür.
-    */
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    
-    /* WICHTIG: Zwingt den Browser, Hintergrundfarben 
-      (z.B. in Tabellenköpfen) zu drucken.
-    */
-    -webkit-print-color-adjust: exact;
+    -webkit-print-color-adjust: exact; /* Wichtig für Hintergrundfarben */
     print-color-adjust: exact;
   }
 
-  /* 2. Dein 2-Spalten-Layout 
-    (zuverlässiger als Tailwind's 'grid-cols-2' für den Druck)
-  */
-  .pdf-two-column-layout {
-    column-count: 2;
-    column-gap: 25px; /* Passe den Spaltenabstand hier an */
+  /* --- Zweisprachiges Layout für Module --- */
+  /* Der Haupt-Container für ein Modul mit DE/EN */
+  .pdf-module-bilingual {
+    column-count: 2;   /* 2 Spalten */
+    column-gap: 25px;  /* Abstand */
+    margin-bottom: 20px; /* Abstand zwischen Modulen */
   }
 
-  /* 3. Bild-Steuerung 
-    (Damit Bilder die Größe behalten, die sie im HTML haben)
-  */
-  .pdf-image {
-    max-width: 100% !important; /* Verhindert, dass Bilder über die Seite ragen */
-    height: auto !important;     /* Behält die Proportionen bei */
-    display: block;             /* Sauberes Rendering */
-    break-inside: avoid;        /* Verhindert Seitenumbruch IN einem Bild */
+  /* Container für den Inhalt EINER Sprache (DE oder EN) */
+  .pdf-language-column {
+    break-inside: avoid; /* Verhindert Seitenumbruch innerhalb einer Spalte */
   }
 
-  /* 4. Tabellen-Optimierung (wird im Druck oft zurückgesetzt) */
+  /* --- Einsprachiges Layout für Module --- */
+  /* Fallback, wenn nur eine Sprache vorhanden ist */
+  .pdf-module-monolingual {
+    column-count: 1;
+    margin-bottom: 20px;
+  }
+
+  /* --- Bild-Styling --- */
+  .pdf-image { /* Diese Klasse müssen wir später noch an <img>-Tags bekommen */
+    max-width: 100% !important;
+    height: auto !important;
+    display: block;
+    break-inside: avoid;
+    margin-bottom: 1rem; /* Beispiel-Abstand */
+  }
+
+   /* --- Tabellen-Styling (volle Breite erzwingen) --- */
   table {
-    width: 100%;
-    border-collapse: collapse; /* Saubere Ränder */
-    break-inside: avoid;      /* Verhindert Seitenumbruch IN Tabellen */
-  }
-  
-  th, td {
-    border: 1px solid #e2e8f0; /* Beispiel: Tailwind 'gray-200' */
-    padding: 8px 12px;
-    text-align: left;
-  }
-  
-  th {
-    background-color: #f8fafc; /* Beispiel: Tailwind 'slate-50' */
+    width: 100% !important; /* Wichtig: Volle Breite */
+    border-collapse: collapse;
+    break-inside: avoid;
+    margin-bottom: 1rem; /* Beispiel-Abstand */
   }
 
-  /* 5. Seitenumbruch-Logik (hattest du schon) */
+  th, td {
+    border: 1px solid #e2e8f0; /* Tailwind 'gray-200' */
+    padding: 6px 10px; /* Etwas kompakter für PDF */
+    text-align: left;
+    vertical-align: top; /* Oben ausrichten */
+  }
+
+  th {
+    background-color: #f8fafc; /* Tailwind 'slate-50' */
+    font-weight: 600; /* Semibold */
+  }
+
+  /* --- Seitenumbruch-Logik --- */
   .break-after-page {
     page-break-after: always;
   }
 
-  /* 6. Variablen-Highlight (hattest du schon) */
+  h1, h2, h3, h4, h5, p, ul, ol, table {
+     orphans: 3;
+     widows: 3;
+  }
+
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+
+  /* --- Sonstiges --- */
   .variable-highlight {
     background-color: transparent !important;
     color: inherit !important;
@@ -70,17 +82,9 @@
     border-radius: 0 !important;
   }
 
-  /* 7. Seitenumbruch-Kontrolle (verhindert "Hurenkinder" & "Schusterjungen") */
-  h1, h2, h3, h4, h5, p, ul, ol, table {
-     orphans: 3; 
-     widows: 3; 
+  a { /* Links im PDF stylen */
+    color: inherit; /* Standardmäßig schwarz */
+    text-decoration: none; /* Keine Unterstreichung */
   }
 
-  h1, h2, h3 {
-    page-break-after: avoid; /* Verhindert Seitenumbruch direkt nach einer Überschrift */
-  }
-
-  a, span {
-    break-inside: avoid; /* Verhindert, dass Text innerhalb eines Links/Spans getrennt wird */
-  }
 }
