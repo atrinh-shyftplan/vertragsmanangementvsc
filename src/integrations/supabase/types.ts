@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       attachments: {
@@ -203,6 +178,7 @@ export type Database = {
       contract_modules: {
         Row: {
           category: string | null
+          content: string | null
           content_de: string
           content_en: string | null
           created_at: string
@@ -219,6 +195,7 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          content?: string | null
           content_de: string
           content_en?: string | null
           created_at?: string
@@ -235,6 +212,7 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          content?: string | null
           content_de?: string
           content_en?: string | null
           created_at?: string
@@ -424,6 +402,42 @@ export type Database = {
           name_de?: string
           name_en?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      pdf_generation_jobs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          filename: string
+          html_content: string
+          id: string
+          status: string
+          storage_path: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          filename: string
+          html_content: string
+          id?: string
+          status?: string
+          storage_path?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          filename?: string
+          html_content?: string
+          id?: string
+          status?: string
+          storage_path?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -627,9 +641,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       user_role: ["admin", "ae"],
