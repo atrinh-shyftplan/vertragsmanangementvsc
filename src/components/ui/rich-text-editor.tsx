@@ -18,10 +18,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import {
   Bold, Italic, Strikethrough, List, ListOrdered, Quote, CheckSquare,
   Indent as IndentIcon, Outdent as OutdentIcon, AlignLeft, AlignCenter,
-  AlignRight, AlignJustify, Variable, Search, ImageIcon, Table as TableIcon,
-  Trash2, Combine, Split, Pilcrow, Heading1, Heading2, Heading3,
-  Columns, Rows, ArrowLeftToLine, ArrowRightToLine, ArrowUpToLine, ArrowDownToLine,
-  Trash
+  AlignRight, AlignJustify, Variable, Search, ImageIcon, Table as TableIcon, Trash2,
+  Combine, Split, Pilcrow, Heading1, Heading2, Heading3, Columns, Rows,
+  ArrowLeftToLine, ArrowRightToLine, ArrowUpToLine, ArrowDownToLine, Trash
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IndentExtension } from '@/lib/indent-extension';
