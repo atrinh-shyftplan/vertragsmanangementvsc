@@ -227,6 +227,6 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
     </div>
   );
 }
-};
+;
 
 export default ContractViewer;
