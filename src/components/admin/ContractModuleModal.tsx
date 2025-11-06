@@ -107,7 +107,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[90vw] lg:max-w-[80vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[95vw] lg:max-w-[90vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {contractModule ? 'Modul bearbeiten' : 'Neues Modul erstellen'}
@@ -117,8 +117,8 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
+        <div className="grid gap-4 py-4" style={{maxWidth: 'none'}}>
+          <div className="grid grid-cols-6 items-center gap-4">
             <Label htmlFor="name" className="text-right">
               Name des Moduls
             </Label>
@@ -126,14 +126,14 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
               id="name"
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
-              className="col-span-3"
+              className="col-span-5"
               placeholder="z.B. Datenschutz"
             />
           </div>
 
           {/* Hidden key field to keep it in form state */}
           <div className="hidden">
-            <div className="grid grid-cols-4 items-center gap-4">
+            <div className="grid grid-cols-6 items-center gap-4">
               <Label htmlFor="key" className="text-right">
                 Schlüssel
               </Label>
@@ -141,12 +141,12 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
                 id="key"
                 value={formData.key}
                 readOnly
-                className="col-span-3"
+                className="col-span-5"
               />
             </div>
           </div>
           
-          <div className="grid grid-cols-4 items-center gap-4">
+          <div className="grid grid-cols-6 items-center gap-4">
             <Label htmlFor="title_de" className="text-right">
               Titel (DE)
             </Label>
@@ -154,12 +154,12 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
               id="title_de"
               value={formData.title_de}
               onChange={(e) => handleChange('title_de', e.target.value)}
-              className="col-span-3"
+              className="col-span-5"
               placeholder="Datenschutz"
             />
           </div>
           
-          <div className="grid grid-cols-4 items-center gap-4">
+          <div className="grid grid-cols-6 items-center gap-4">
             <Label htmlFor="title_en" className="text-right">
               Titel (EN)
             </Label>
@@ -167,47 +167,35 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
               id="title_en"
               value={formData.title_en}
               onChange={(e) => handleChange('title_en', e.target.value)}
-              className="col-span-3"
+              className="col-span-5"
               placeholder="Data Protection"
             />
           </div>
           
-          <div className="grid grid-cols-4 items-start gap-4">
-            <Label htmlFor="content_de" className="text-right pt-2">
-              Inhalt (DE)
+          <div className="grid grid-cols-6 items-start gap-4">
+            <Label htmlFor="content" className="text-right pt-2">
+              Inhalt
             </Label>
-            <div className="col-span-3">
+            <div className="col-span-5">
               <RichTextEditor
-                content={formData.content_de}
-                onChange={(content) => handleChange('content_de', content)}
-                placeholder="Deutscher Modulinhalt..."
+                content={formData.content || ''}
+                onChange={(content) => handleChange('content', content)}
+                placeholder="Modulinhalt hier einfügen. Für zweisprachige Module bitte eine 2-spaltige Tabelle verwenden."
                 className="min-h-[400px]"
                 globalVariables={globalVariables.map(v => ({ ...v, category: v.category || 'general' }))}
               />
+              <p className="text-xs text-muted-foreground mt-2">
+                Tipp: Für zweisprachige Inhalte (DE/EN) bitte das Tabellen-Icon oben im Editor verwenden, um eine 2-spaltige Tabelle einzufügen.
+              </p>
             </div>
           </div>
           
-          <div className="grid grid-cols-4 items-start gap-4">
-            <Label htmlFor="content_en" className="text-right pt-2">
-              Inhalt (EN)
-            </Label>
-            <div className="col-span-3">
-              <RichTextEditor
-                content={formData.content_en}
-                onChange={(content) => handleChange('content_en', content)}
-                placeholder="English module content..."
-                className="min-h-[400px]"
-                globalVariables={globalVariables.map(v => ({ ...v, category: v.category || 'general' }))}
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-4 items-center gap-4">
+          <div className="grid grid-cols-6 items-center gap-4">
             <Label htmlFor="category" className="text-right">
               Tag
             </Label>
             <Select value={formData.category} onValueChange={(value) => handleChange('category', value)}>
-              <SelectTrigger className="col-span-3">
+              <SelectTrigger className="col-span-5">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -220,7 +208,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
             </Select>
           </div>
           
-          <div className="grid grid-cols-4 items-center gap-4">
+          <div className="grid grid-cols-6 items-center gap-4">
             <Label htmlFor="sort_order" className="text-right">
               Sortierung
             </Label>
@@ -229,11 +217,11 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
               type="number"
               value={formData.sort_order}
               onChange={(e) => handleChange('sort_order', parseInt(e.target.value) || 0)}
-              className="col-span-3"
+              className="col-span-5"
             />
           </div>
           
-          <div className="grid grid-cols-4 items-center gap-4">
+          <div className="grid grid-cols-6 items-center gap-4">
             <Label htmlFor="is_active" className="text-right">
               Aktiv
             </Label>
