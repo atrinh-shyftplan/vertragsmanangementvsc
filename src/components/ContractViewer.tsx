@@ -55,10 +55,6 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
 
     // Logik für den Titel
     const title = language === 'de' ? moduleData.title_de : moduleData.title_en;
-
-    // Neue Logik: Nur noch das einheitliche content-Feld
-    const hasContent = moduleData.content && moduleData.content.trim() !== '';
-
     const getNumberPrefix = () => {
       if (!numberingStyle || numberingStyle === 'none' || !sortOrder) return '';
       switch (numberingStyle) {
@@ -70,8 +66,10 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
       }
     };
 
+    const hasContent = moduleData.content && moduleData.content.trim() !== '';
+
     // Nur wenn mindestens ein Titel oder Content vorhanden ist, rendern
-    if (!hasContent && !title) {
+    if (!title && !hasContent) {
       return null;
     }
 
@@ -150,7 +148,6 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
                 {contract.status}
               </Badge>
               <div className="flex gap-2">
-                {/* DE/EN Umschalt-Button entfernt */}
                 <Button variant="outline" size="sm">
                   <Download className="w-4 h-4 mr-2" />
                   PDF Export
@@ -229,6 +226,7 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
       </Card>
     </div>
   );
+}
 };
 
 export default ContractViewer;
