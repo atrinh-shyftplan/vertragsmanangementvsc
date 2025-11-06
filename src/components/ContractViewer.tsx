@@ -56,12 +56,11 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
     // Logik für den Titel
     const title = language === 'de' ? moduleData.title_de : moduleData.title_en;
 
-    const htmlContent = moduleData.content || '';
-    const hasContent = htmlContent.trim() !== '';
-    
+    // Neue Logik: Nur noch das einheitliche content-Feld
+    const hasContent = moduleData.content && moduleData.content.trim() !== '';
+
     const getNumberPrefix = () => {
       if (!numberingStyle || numberingStyle === 'none' || !sortOrder) return '';
-      
       switch (numberingStyle) {
         case 'numbered': return `${sortOrder}.`;
         case 'parentheses': return `(${sortOrder})`;
@@ -70,12 +69,12 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
         default: return '';
       }
     };
-    
-    // Nur wenn mindestens eine Sprache Inhalt oder einen Titel hat, etwas rendern
+
+    // Nur wenn mindestens ein Titel oder Content vorhanden ist, rendern
     if (!hasContent && !title) {
       return null;
     }
-    
+
     return (
       <div key={moduleKey} className="mb-8 break-after-page">
         {title && (
@@ -84,12 +83,11 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
             {title}
           </h2>
         )}
-        
         {hasContent && (
-          <div 
+          <div
             className="flex-1 text-muted-foreground leading-relaxed prose prose-sm max-w-none contract-preview"
-            dangerouslySetInnerHTML={{ 
-              __html: replaceVariables(htmlContent)
+            dangerouslySetInnerHTML={{
+              __html: replaceVariables(moduleData.content)
             }}
           />
         )}
@@ -152,10 +150,7 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
                 {contract.status}
               </Badge>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  <Globe className="w-4 h-4 mr-2" />
-                  {language === 'de' ? 'EN' : 'DE'}
-                </Button>
+                {/* DE/EN Umschalt-Button entfernt */}
                 <Button variant="outline" size="sm">
                   <Download className="w-4 h-4 mr-2" />
                   PDF Export
