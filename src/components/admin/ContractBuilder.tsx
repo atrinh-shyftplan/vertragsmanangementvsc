@@ -625,8 +625,8 @@ export function ContractBuilder({
                             <h3 class="text-lg font-semibold mb-2">${module.title_de}</h3>
                             <div
                               class="prose prose-sm sm:prose-base max-w-none"
+                              dangerouslySetInnerHTML={{ __html: module.content || '' }}
                             >
-                              ${module.content || ''}
                             </div>
                           </div>
                         `;

@@ -56,13 +56,8 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
     // Logik für den Titel
     const title = language === 'de' ? moduleData.title_de : moduleData.title_en;
 
-    // Prüfen, ob in den jeweiligen Sprachen Inhalt vorhanden ist.
-    const hasGermanContent = moduleData.content_de && moduleData.content_de.trim() !== '';
-    const hasEnglishContent = moduleData.content_en && moduleData.content_en.trim() !== '';
-    
-    // Das Layout mit voller Breite (1 Spalte) wird verwendet,
-    // AUSSER wenn BEIDE Sprachen Inhalt haben.
-    const shouldShowFullWidth = !(hasGermanContent && hasEnglishContent);
+    const htmlContent = moduleData.content || '';
+    const hasContent = htmlContent.trim() !== '';
     
     const getNumberPrefix = () => {
       if (!numberingStyle || numberingStyle === 'none' || !sortOrder) return '';
@@ -77,7 +72,7 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
     };
     
     // Nur wenn mindestens eine Sprache Inhalt oder einen Titel hat, etwas rendern
-    if (!hasGermanContent && !hasEnglishContent && !title) {
+    if (!hasContent && !title) {
       return null;
     }
     
@@ -90,34 +85,14 @@ const ContractViewer: React.FC<ContractViewerProps> = ({
           </h2>
         )}
         
-        {/*
-          KORREKTUR:
-          Ein Flexbox-Container, der die Spalten-Logik steuert.
-          - `shouldShowFullWidth = true`: Spalten sind untereinander (`flex-col`).
-          - `shouldShowFullWidth = false`: Spalten sind nebeneinander.
-        */}
-        <div className={`flex gap-x-8 ${shouldShowFullWidth ? 'flex-col' : ''}`}>
-          
-          {/* Deutsche Spalte: Wird nur angezeigt, wenn deutscher Inhalt da ist. */}
-          {hasGermanContent && (
-            <div 
-              className="flex-1 text-muted-foreground leading-relaxed prose prose-sm max-w-none contract-preview"
-              dangerouslySetInnerHTML={{ 
-                __html: replaceVariables(moduleData.content_de)
-              }}
-            />
-          )}
-
-          {/* Englische Spalte: Wird nur angezeigt, wenn beide Inhalte da sind (also nicht volle Breite). */}
-          {!shouldShowFullWidth && hasEnglishContent && (
-            <div 
-              className="flex-1 text-muted-foreground leading-relaxed prose prose-sm max-w-none contract-preview"
-              dangerouslySetInnerHTML={{ 
-                __html: replaceVariables(moduleData.content_en)
-              }}
-            />
-          )}
-        </div>
+        {hasContent && (
+          <div 
+            className="flex-1 text-muted-foreground leading-relaxed prose prose-sm max-w-none contract-preview"
+            dangerouslySetInnerHTML={{ 
+              __html: replaceVariables(htmlContent)
+            }}
+          />
+        )}
       </div>
     );
   };
