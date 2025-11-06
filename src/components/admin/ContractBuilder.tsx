@@ -620,73 +620,83 @@ export function ContractBuilder({
                     let preview = '';
                     
                      getSelectedModulesInOrder().forEach((module) => {
-                       const moduleVariables = safeJsonParse(module.variables);
-                      
-                      // Check if content exists for each language
-                      const hasGermanContent = module.content_de && module.content_de.trim().length > 0;
-                      const hasEnglishContent = module.content_en && module.content_en.trim().length > 0;
-                      
-                      // Special handling for Header Sales module - center it and override prose styles
-                      const isHeaderModule = module.key === 'Header Sales';
-                      
-                      if (isHeaderModule) {
-                        preview += `<div class="mb-8 not-prose flex justify-center">`;
-                        preview += `<div class="header-content" style="text-align: center; margin: 0 auto; max-width: 800px; padding: 20px; border: 2px solid #e5e7eb; border-radius: 8px; background-color: white;">`;
-                      } else {
-                        preview += `<div class="mb-8">`;
-                      }
-                      
-                      // Case 1: Both German and English content - two-column layout
-                      if (hasGermanContent && hasEnglishContent) {
-                        preview += `<div class="grid grid-cols-2 gap-0 relative">`;
-                        
-                        // German column with aligned baseline
-                        preview += `<div class="pr-6" style="display: flex; flex-direction: column;">`;
-                        if (!isHeaderModule) {
-                          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4" style="min-height: 2em; display: flex; align-items: baseline;">${module.title_de}</h3>`;
+                        const moduleVariables = safeJsonParse(module.variables);
+                        const isHeaderModule = module.key === 'Header Sales';
+
+                        // NEW LOGIC: Check for unified 'content' field
+                        if (module.content && module.content.trim().length > 0) {
+                          preview += `
+                            <div class="mb-8">
+                              ${!isHeaderModule ? `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de || module.title_en || 'Modul'}</h3>` : ''}
+                              <div class="prose prose-sm max-w-none">
+                                ${processContent(module.content, moduleVariables)}
+                              </div>
+                            </div>
+                          `;
+                        } else {
+                          // OLD LOGIC: Fallback to content_de / content_en
+                          const hasGermanContent = module.content_de && module.content_de.trim().length > 0;
+                          const hasEnglishContent = module.content_en && module.content_en.trim().length > 0;
+
+                          if (isHeaderModule) {
+                            preview += `<div class="mb-8 not-prose flex justify-center">`;
+                            preview += `<div class="header-content" style="text-align: center; margin: 0 auto; max-width: 800px; padding: 20px; border: 2px solid #e5e7eb; border-radius: 8px; background-color: white;">`;
+                          } else {
+                            preview += `<div class="mb-8">`;
+                          }
+
+                          // Case 1: Both German and English content - two-column layout
+                          if (hasGermanContent && hasEnglishContent) {
+                            preview += `<div class="grid grid-cols-2 gap-0 relative">`;
+
+                            // German column with aligned baseline
+                            preview += `<div class="pr-6" style="display: flex; flex-direction: column;">`;
+                            if (!isHeaderModule) {
+                              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4" style="min-height: 2em; display: flex; align-items: baseline;">${module.title_de}</h3>`;
+                            }
+                            preview += `<div class="prose prose-sm max-w-none text-sm leading-relaxed" style="flex: 1;">${processContent(module.content_de, moduleVariables)}</div>`;
+                            preview += `</div>`;
+
+                            // Gray vertical divider line
+                            if (!isHeaderModule) {
+                              preview += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
+                            }
+
+                            // English column with aligned baseline
+                            preview += `<div class="pl-6" style="display: flex; flex-direction: column;">`;
+                            if (!isHeaderModule) {
+                              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4" style="min-height: 2em; display: flex; align-items: baseline;">${module.title_en || module.title_de}</h3>`;
+                            }
+                            preview += `<div class="prose prose-sm max-w-none text-sm leading-relaxed" style="flex: 1;">${processContent(module.content_en, moduleVariables)}</div>`;
+                            preview += `</div>`;
+
+                            preview += `</div>`;
+                          }
+                          // Case 2: Only German content - single-column layout
+                          else if (hasGermanContent && !hasEnglishContent) {
+                            preview += `<div class="space-y-4">`;
+                            if (!isHeaderModule) {
+                              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
+                            }
+                            preview += `<div class="prose prose-sm max-w-none text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
+                            preview += `</div>`;
+                          }
+                          // Case 3: Only English content - single-column layout
+                          else if (!hasGermanContent && hasEnglishContent) {
+                            preview += `<div class="space-y-4">`;
+                            if (!isHeaderModule) {
+                              preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
+                            }
+                            preview += `<div class="prose prose-sm max-w-none text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
+                            preview += `</div>`;
+                          }
+
+                          if (isHeaderModule) {
+                            preview += `</div>`;
+                          }
+
+                          preview += `</div>`;
                         }
-                        preview += `<div class="text-sm leading-relaxed" style="flex: 1;">${processContent(module.content_de, moduleVariables)}</div>`;
-                        preview += `</div>`;
-                        
-                        // Gray vertical divider line
-                        if (!isHeaderModule) {
-                          preview += `<div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 transform -translate-x-1/2"></div>`;
-                        }
-                        
-                        // English column with aligned baseline
-                        preview += `<div class="pl-6" style="display: flex; flex-direction: column;">`;
-                        if (!isHeaderModule) {
-                          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4" style="min-height: 2em; display: flex; align-items: baseline;">${module.title_en || module.title_de}</h3>`;
-                        }
-                        preview += `<div class="text-sm leading-relaxed" style="flex: 1;">${processContent(module.content_en, moduleVariables)}</div>`;
-                        preview += `</div>`;
-                        
-                        preview += `</div>`;
-                      }
-                      // Case 2: Only German content - single-column layout
-                      else if (hasGermanContent && !hasEnglishContent) {
-                        preview += `<div class="space-y-4">`;
-                        if (!isHeaderModule) {
-                          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_de}</h3>`;
-                        }
-                        preview += `<div class="text-sm leading-relaxed">${processContent(module.content_de, moduleVariables)}</div>`;
-                        preview += `</div>`;
-                      }
-                      // Case 3: Only English content - single-column layout
-                      else if (!hasGermanContent && hasEnglishContent) {
-                        preview += `<div class="space-y-4">`;
-                        if (!isHeaderModule) {
-                          preview += `<h3 class="text-lg font-bold text-gray-800 mb-4">${module.title_en || module.title_de}</h3>`;
-                        }
-                        preview += `<div class="text-sm leading-relaxed">${processContent(module.content_en, moduleVariables)}</div>`;
-                        preview += `</div>`;
-                      }
-                      
-                      if (isHeaderModule) {
-                        preview += `</div>`;
-                      }
-                      
-                      preview += `</div>`;
                     });
                     
                     return preview;
