@@ -295,17 +295,16 @@ export function UnifiedTemplateEditor() {
     if (!selectedContractTypeKey) return '';
     return compositions.map(({ contract_modules: module }) => {
       if (!module) return `<div class="py-4 my-2 border-b border-dashed border-destructive text-destructive"><em>Modul nicht gefunden.</em></div>`;
-
-      const germanContent = processPreviewContent(module.content_de, module);
-      const englishContent = processPreviewContent(module.content_en || '', module);
+      
+      const hasContent = module.content && module.content.trim() !== '';
+      const content = hasContent ? processPreviewContent(module.content, module) : '';
+      const title = module.title_de || module.title_en;
 
       let moduleHtml = `<div class="py-4 my-2 border-b">`;
-      if (germanContent && englishContent) {
-        moduleHtml += `<div class="grid grid-cols-2 gap-6"><div><h3 class="font-bold mb-2">${module.title_de}</h3><div>${germanContent}</div></div><div><h3 class="font-bold mb-2">${module.title_en || module.title_de}</h3><div>${englishContent}</div></div></div>`;
-      } else {
-        moduleHtml += `<h3 class="font-bold mb-2">${module.title_de || module.title_en}</h3><div>${germanContent || englishContent}</div>`;
-      }
+      moduleHtml += `<h3 class="font-bold mb-2">${title}</h3>`;
+      moduleHtml += `<div>${content}</div>`;
       moduleHtml += `</div>`;
+
       return moduleHtml;
     }).join('');
   };

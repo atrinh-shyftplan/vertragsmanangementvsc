@@ -52,7 +52,7 @@ const getValidationSchema = (
 
     selectedModules.forEach(module => {
       if (module) {
-        const contentVariables = extractVariablesFromContent(module.content_de || '');
+        const contentVariables = extractVariablesFromContent(module.content || '');
         contentVariables.forEach(variableKey => {
           if (!requiredFieldsShape[variableKey]) {
             requiredFieldsShape[variableKey] = yup.string().required(`Die Variable "${variableKey}" ist ein Pflichtfeld.`);
@@ -285,7 +285,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
       .map(item => item.module);
 
     modulesToScan.forEach(module => {
-      const content = module.content_de || '';
+      const content = module.content || '';
       const regex = /{{\s*(\w+)\s*}}/g;
       let match;
       while ((match = regex.exec(content)) !== null) {
@@ -365,92 +365,34 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
   };
 
   const renderSimpleModule = (module: ContractModule, isAnnex: boolean, annexNumber: number) => {
-    let moduleVariables = [];
-    try {
-      if (module.variables) {
-        if (Array.isArray(module.variables)) {
-          moduleVariables = module.variables;
-        } else if (typeof module.variables === 'string' && module.variables.trim()) {
-          const parsed = JSON.parse(module.variables);
-          if (Array.isArray(parsed)) {
-            moduleVariables = parsed;
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Failed to parse module variables:', error);
-      moduleVariables = [];
-    }
-    
-    const hasGermanContent = (module.content_de || '').trim().length > 0;
-    const hasEnglishContent = (module.content_en || '').trim().length > 0;
-    const hasGermanTitle = (module.title_de || '').trim().length > 0;
-    const hasEnglishTitle = (module.title_en || '').trim().length > 0;
+    const title = module.title_de; // Wir verwenden hier nur den deutschen Titel für die Vorschau
+    const hasContent = module.content && module.content.trim() !== '';
+    const isHeaderModule = module.key === 'Header Sales';
 
-    if (module.key !== 'Header Sales' && !hasGermanTitle && !hasEnglishTitle && !hasGermanContent && !hasEnglishContent) {
+    if (!isHeaderModule && !title && !hasContent) {
       return '';
     }
-    const isHeaderModule = module.key === 'Header Sales';
-    
+
     let moduleHtml = '';
-    
+
     if (isHeaderModule) {
       moduleHtml += `<div class="mb-8 not-prose flex justify-center">`;
       moduleHtml += `<div class="header-content" style="text-align: center; margin: 0 auto; max-width: 800px; padding: 20px; border: 2px solid #e5e7eb; border-radius: 8px; background-color: white;">`; // Stile beibehalten
     } else {
       moduleHtml += `<div class="mb-8">`;
     }
-    // Finale Korrektur: Ein Modul ist nur dann zweisprachig, wenn BEIDE Inhaltsfelder (content_de und content_en)
-    // Text enthalten. Titel allein lösen die zweispaltige Ansicht nicht mehr aus.
-    const isBilingual = hasGermanContent && hasEnglishContent;
 
-    if (isBilingual) {
-      moduleHtml += `<div class="grid grid-cols-2 side-by-side-table">`;
-      // German column
-      let germanColumn = `<div class="german-content pr-4 border-r border-gray-200">`;
-      if (!isHeaderModule && hasGermanTitle) {
-        const displayTitleDe = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
-        germanColumn += `<h3>${displayTitleDe}</h3>`;
-      }
-      if (hasGermanContent) {
-        germanColumn += `<div>${renderContent(module.content_de)}</div>`;
-      }
-      germanColumn += `</div>`;
-      moduleHtml += germanColumn;
-      // English column
-      let englishColumn = `<div class="pl-4">`;
-      if (!isHeaderModule && hasEnglishTitle) {
-        const displayTitleEn = isAnnex ? `Annex ${annexNumber}: ${module.title_en}` : module.title_en;
-        englishColumn += `<h3>${displayTitleEn}</h3>`;
-      }
-      if (hasEnglishContent) {
-        englishColumn += `<div>${renderContent(module.content_en)}</div>`;
-      }
-      englishColumn += `</div>`;
-      moduleHtml += englishColumn;
-      moduleHtml += `</div>`;
-    } else if (hasGermanContent || hasGermanTitle) { // German only
-      moduleHtml += `<div class="german-content">`;
-      if (!isHeaderModule && hasGermanTitle) {
-        const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${module.title_de}` : module.title_de;
-        moduleHtml += `<h3>${displayTitle}</h3>`;
-      }
-      if (hasGermanContent) {
-        moduleHtml += `<div>${renderContent(module.content_de)}</div>`;
-      }
-      moduleHtml += `</div>`;
-    } else if (hasEnglishContent || hasEnglishTitle) { // English only
-      moduleHtml += `<div>`;
-      if (!isHeaderModule && hasEnglishTitle) {
-        const displayTitle = isAnnex ? `Annex ${annexNumber}: ${module.title_en}` : module.title_en;
-        moduleHtml += `<h3>${displayTitle}</h3>`;
-      }
-      if (hasEnglishContent) {
-        moduleHtml += `<div>${renderContent(module.content_en)}</div>`;
-      }
-      moduleHtml += `</div>`;
+    // Einheitliches Rendering
+    moduleHtml += `<div class="german-content">`; // Beibehaltung der Klasse für Gliederungs-Parsing
+    if (!isHeaderModule && title) {
+      const displayTitle = isAnnex ? `Anhang ${annexNumber}: ${title}` : title;
+      moduleHtml += `<h3>${displayTitle}</h3>`;
     }
-    
+    if (hasContent) {
+      moduleHtml += `<div>${renderContent(module.content!)}</div>`;
+    }
+    moduleHtml += `</div>`;
+
     if (isHeaderModule) {
       moduleHtml += `</div>`;
     }

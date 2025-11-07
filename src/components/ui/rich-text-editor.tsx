@@ -7,20 +7,21 @@ import { ListKeymap } from '@tiptap/extension-list-keymap';
 import { TaskList } from '@tiptap/extension-task-list';
 import { TaskItem } from '@tiptap/extension-task-item';
 import Image from '@tiptap/extension-image';
+import { findParentNode } from '@tiptap/core';
 import {
   Table,
   TableRow,
   TableHeader,
   TableCell,
 } from '@tiptap/extension-table';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Bold, Italic, Strikethrough, List, ListOrdered, Quote, CheckSquare,
-  Indent as IndentIcon, Outdent as OutdentIcon, AlignLeft, AlignCenter,
-  AlignRight, AlignJustify, Variable, Search, ImageIcon, Table as TableIcon, Trash2,
-  Combine, Split, Pilcrow, Heading1, Heading2, Heading3, Columns, Rows,
-  ArrowLeftToLine, ArrowRightToLine, ArrowUpToLine, ArrowDownToLine, Trash
+  Indent as IndentIcon, Outdent as OutdentIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify,
+  Variable, Search, ImageIcon, Table as TableIcon, Trash2, Combine, Split, Pilcrow, Heading1, Heading2, Heading3,
+  Columns, Rows, ArrowLeftToLine, ArrowRightToLine, ArrowUpToLine, ArrowDownToLine, Trash,
+  BorderAll, BorderNone, Minus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IndentExtension } from '@/lib/indent-extension';
@@ -183,6 +184,17 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
       }),
       Table.configure({
         resizable: true,
+        addAttributes() {
+          return {
+            class: {
+              default: null,
+              parseHTML: element => element.getAttribute('class'),
+              renderHTML: attributes => ({
+                class: attributes.class,
+              }),
+            },
+          };
+        },
       }),
       TableRow,
       TableHeader,
@@ -224,6 +236,27 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
       editor.commands.setContent(content);
     }
   }, [content, editor]);
+
+  // Hilfsfunktion für die Toolbar-Buttons (ToolbarButton ist ein Platzhalter, wir nutzen Button)
+  const ToolbarButton = ({ onClick, tooltip, isActive, children }: { onClick: () => void; tooltip: string; isActive?: boolean; children: React.ReactNode; }) => (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button type="button" variant="ghost" size="sm" onClick={onClick} className={cn("h-8 w-8 p-0", isActive && "bg-primary/20")}>
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent><p>{tooltip}</p></TooltipContent>
+    </Tooltip>
+  );
+
+  // Hilfsfunktion zum Umschalten der Tabellen-Klassen
+  const toggleTableClass = (className: string) => {
+    const tableNode = findParentNode(node => node.type.name === 'table')(editor.state.selection);
+    if (!tableNode) return;
+    const currentClass = tableNode.node.attrs.class || '';
+    let newClass = currentClass.includes(className) ? currentClass.replace(className, '').trim() : (currentClass.replace('full-border', '').replace('no-border', '').trim() + ' ' + className).trim();
+    editor.chain().focus().updateAttributes('table', { class: newClass }).run();
+  };
 
   if (!editor) {
     return null;
@@ -331,6 +364,31 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
               </>
             )}
           </div>
+
+          {/* Table Styling Controls */}
+          {editor.isActive('table') && (
+            <>
+              <div className="w-px h-6 bg-border mx-1" />
+              <ToolbarButton
+                onClick={() => toggleTableClass('')} // Setzt die Klasse zurück
+                tooltip="Standard-Ansicht (Vertikale Linie)"
+                isActive={
+                  !editor.getAttributes('table').class?.includes('full-border') &&
+                  !editor.getAttributes('table').class?.includes('no-border')
+                }
+              >
+                <Minus className="w-4 h-4" />
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() => toggleTableClass('full-border')}
+                tooltip="Gitter-Ansicht umschalten"
+                isActive={editor.getAttributes('table').class?.includes('full-border')}
+              >
+                <BorderAll className="h-4 w-4" />
+              </ToolbarButton>
+              <ToolbarButton onClick={() => toggleTableClass('no-border')} tooltip="Keine Ränder umschalten" isActive={editor.getAttributes('table').class?.includes('no-border')}><BorderNone className="h-4 w-4" /></ToolbarButton>
+            </>
+          )}
 
           <div className="w-px h-6 bg-border mx-1" />
 
