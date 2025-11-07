@@ -230,34 +230,6 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
     },
   });
 
-  // Update editor content when content prop changes
-  useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
-    }
-  }, [content, editor]);
-
-  // Hilfsfunktion für die Toolbar-Buttons (ToolbarButton ist ein Platzhalter, wir nutzen Button)
-  const ToolbarButton = ({ onClick, tooltip, isActive, children }: { onClick: () => void; tooltip: string; isActive?: boolean; children: React.ReactNode; }) => (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button type="button" variant="ghost" size="sm" onClick={onClick} className={cn("h-8 w-8 p-0", isActive && "bg-primary/20")}>
-          {children}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent><p>{tooltip}</p></TooltipContent>
-    </Tooltip>
-  );
-
-  // Hilfsfunktion zum Umschalten der Tabellen-Klassen
-  const toggleTableClass = (className: string) => {
-    const tableNode = findParentNode(node => node.type.name === 'table')(editor.state.selection);
-    if (!tableNode) return;
-    const currentClass = tableNode.node.attrs.class || '';
-    let newClass = currentClass.includes(className) ? currentClass.replace(className, '').trim() : (currentClass.replace('full-border', '').replace('no-border', '').trim() + ' ' + className).trim();
-    editor.chain().focus().updateAttributes('table', { class: newClass }).run();
-  };
-
   if (!editor) {
     return null;
   }
@@ -266,6 +238,8 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
     <div className={cn("border rounded-md bg-background", className)}>
       <TooltipProvider delayDuration={0}>
         <div className="flex flex-wrap items-center gap-1 p-3 border-b bg-muted/30">
+          {/* --- HIER STARTET DER GANZE TOOLBAR-CODE --- */}
+
           {/* Basic formatting */}
           <div className="flex items-center gap-1">
             <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleBold().run()} className={cn("h-8 w-8 p-0", editor.isActive('bold') && "bg-primary/20")}>
@@ -338,7 +312,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
           <div className="flex items-center gap-1">
             <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} className="h-8 w-8 p-0">
               <TableIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Tabelle einfügen</p></TooltipContent></Tooltip>
-            
+
             {editor.can().deleteTable() && (
               <>
                 {/* Column Operations */}
@@ -467,7 +441,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                     <option value="all">Alle Kategorien</option>
                     {Array.from(new Set(globalVariables.map(v => v.category || 'general'))).map(category => (
                       <option key={category} value={category}>
-                        {category === 'header' ? 'Header' : 
+                        {category === 'header' ? 'Header' :
                          category === 'vertragskonditionen' ? 'Vertragskonditionen' :
                          category === 'general' ? 'Allgemein' : category}
                       </option>
@@ -484,10 +458,10 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                         variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase());
-                      
-                      const matchesCategory = selectedCategory === 'all' || 
+
+                      const matchesCategory = selectedCategory === 'all' ||
                         (variable.category || 'general') === selectedCategory;
-                      
+
                       return matchesSearch && matchesCategory;
                     });
 
@@ -501,7 +475,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
 
                     const categoryNames = {
                       header: 'Header',
-                      vertragskonditionen: 'Vertragskonditionen', 
+                      vertragskonditionen: 'Vertragskonditionen',
                       general: 'Allgemein'
                     };
 
@@ -535,15 +509,15 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                       </div>
                     ));
                   })()}
-                  
+
                   {/* No results message */}
                   {globalVariables.filter(variable => {
                     const matchesSearch = searchTerm === '' ||
                       variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase());
-                    
-                    const matchesCategory = selectedCategory === 'all' || 
+
+                    const matchesCategory = selectedCategory === 'all' ||
                       (variable.category || 'general') === selectedCategory;
                     return matchesSearch && matchesCategory;
                   }).length === 0 && (
@@ -560,8 +534,8 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
 
       {/* Editor Content */}
       <div className="relative">
-        <EditorContent 
-          editor={editor} 
+        <EditorContent
+          editor={editor}
           className="prose max-w-none min-h-[400px] max-h-[600px] overflow-y-auto"
         />
       </div>
