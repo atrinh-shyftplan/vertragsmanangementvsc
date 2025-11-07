@@ -432,7 +432,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
             </>
           )}
           {/* ENDE DES NEUEN BLOCKS */}
-
+          <div className="w-px h-6 bg-border mx-1" />
           {/* Image Upload */}
           <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={handleImageUpload} className="h-8 w-8 p-0">
             <ImageIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Bild hochladen</p></TooltipContent></Tooltip>
