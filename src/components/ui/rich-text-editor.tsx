@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer, NodeViewProps } from '@tiptap/react';
+import { findParentNode } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { TextAlign } from '@tiptap/extension-text-align';
@@ -28,8 +29,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { VariableHighlight } from '../../lib/variable-highlight-extension';
 
 // NEU: Erweiterte Bild-Konfiguration
-import { findParentNode } from "@tiptap/react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // NEU: Komponente, die das Bild im Editor rendert
 const ImageView = ({ node, selected }: NodeViewProps) => {
@@ -269,281 +274,150 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
     <div className={cn("border rounded-md bg-background", className)}>
       <TooltipProvider delayDuration={0}>
         <div className="flex flex-wrap items-center gap-1 p-3 border-b bg-muted/30">
-          <ToolbarButton
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            isActive={editor.isActive('bold')}
-            tooltip="Fett"
-          >
-            <Bold className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            isActive={editor.isActive('italic')}
-            tooltip="Kursiv"
-          >
-            <Italic className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-            isActive={editor.isActive('strike')}
-            tooltip="Durchgestrichen"
-          >
-            <Strikethrough className="h-4 w-4" />
-          </ToolbarButton>
+          {/* Basic formatting */}
+          <div className="flex items-center gap-1">
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleBold().run()} className={cn("h-8 w-8 p-0", editor.isActive('bold') && "bg-primary/20")}>
+              <Bold className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Fett</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleItalic().run()} className={cn("h-8 w-8 p-0", editor.isActive('italic') && "bg-primary/20")}>
+              <Italic className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Kursiv</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleStrike().run()} className={cn("h-8 w-8 p-0", editor.isActive('strike') && "bg-primary/20")}>
+              <Strikethrough className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Durchgestrichen</p></TooltipContent></Tooltip>
+          </div>
 
           <div className="w-px h-6 bg-border mx-1" />
 
-          <ToolbarButton
-            onClick={() => editor.chain().focus().setHeading({ level: 1 }).run()}
-            isActive={editor.isActive('heading', { level: 1 })}
-            tooltip="Überschrift 1"
-          >
-            H1
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().setHeading({ level: 2 }).run()}
-            isActive={editor.isActive('heading', { level: 2 })}
-            tooltip="Überschrift 2"
-          >
-            <Heading2 className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().setHeading({ level: 3 }).run()}
-            isActive={editor.isActive('heading', { level: 3 })}
-            tooltip="Überschrift 3"
-          >
-            <Heading3 className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().setParagraph().run()}
-            isActive={!editor.isActive('heading') && !editor.isActive('blockquote')}
-            tooltip="Absatz"
-          >
-            P
-          </ToolbarButton>
+          {/* Headings */}
+          <div className="flex items-center gap-1">
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setHeading({ level: 1 }).run()} className={cn("h-8 px-2 text-xs font-semibold", editor.isActive('heading', { level: 1 }) && "bg-primary/20")}>
+              H1</Button></TooltipTrigger><TooltipContent><p>Überschrift 1</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setHeading({ level: 2 }).run()} className={cn("h-8 w-8 p-0", editor.isActive('heading', { level: 2 }) && "bg-primary/20")}>
+              <Heading2 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Überschrift 2</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setHeading({ level: 3 }).run()} className={cn("h-8 w-8 p-0", editor.isActive('heading', { level: 3 }) && "bg-primary/20")}>
+              <Heading3 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Überschrift 3</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setParagraph().run()} className={cn("h-8 px-2 text-xs", !editor.isActive('heading') && !editor.isActive('blockquote') && "bg-primary/20")}>
+              P</Button></TooltipTrigger><TooltipContent><p>Absatz</p></TooltipContent></Tooltip>
+          </div>
 
           <div className="w-px h-6 bg-border mx-1" />
 
-          <ToolbarButton
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            isActive={editor.isActive('bulletList')}
-            tooltip="Aufzählung"
-          >
-            <List className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            isActive={editor.isActive('orderedList')}
-            tooltip="Nummerierte Liste"
-          >
-            <ListOrdered className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().toggleTaskList().run()}
-            isActive={editor.isActive('taskList')}
-            tooltip="Checkliste"
-          >
-            <CheckSquare className="h-4 w-4" />
-          </ToolbarButton>
+          {/* Lists */}
+          <div className="flex items-center gap-1">
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleBulletList().run()} className={cn("h-8 w-8 p-0", editor.isActive('bulletList') && "bg-primary/20")}>
+              <List className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Aufzählung</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={cn("h-8 w-8 p-0", editor.isActive('orderedList') && "bg-primary/20")}>
+              <ListOrdered className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Nummerierte Liste</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleTaskList().run()} className={cn("h-8 w-8 p-0", editor.isActive('taskList') && "bg-primary/20")}>
+              <CheckSquare className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Checkliste</p></TooltipContent></Tooltip>
+          </div>
 
           <div className="w-px h-6 bg-border mx-1" />
 
-          <ToolbarButton
-            onClick={() => editor.chain().focus().outdent().run()}
-            tooltip="Ausrücken"
-          >
-            <OutdentIcon className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().indent().run()}
-            tooltip="Einrücken"
-          >
-            <IndentIcon className="h-4 w-4" />
-          </ToolbarButton>
+          {/* Indentation */}
+          <div className="flex items-center gap-1">
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().outdent().run()} className="h-8 w-8 p-0">
+              <OutdentIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Ausrücken</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().indent().run()} className="h-8 w-8 p-0">
+              <IndentIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Einrücken</p></TooltipContent></Tooltip>
+          </div>
 
           <div className="w-px h-6 bg-border mx-1" />
 
-          <ToolbarButton
-            onClick={() => editor.chain().focus().setTextAlign('left').run()}
-            isActive={editor.isActive({ textAlign: 'left' })}
-            tooltip="Linksbündig"
-          >
-            <AlignLeft className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().setTextAlign('center').run()}
-            isActive={editor.isActive({ textAlign: 'center' })}
-            tooltip="Zentriert"
-          >
-            <AlignCenter className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().setTextAlign('right').run()}
-            isActive={editor.isActive({ textAlign: 'right' })}
-            tooltip="Rechtsbündig"
-          >
-            <AlignRight className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-            isActive={editor.isActive({ textAlign: 'justify' })}
-            tooltip="Blocksatz"
-          >
-            <AlignJustify className="h-4 w-4" />
-          </ToolbarButton>
+          {/* Text Alignment */}
+          <div className="flex items-center gap-1">
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setTextAlign('left').run()} className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'left' }) && "bg-primary/20")}>
+              <AlignLeft className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Linksbündig</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setTextAlign('center').run()} className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'center' }) && "bg-primary/20")}>
+              <AlignCenter className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zentriert</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setTextAlign('right').run()} className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'right' }) && "bg-primary/20")}>
+              <AlignRight className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Rechtsbündig</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().setTextAlign('justify').run()} className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: 'justify' }) && "bg-primary/20")}>
+              <AlignJustify className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Blocksatz</p></TooltipContent></Tooltip>
+          </div>
 
           <div className="w-px h-6 bg-border mx-1" />
 
-          <ToolbarButton
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            isActive={editor.isActive('blockquote')}
-            tooltip="Zitat"
-          >
-            <Quote className="h-4 w-4" />
-          </ToolbarButton>
+          {/* Quote */}
+          <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleBlockquote().run()} className={cn("h-8 w-8 p-0", editor.isActive('blockquote') && "bg-primary/20")}>
+            <Quote className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zitat</p></TooltipContent></Tooltip>
 
           <div className="w-px h-6 bg-border mx-1" />
 
-          <ToolbarButton
-            onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-            tooltip="Tabelle einfügen"
-          >
-            <TableIcon className="h-4 w-4" />
-          </ToolbarButton>
+          {/* Table Controls - Grouped */}
+          <div className="flex items-center gap-1">
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} className="h-8 w-8 p-0">
+              <TableIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Tabelle einfügen</p></TooltipContent></Tooltip>
+            
+            {editor.can().deleteTable() && (
+              <>
+                {/* Column Operations */}
+                <div className="w-px h-6 bg-border mx-1" />
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addColumnBefore().run()} className="h-8 w-8 p-0"><ArrowLeftToLine className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Spalte davor einfügen</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addColumnAfter().run()} className="h-8 w-8 p-0"><ArrowRightToLine className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Spalte danach einfügen</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().deleteColumn().run()} className="h-8 w-8 p-0"><Trash className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Spalte löschen</p></TooltipContent></Tooltip>
 
-          {editor.can().deleteTable() && (
-            <>
-              <div className="w-px h-6 bg-border mx-1" />
-              <ToolbarButton
-                onClick={() => editor.chain().focus().addColumnBefore().run()}
-                tooltip="Spalte davor einfügen"
-              >
-                <ArrowLeftToLine className="h-4 w-4" />
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => editor.chain().focus().addColumnAfter().run()}
-                tooltip="Spalte danach einfügen"
-              >
-                <ArrowRightToLine className="h-4 w-4" />
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => editor.chain().focus().deleteColumn().run()}
-                tooltip="Spalte löschen"
-              >
-                <Trash className="h-4 w-4" />
-              </ToolbarButton>
+                {/* Row Operations */}
+                <div className="w-px h-6 bg-border mx-1" />
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addRowBefore().run()} className="h-8 w-8 p-0"><ArrowUpToLine className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zeile davor einfügen</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().addRowAfter().run()} className="h-8 w-8 p-0"><ArrowDownToLine className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zeile danach einfügen</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().deleteRow().run()} className="h-8 w-8 p-0"><Trash className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zeile löschen</p></TooltipContent></Tooltip>
 
-              <div className="w-px h-6 bg-border mx-1" />
-              <ToolbarButton
-                onClick={() => editor.chain().focus().addRowBefore().run()}
-                tooltip="Zeile davor einfügen"
-              >
-                <ArrowUpToLine className="h-4 w-4" />
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => editor.chain().focus().addRowAfter().run()}
-                tooltip="Zeile danach einfügen"
-              >
-                <ArrowDownToLine className="h-4 w-4" />
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => editor.chain().focus().deleteRow().run()}
-                tooltip="Zeile löschen"
-              >
-                <Trash className="h-4 w-4" />
-              </ToolbarButton>
+                {/* Cell & Table Operations */}
+                <div className="w-px h-6 bg-border mx-1" />
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().mergeCells().run()} className="h-8 w-8 p-0">
+                  <Combine className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zellen verbinden</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().splitCell().run()} className="h-8 w-8 p-0">
+                  <Split className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zellen trennen</p></TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().deleteTable().run()} className="h-8 w-8 p-0">
+                  <Trash2 className="h-4 w-4 text-destructive" /></Button></TooltipTrigger><TooltipContent><p>Tabelle löschen</p></TooltipContent></Tooltip>
+              </>
 
-              <div className="w-px h-6 bg-border mx-1" />
-              <ToolbarButton
-                onClick={() => editor.chain().focus().mergeCells().run()}
-                tooltip="Zellen verbinden"
-              >
-                <Combine className="h-4 w-4" />
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => editor.chain().focus().splitCell().run()}
-                tooltip="Zellen trennen"
-              >
-                <Split className="h-4 w-4" />
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => editor.chain().focus().deleteTable().run()}
-                tooltip="Tabelle löschen"
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </ToolbarButton>
-            </>
-          )}
+            )}
+          </div>
 
           <div className="w-px h-6 bg-border mx-1" />
 
-          <ToolbarButton
-            onClick={handleImageUpload}
-            tooltip="Bild hochladen"
-          >
-            <ImageIcon className="h-4 w-4" />
-          </ToolbarButton>
+          {/* Image Upload */}
+          <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={handleImageUpload} className="h-8 w-8 p-0">
+            <ImageIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Bild hochladen</p></TooltipContent></Tooltip>
 
+          {/* NEU: Buttons sind nur sichtbar, wenn ein Bild aktiv ist */}
           {editor.isActive('image') && (
             <>
               <div className="w-px h-6 bg-border mx-1" />
-              <ToolbarButton
-                onClick={() => setImageAlignment('left')}
-                isActive={editor.isActive('image', { 'data-align': 'left' })}
-                tooltip="Linksbündig"
-              >
-                <AlignLeft className="h-4 w-4" />
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => setImageAlignment('center')}
-                isActive={editor.isActive('image', { 'data-align': 'center' })}
-                tooltip="Zentriert"
-              >
-                <AlignCenter className="h-4 w-4" />
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => setImageAlignment('right')}
-                isActive={editor.isActive('image', { 'data-align': 'right' })}
-                tooltip="Rechtsbündig"
-              >
-                <AlignRight className="h-4 w-4" />
-              </ToolbarButton>
+              <Tooltip><TooltipTrigger asChild>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setImageAlignment('left')} className={cn("h-8 w-8 p-0", editor.isActive('image', { 'data-align': 'left' }) && "bg-primary/20")}>
+                  <AlignLeft className="h-4 w-4" />
+                </Button></TooltipTrigger><TooltipContent><p>Linksbündig</p></TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setImageAlignment('center')} className={cn("h-8 w-8 p-0", editor.isActive('image', { 'data-align': 'center' }) && "bg-primary/20")}>
+                  <AlignCenter className="h-4 w-4" />
+                </Button></TooltipTrigger><TooltipContent><p>Zentriert</p></TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setImageAlignment('right')} className={cn("h-8 w-8 p-0", editor.isActive('image', { 'data-align': 'right' }) && "bg-primary/20")}>
+                  <AlignRight className="h-4 w-4" />
+                </Button></TooltipTrigger><TooltipContent><p>Rechtsbündig</p></TooltipContent></Tooltip>
 
               <div className="w-px h-6 bg-border mx-1" />
 
-              <ToolbarButton
-                onClick={() => setImageSize('25%')}
-                isActive={editor.isActive('image', { width: '25%' })}
-                tooltip="Kleine Größe (25%)"
-              >
-                <span className="font-bold text-xs">S</span>
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => setImageSize('50%')}
-                isActive={editor.isActive('image', { width: '50%' })}
-                tooltip="Mittlere Größe (50%)"
-              >
-                <span className="font-bold text-xs">M</span>
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => setImageSize('75%')}
-                isActive={editor.isActive('image', { width: '75%' })}
-                tooltip="Große Größe (75%)"
-              >
-                <span className="font-bold text-xs">L</span>
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => setImageSize('100%')}
-                isActive={editor.isActive('image', { width: '100%' })}
-                tooltip="Volle Breite (100%)"
-              >
-                <span className="font-bold text-xs">XL</span>
-              </ToolbarButton>
+              <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('25%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '25%' }) && "bg-primary/20")}>
+                  <span className="font-bold text-xs">S</span>
+                </Button></TooltipTrigger><TooltipContent><p>Kleine Größe (25%)</p></TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('50%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '50%' }) && "bg-primary/20")}>
+                  <span className="font-bold text-xs">M</span>
+                </Button></TooltipTrigger><TooltipContent><p>Mittlere Größe (50%)</p></TooltipContent></Tooltip>
+              {/* *** ANGEPASST: L ist jetzt 75% und XL ist 100% *** */}
+              <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('75%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '75%' }) && "bg-primary/20")}>
+                  <span className="font-bold text-xs">L</span>
+                </Button></TooltipTrigger><TooltipContent><p>Große Größe (75%)</p></TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('100%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '100%' }) && "bg-primary/20")}>
+                  <span className="font-bold text-xs">XL</span>
+                </Button></TooltipTrigger><TooltipContent><p>Volle Breite (100%)</p></TooltipContent></Tooltip>
             </>
           )}
 
           <div className="w-px h-6 bg-border mx-1" />
 
+          {/* Variables */}
           {globalVariables.length > 0 && (
             <Popover open={variablePopoverOpen} onOpenChange={setVariablePopoverOpen} modal={true}>
               <PopoverTrigger asChild>
@@ -560,6 +434,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-96 p-0 bg-popover border shadow-lg flex flex-col max-h-96" align="start">
+                {/* Search and Filter Controls */}
                 <div className="p-3 border-b space-y-2 flex-shrink-0">
                   <input
                     type="text"
@@ -584,8 +459,10 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                   </select>
                 </div>
 
+                {/* Variables List */}
                 <div className="overflow-y-auto flex-1">
                   {(() => {
+                    // Filter variables based on search and category
                     const filteredVariables = globalVariables.filter(variable => {
                       const matchesSearch = searchTerm === '' ||
                         variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -598,6 +475,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                       return matchesSearch && matchesCategory;
                     });
 
+                    // Group by category
                     const groupedVariables = filteredVariables.reduce((acc, variable) => {
                       const category = variable.category || 'general';
                       if (!acc[category]) acc[category] = [];
@@ -642,6 +520,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                     ));
                   })()}
                   
+                  {/* No results message */}
                   {globalVariables.filter(variable => {
                     const matchesSearch = searchTerm === '' ||
                       variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -660,34 +539,6 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
               </PopoverContent>
             </Popover>
           )}
-
-          {/* Table Styling Buttons - Only visible when cursor is inside a table */}
-          {editor.isActive('table') && (
-            <>
-              <div className="w-px h-6 bg-border mx-1" />
-              <ToolbarButton
-                onClick={() => toggleTableClass('full-border')}
-                isActive={editor.getAttributes('table').class?.includes('full-border')}
-                tooltip="Tabelle mit allen Rändern"
-              >
-                <BorderAll className="h-4 w-4" />
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => toggleTableClass('no-border')}
-                isActive={editor.getAttributes('table').class?.includes('no-border')}
-                tooltip="Tabelle ohne Ränder"
-              >
-                <BorderNone className="h-4 w-4" />
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => toggleTableClass('')} // Setzt auf Standard (nur vertikale Linie)
-                isActive={!editor.getAttributes('table').class?.includes('full-border') && !editor.getAttributes('table').class?.includes('no-border')}
-                tooltip="Standard-Tabelle (vertikale Linie)"
-              >
-                <Minus className="h-4 w-4" />
-              </ToolbarButton>
-            </>
-          )}
         </div>
         {/* Editor Content */}
         <div className="relative">
@@ -700,32 +551,3 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
     </div>
   );
 }
-
-interface ToolbarButtonProps extends React.ComponentPropsWithoutRef<typeof Button> {
-  onClick: () => void;
-  tooltip: string;
-  isActive?: boolean;
-  children: React.ReactNode;
-}
-
-const ToolbarButton = React.forwardRef<HTMLButtonElement, ToolbarButtonProps>(
-  ({ onClick, tooltip, isActive = false, children, className, ...props }, ref) => {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            ref={ref}
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onClick}
-            className={cn("h-8 w-8 p-0", isActive && "bg-primary/20", className)}
-            {...props}
-          >{children}</Button>
-        </TooltipTrigger>
-        <TooltipContent><p>{tooltip}</p></TooltipContent>
-      </Tooltip>
-    );
-  }
-);
-ToolbarButton.displayName = "ToolbarButton";
