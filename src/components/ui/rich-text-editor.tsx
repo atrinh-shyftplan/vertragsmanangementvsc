@@ -70,6 +70,34 @@ const CustomImage = Image.extend({
   },
 });
 
+// HILFSKOMPONENTE FÜR TOOLBAR-BUTTONS
+
+interface ToolbarButtonProps {
+  onClick: () => void;
+  tooltip: string;
+  isActive: boolean;
+  children: React.ReactNode;
+}
+
+const ToolbarButton = ({ onClick, tooltip, isActive, children }: ToolbarButtonProps) => {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onClick}
+          className={cn("h-8 w-8 p-0", isActive && "bg-primary/20")}
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent><p>{tooltip}</p></TooltipContent>
+    </Tooltip>
+  );
+};
+
 interface RichTextEditorProps {
   content: string;
   onChange: (content: string) => void;
@@ -247,28 +275,26 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
   const toggleTableClass = (className: string) => {
     if (!editor) return;
 
-    // Finde die Tabelle, in der sich der Cursor befindet
-    const tableNode = findParentNode(node => node.type.name === 'table')(editor.state.selection);
-    if (!tableNode) return;
+    // Finde den 'table' Node basierend auf der aktuellen Auswahl
+    const { state } = editor;
+    const { selection } = state;
+    const tableNode = findParentNode(node => node.type.name === 'table')(selection);
+    
+    if (!tableNode) return; // Abbruch, falls keine Tabelle gefunden wurde
 
-    const currentClass = tableNode.node.attrs.class || '';
-    let newClass = '';
-
-    if (className === '') {
-      // Explizit auf Standard (vertikale Linie) zurücksetzen
-      newClass = currentClass.replace('full-border', '').replace('no-border', '').trim();
-    } else if (currentClass.includes(className)) {
-      // Klasse entfernen (zurück zum Standard)
-      newClass = currentClass.replace(className, '').trim();
-    } else {
-      // Klasse hinzufügen/ersetzen
-      // (entfernt andere Stil-Klassen, um Konflikte zu vermeiden)
-      newClass = currentClass.replace('full-border', '').replace('no-border', '').trim();
-      newClass = (newClass + ' ' + className).trim();
-    }
-
-    editor.chain().focus().updateAttributes('table', { class: newClass }).run();
-  };
+    const { tr } = state;
+    
+    // Setze das Attribut 'class' auf dem gefundenen Tabellen-Node
+    editor.view.dispatch(
+      tr.setNodeMarkup(tableNode.pos, undefined, {
+        ...tableNode.node.attrs, // Behalte alle alten Attribute
+        class: className,      // Setze (oder überschreibe) nur die Klasse
+      })
+    );
+    
+    // Setze den Fokus, um die Toolbar zu aktualisieren
+    editor.chain().focus().run();
+  }; 
 
   return (
     <div className={cn("border rounded-md bg-background", className)}>
@@ -373,8 +399,39 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
 
             )}
           </div>
+          {/* ENDE DES BESTEHENDEN TABELLEN-BLOCKS */}
 
-          <div className="w-px h-6 bg-border mx-1" />
+          {/* Table Styling Controls */}
+          {editor.isActive('table') && (
+            <>
+              <div className="w-px h-6 bg-border mx-1" />
+              <ToolbarButton
+                onClick={() => toggleTableClass('')}
+                tooltip="Standard-Ansicht (Vertikale Linie)"
+                isActive={
+                  !editor.getAttributes('table').class?.includes('full-border') &&
+                  !editor.getAttributes('table').class?.includes('no-border')
+                }
+              >
+                <Minus className="w-4 h-4" />
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() => toggleTableClass('full-border')}
+                tooltip="Gitter-Ansicht umschalten"
+                isActive={editor.getAttributes('table').class?.includes('full-border')}
+              >
+                <BorderAll className="h-4 w-4" />
+              </ToolbarButton>
+              <ToolbarButton 
+                onClick={() => toggleTableClass('no-border')} 
+                tooltip="Keine Ränder umschalten" 
+                isActive={editor.getAttributes('table').class?.includes('no-border')}
+              >
+                <BorderNone className="h-4 w-4" />
+              </ToolbarButton>
+            </>
+          )}
+          {/* ENDE DES NEUEN BLOCKS */}
 
           {/* Image Upload */}
           <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={handleImageUpload} className="h-8 w-8 p-0">
