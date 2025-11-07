@@ -375,6 +375,72 @@
   }
 }
 
+/* ======================================================================== */
+/* Tiptap & Prose Table WYSIWYG Standardization (Finaler Ansatz)            */
+/* ======================================================================== */
+
+/* 1. Basis-Setup: Volle Breite & fixes Layout (aktiviert Resizing) */
+.prose table,
+.tiptap table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  /* Verhindert doppelte Ränder an den Kanten */
+  border-style: hidden;
+  background-color: transparent;
+}
+
+/* 2. Zellen-Setup: Ausrichtung & Standard-Rahmen */
+.prose table td,
+.prose table th,
+.tiptap table td,
+.tiptap table th {
+  vertical-align: top; /* ANFORDERUNG 1: Immer Oben */
+  padding: 8px 12px;
+  text-align: left;
+  
+  /* STANDARD-RAHMEN: Standardmäßig KEINE Ränder */
+  border: none;
+}
+
+/* 3. Standard-Trennlinie (Haupt-Anwendungsfall DE/EN) 
+   Fügt NUR nach der ERSTEN Spalte eine rechte Linie hinzu.
+*/
+.prose table:not(.full-border):not(.no-border) td:first-child,
+.prose table:not(.full-border):not(.no-border) th:first-child,
+.tiptap table:not(.full-border):not(.no-border) td:first-child,
+.prose table:not(.full-border):not(.no-border) th:first-child {
+  border-right: 1px solid #e5e7eb; /* Vertikale Trennlinie (gray-200) */
+}
+
+/* 4. Kopfzeile (optional, aber sauber) */
+.prose table th,
+.tiptap table th {
+  font-weight: 600;
+}
+
+/* ======================================================================== */
+/* UMSCHALT-STILE (Für Flexibilität per Button-Klick)                       */
+/* ======================================================================== */
+
+/* 5. Stil für "Gitter-Ansicht" (Pricing / Bearbeitungshilfe) */
+.prose table.full-border td,
+.prose table.full-border th,
+.tiptap table.full-border td,
+.tiptap table.full-border th {
+  /* Erzwingt ein volles Gitter */
+  border: 1px solid #e5e7eb !important; /* gray-200 */
+}
+
+/* 6. Stil für "Keine Ränder" (Unterschrift) */
+.prose table.no-border td,
+.prose table.no-border th,
+.tiptap table.no-border td,
+.tiptap table.no-border th {
+  /* Erzwingt KEINE Ränder (überschreibt auch die Standard-Trennlinie) */
+  border: none !important;
+}
+
 /* NEU: CSS für Bildausrichtung im Editor */
 .prose img {
   display: block; /* Wichtig, damit margin auto funktioniert */
@@ -505,11 +571,9 @@
 }
 
 /* 4. Kopfzeile (optional, aber sauber) */
-.prose table td,
 .prose table th,
-.tiptap table td,
 .tiptap table th {
-  font-weight: 600;
+  font-weight: 600; /* Nur Kopfzeilen fett formatieren */
 }
 
 /* ======================================================================== */

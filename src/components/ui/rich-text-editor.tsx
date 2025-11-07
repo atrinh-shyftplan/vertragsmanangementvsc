@@ -21,7 +21,7 @@ import {
   AlignRight, AlignJustify, Variable, Search, ImageIcon, Table as TableIcon, Trash2,
   Combine, Split, Pilcrow, Heading1, Heading2, Heading3, Columns, Rows,
   ArrowLeftToLine, ArrowRightToLine, ArrowUpToLine, ArrowDownToLine, Trash
-} from 'lucide-react';
+  BorderAll, BorderNone, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IndentExtension } from '@/lib/indent-extension';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,6 +29,7 @@ import { VariableHighlight } from '../../lib/variable-highlight-extension';
 
 // NEU: Erweiterte Bild-Konfiguration
 import {
+  findParentNode,
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -137,6 +138,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
   const setImageAlignment = (align: 'left' | 'center' | 'right') => {
     if (!editor) return;
     editor.chain().focus().updateAttributes('image', { 'data-align': align }).run();
+
   };
 
   const editor = useEditor({
@@ -183,9 +185,21 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
       }),
       Table.configure({
         resizable: true,
+        addAttributes() {
+          return {
+            class: {
+              default: null,
+              parseHTML: element => element.getAttribute('class'),
+              renderHTML: attributes => ({
+                class: attributes.class,
+              }),
+            },
+          };
+        },
       }),
       TableRow,
       TableHeader,
+
       TableCell,
       CustomImage.configure({
         // HTMLAttributes are now handled by the NodeView
@@ -228,6 +242,33 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
   if (!editor) {
     return null;
   }
+
+  // Hilfsfunktion zum Umschalten der Tabellen-Klassen
+  const toggleTableClass = (className: string) => {
+    if (!editor) return;
+
+    // Finde die Tabelle, in der sich der Cursor befindet
+    const tableNode = findParentNode(node => node.type.name === 'table')(editor.state.selection);
+    if (!tableNode) return;
+
+    const currentClass = tableNode.node.attrs.class || '';
+    let newClass = '';
+
+    if (className === '') {
+      // Explizit auf Standard (vertikale Linie) zurücksetzen
+      newClass = currentClass.replace('full-border', '').replace('no-border', '').trim();
+    } else if (currentClass.includes(className)) {
+      // Klasse entfernen (zurück zum Standard)
+      newClass = currentClass.replace(className, '').trim();
+    } else {
+      // Klasse hinzufügen/ersetzen
+      // (entfernt andere Stil-Klassen, um Konflikte zu vermeiden)
+      newClass = currentClass.replace('full-border', '').replace('no-border', '').trim();
+      newClass = (newClass + ' ' + className).trim();
+    }
+
+    editor.chain().focus().updateAttributes('table', { class: newClass }).run();
+  };
 
   return (
     <div className={cn("border rounded-md bg-background", className)}>
@@ -329,6 +370,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                 <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().deleteTable().run()} className="h-8 w-8 p-0">
                   <Trash2 className="h-4 w-4 text-destructive" /></Button></TooltipTrigger><TooltipContent><p>Tabelle löschen</p></TooltipContent></Tooltip>
               </>
+
             )}
           </div>
 
@@ -498,6 +540,183 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
             </Popover>
           )}
         </div>
+
+        {/* Table Styling Controls */}
+        {editor.isActive('table') && (
+          <>
+            <div className="w-px h-6 bg-border mx-1" />
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => toggleTableClass('')} className={cn("h-8 w-8 p-0", !editor.getAttributes('table').class?.includes('full-border') && !editor.getAttributes('table').class?.includes('no-border') && "bg-primary/20")}>
+              <Minus className="w-4 h-4" /></Button></TooltipTrigger><TooltipContent><p>Standard-Ansicht (Vertikale Linie)</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => toggleTableClass('full-border')} className={cn("h-8 w-8 p-0", editor.getAttributes('table').class?.includes('full-border') && "bg-primary/20")}>
+              <BorderAll className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Gitter-Ansicht umschalten</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => toggleTableClass('no-border')} className={cn("h-8 w-8 p-0", editor.getAttributes('table').class?.includes('no-border') && "bg-primary/20")}>
+              <BorderNone className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Keine Ränder umschalten</p></TooltipContent></Tooltip>
+          </>
+        )}
+
+        <div className="w-px h-6 bg-border mx-1" />
+
+        {/* Image Upload */}
+        <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={handleImageUpload} className="h-8 w-8 p-0">
+          <ImageIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Bild hochladen</p></TooltipContent></Tooltip>
+
+        {/* NEU: Buttons sind nur sichtbar, wenn ein Bild aktiv ist */}
+        {editor.isActive('image') && (
+          <>
+            <div className="w-px h-6 bg-border mx-1" />
+            <Tooltip><TooltipTrigger asChild>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setImageAlignment('left')} className={cn("h-8 w-8 p-0", editor.isActive('image', { 'data-align': 'left' }) && "bg-primary/20")}>
+                <AlignLeft className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Linksbündig</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setImageAlignment('center')} className={cn("h-8 w-8 p-0", editor.isActive('image', { 'data-align': 'center' }) && "bg-primary/20")}>
+                <AlignCenter className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Zentriert</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setImageAlignment('right')} className={cn("h-8 w-8 p-0", editor.isActive('image', { 'data-align': 'right' }) && "bg-primary/20")}>
+                <AlignRight className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Rechtsbündig</p></TooltipContent></Tooltip>
+
+            <div className="w-px h-6 bg-border mx-1" />
+
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('25%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '25%' }) && "bg-primary/20")}>
+                <span className="font-bold text-xs">S</span>
+              </Button></TooltipTrigger><TooltipContent><p>Kleine Größe (25%)</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('50%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '50%' }) && "bg-primary/20")}>
+                <span className="font-bold text-xs">M</span>
+              </Button></TooltipTrigger><TooltipContent><p>Mittlere Größe (50%)</p></TooltipContent></Tooltip>
+            {/* *** ANGEPASST: L ist jetzt 75% und XL ist 100% *** */}
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('75%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '75%' }) && "bg-primary/20")}>
+                <span className="font-bold text-xs">L</span>
+              </Button></TooltipTrigger><TooltipContent><p>Große Größe (75%)</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => setImageSize('100%')} className={cn("h-8 w-8 p-0", editor.isActive('image', { width: '100%' }) && "bg-primary/20")}>
+                <span className="font-bold text-xs">XL</span>
+              </Button></TooltipTrigger><TooltipContent><p>Volle Breite (100%)</p></TooltipContent></Tooltip>
+          </>
+        )}
+
+        <div className="w-px h-6 bg-border mx-1" />
+
+        {/* Variables */}
+        {globalVariables.length > 0 && (
+          <Popover open={variablePopoverOpen} onOpenChange={setVariablePopoverOpen} modal={true}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1 text-xs"
+                title="Variable einfügen"
+              >
+                <Variable className="h-3 w-3" />
+                <span>Variable</span>
+                <Search className="h-3 w-3 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-96 p-0 bg-popover border shadow-lg flex flex-col max-h-96" align="start">
+              {/* Search and Filter Controls */}
+              <div className="p-3 border-b space-y-2 flex-shrink-0">
+                <input
+                  type="text"
+                  placeholder="Suche Variablen..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="all">Alle Kategorien</option>
+                  {Array.from(new Set(globalVariables.map(v => v.category || 'general'))).map(category => (
+                    <option key={category} value={category}>
+                      {category === 'header' ? 'Header' :
+                       category === 'vertragskonditionen' ? 'Vertragskonditionen' :
+                       category === 'general' ? 'Allgemein' : category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Variables List */}
+              <div className="overflow-y-auto flex-1">
+                {(() => {
+                  // Filter variables based on search and category
+                  const filteredVariables = globalVariables.filter(variable => {
+                    const matchesSearch = searchTerm === '' ||
+                      variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+
+                    const matchesCategory = selectedCategory === 'all' ||
+                      (variable.category || 'general') === selectedCategory;
+
+                    return matchesSearch && matchesCategory;
+                  });
+
+                  // Group by category
+                  const groupedVariables = filteredVariables.reduce((acc, variable) => {
+                    const category = variable.category || 'general';
+                    if (!acc[category]) acc[category] = [];
+                    acc[category].push(variable);
+                    return acc;
+                  }, {} as Record<string, typeof globalVariables>);
+
+                  const categoryNames = {
+                    header: 'Header',
+                    vertragskonditionen: 'Vertragskonditionen',
+                    general: 'Allgemein'
+                  };
+
+                  return Object.entries(groupedVariables).map(([category, variables]) => (
+                    <div key={category} className="p-2">
+                      <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b mb-2">
+                        {categoryNames[category as keyof typeof categoryNames] || category}
+                      </div>
+                      {variables.map(variable => (
+                        <div
+                          key={variable.key}
+                          onClick={() => {
+                            editor.chain().focus().insertContent(`{{${variable.key}}}`).run();
+                            setVariablePopoverOpen(false);
+                            setSearchTerm('');
+                            setSelectedCategory('all');
+                          }}
+                          className="flex flex-col gap-1 p-3 cursor-pointer hover:bg-accent rounded-md mx-1 mb-1"
+                        >
+                          <div className="flex w-full justify-between items-center">
+                            <span className="font-medium text-sm">{variable.name_de}</span>
+                            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded font-mono">
+                              {`{{${variable.key}}}`}
+                            </span>
+                          </div>
+                          {variable.description && (
+                            <span className="text-xs text-muted-foreground">{variable.description}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ));
+                })()}
+
+                {/* No results message */}
+                {globalVariables.filter(variable => {
+                  const matchesSearch = searchTerm === '' ||
+                    variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+
+                  const matchesCategory = selectedCategory === 'all' ||
+                    (variable.category || 'general') === selectedCategory;
+                  return matchesSearch && matchesCategory;
+                }).length === 0 && (
+                  <div className="p-8 text-center text-muted-foreground text-sm">
+                    Keine Variablen gefunden.
+                  </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
+      </div>
       </TooltipProvider>
 
       {/* Editor Content */}
