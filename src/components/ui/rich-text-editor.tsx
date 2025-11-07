@@ -136,37 +136,6 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
 
   };
 
-  // Hilfsfunktion zum Umschalten der Tabellen-Klassen
-  const toggleTableClass = (className: string) => {
-    if (!editor) return;
-
-    // Finde die Tabelle, in der sich der Cursor befindet
-    const tableNodeWithPos = findParentNode(node => node.type.name === 'table')(editor.state.selection);
-    if (!tableNodeWithPos) return;
-
-    const { node: tableNode, pos } = tableNodeWithPos;
-
-    const currentClass = tableNode.attrs.class || '';
-    let newClass = '';
-
-    if (className === '') {
-      // Explizit auf Standard (vertikale Linie) zurücksetzen
-      newClass = currentClass.replace('full-border', '').replace('no-border', '').trim();
-    } else if (currentClass.includes(className)) {
-      // Klasse entfernen (zurück zum Standard)
-      newClass = currentClass.replace(className, '').trim();
-    } else {
-      // Klasse hinzufügen/ersetzen (entfernt andere Stil-Klassen, um Konflikte zu vermeiden)
-      newClass = currentClass.replace('full-border', '').replace('no-border', '').trim();
-      newClass = (newClass + ' ' + className).trim();
-    }
-
-    const tr = editor.state.tr;
-    tr.setNodeMarkup(pos, tableNode.type, { ...tableNode.attrs, class: newClass });
-    editor.view.dispatch(tr);
-    editor.chain().focus().run(); // To update the toolbar state
-  };
-
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -692,7 +661,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
             </Popover>
           )}
 
-          {/* Table Styling Controls */}
+          {/* Table Styling Buttons - Only visible when cursor is inside a table */}
           {editor.isActive('table') && (
             <>
               <div className="w-px h-6 bg-border mx-1" />
@@ -700,19 +669,19 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                 onClick={() => toggleTableClass('full-border')}
                 isActive={editor.getAttributes('table').class?.includes('full-border')}
                 tooltip="Tabelle mit allen Rändern"
-              > 
+              >
                 <BorderAll className="h-4 w-4" />
               </ToolbarButton>
               <ToolbarButton
                 onClick={() => toggleTableClass('no-border')}
                 isActive={editor.getAttributes('table').class?.includes('no-border')}
                 tooltip="Tabelle ohne Ränder"
-              > 
+              >
                 <BorderNone className="h-4 w-4" />
               </ToolbarButton>
               <ToolbarButton
                 onClick={() => toggleTableClass('')} // Setzt auf Standard (nur vertikale Linie)
-                isActive={!editor.getAttributes('table').class?.includes('full-border') && !editor.getAttributes('table').class?.includes('no-border')} 
+                isActive={!editor.getAttributes('table').class?.includes('full-border') && !editor.getAttributes('table').class?.includes('no-border')}
                 tooltip="Standard-Tabelle (vertikale Linie)"
               >
                 <Minus className="h-4 w-4" />
