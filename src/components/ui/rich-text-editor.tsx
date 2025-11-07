@@ -7,21 +7,20 @@ import { ListKeymap } from '@tiptap/extension-list-keymap';
 import { TaskList } from '@tiptap/extension-task-list';
 import { TaskItem } from '@tiptap/extension-task-item';
 import Image from '@tiptap/extension-image';
-import { findParentNode } from '@tiptap/core';
 import {
   Table,
   TableRow,
   TableHeader,
   TableCell,
 } from '@tiptap/extension-table';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Bold, Italic, Strikethrough, List, ListOrdered, Quote, CheckSquare,
-  Indent as IndentIcon, Outdent as OutdentIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  Variable, Search, ImageIcon, Table as TableIcon, Trash2, Combine, Split, Pilcrow, Heading1, Heading2, Heading3,
-  Columns, Rows, ArrowLeftToLine, ArrowRightToLine, ArrowUpToLine, ArrowDownToLine, Trash,
-  BorderAll, BorderNone, Minus
+  Indent as IndentIcon, Outdent as OutdentIcon, AlignLeft, AlignCenter,
+  AlignRight, AlignJustify, Variable, Search, ImageIcon, Table as TableIcon, Trash2,
+  Combine, Split, Pilcrow, Heading1, Heading2, Heading3, Columns, Rows,
+  ArrowLeftToLine, ArrowRightToLine, ArrowUpToLine, ArrowDownToLine, Trash
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IndentExtension } from '@/lib/indent-extension';
@@ -184,17 +183,6 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
       }),
       Table.configure({
         resizable: true,
-        addAttributes() {
-          return {
-            class: {
-              default: null,
-              parseHTML: element => element.getAttribute('class'),
-              renderHTML: attributes => ({
-                class: attributes.class,
-              }),
-            },
-          };
-        },
       }),
       TableRow,
       TableHeader,
@@ -230,6 +218,13 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
     },
   });
 
+  // Update editor content when content prop changes
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
+
   if (!editor) {
     return null;
   }
@@ -238,8 +233,6 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
     <div className={cn("border rounded-md bg-background", className)}>
       <TooltipProvider delayDuration={0}>
         <div className="flex flex-wrap items-center gap-1 p-3 border-b bg-muted/30">
-          {/* --- HIER STARTET DER GANZE TOOLBAR-CODE --- */}
-
           {/* Basic formatting */}
           <div className="flex items-center gap-1">
             <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleBold().run()} className={cn("h-8 w-8 p-0", editor.isActive('bold') && "bg-primary/20")}>
@@ -312,7 +305,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
           <div className="flex items-center gap-1">
             <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} className="h-8 w-8 p-0">
               <TableIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Tabelle einfügen</p></TooltipContent></Tooltip>
-
+            
             {editor.can().deleteTable() && (
               <>
                 {/* Column Operations */}
@@ -338,31 +331,6 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
               </>
             )}
           </div>
-
-          {/* Table Styling Controls */}
-          {editor.isActive('table') && (
-            <>
-              <div className="w-px h-6 bg-border mx-1" />
-              <ToolbarButton
-                onClick={() => toggleTableClass('')} // Setzt die Klasse zurück
-                tooltip="Standard-Ansicht (Vertikale Linie)"
-                isActive={
-                  !editor.getAttributes('table').class?.includes('full-border') &&
-                  !editor.getAttributes('table').class?.includes('no-border')
-                }
-              >
-                <Minus className="w-4 h-4" />
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => toggleTableClass('full-border')}
-                tooltip="Gitter-Ansicht umschalten"
-                isActive={editor.getAttributes('table').class?.includes('full-border')}
-              >
-                <BorderAll className="h-4 w-4" />
-              </ToolbarButton>
-              <ToolbarButton onClick={() => toggleTableClass('no-border')} tooltip="Keine Ränder umschalten" isActive={editor.getAttributes('table').class?.includes('no-border')}><BorderNone className="h-4 w-4" /></ToolbarButton>
-            </>
-          )}
 
           <div className="w-px h-6 bg-border mx-1" />
 
@@ -441,7 +409,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                     <option value="all">Alle Kategorien</option>
                     {Array.from(new Set(globalVariables.map(v => v.category || 'general'))).map(category => (
                       <option key={category} value={category}>
-                        {category === 'header' ? 'Header' :
+                        {category === 'header' ? 'Header' : 
                          category === 'vertragskonditionen' ? 'Vertragskonditionen' :
                          category === 'general' ? 'Allgemein' : category}
                       </option>
@@ -458,10 +426,10 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                         variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase());
-
-                      const matchesCategory = selectedCategory === 'all' ||
+                      
+                      const matchesCategory = selectedCategory === 'all' || 
                         (variable.category || 'general') === selectedCategory;
-
+                      
                       return matchesSearch && matchesCategory;
                     });
 
@@ -475,7 +443,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
 
                     const categoryNames = {
                       header: 'Header',
-                      vertragskonditionen: 'Vertragskonditionen',
+                      vertragskonditionen: 'Vertragskonditionen', 
                       general: 'Allgemein'
                     };
 
@@ -509,15 +477,15 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                       </div>
                     ));
                   })()}
-
+                  
                   {/* No results message */}
                   {globalVariables.filter(variable => {
                     const matchesSearch = searchTerm === '' ||
                       variable.name_de.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       (variable.description || '').toLowerCase().includes(searchTerm.toLowerCase());
-
-                    const matchesCategory = selectedCategory === 'all' ||
+                    
+                    const matchesCategory = selectedCategory === 'all' || 
                       (variable.category || 'general') === selectedCategory;
                     return matchesSearch && matchesCategory;
                   }).length === 0 && (
@@ -534,8 +502,8 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
 
       {/* Editor Content */}
       <div className="relative">
-        <EditorContent
-          editor={editor}
+        <EditorContent 
+          editor={editor} 
           className="prose max-w-none min-h-[400px] max-h-[600px] overflow-y-auto"
         />
       </div>

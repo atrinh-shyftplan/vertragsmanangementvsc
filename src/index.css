@@ -482,7 +482,6 @@
   background-color: transparent;
 }
 
-/* 2. Zellen-Setup: Ausrichtung (Problem 1) & Standard-Rahmen (Problem 3) */
 .prose table td,
 .prose table th,
 .tiptap table td,
@@ -506,7 +505,9 @@
 }
 
 /* 4. Kopfzeile (optional, aber sauber) */
+.prose table td,
 .prose table th,
+.tiptap table td,
 .tiptap table th {
   font-weight: 600;
 }
