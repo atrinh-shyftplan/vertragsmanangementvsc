@@ -70,6 +70,22 @@ const CustomImage = Image.extend({
   },
 });
 
+// CustomTable Erweiterung für Tabellen-Klassen
+const CustomTable = Table.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(), // Holt alle Standard-Attribute (colspan etc.)
+      class: { // Fügt unser 'class'-Attribut hinzu
+        default: null,
+        parseHTML: element => element.getAttribute('class'),
+        renderHTML: attributes => ({
+          class: attributes.class,
+        }),
+      },
+    };
+  },
+});
+
 // HILFSKOMPONENTE FÜR TOOLBAR-BUTTONS
 
 interface ToolbarButtonProps {
@@ -211,23 +227,11 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
         minLevel: 0,
         maxLevel: 8,
       }),
-      Table.configure({
+      CustomTable.configure({
         resizable: true,
-        addAttributes() {
-          return {
-            class: {
-              default: null,
-              parseHTML: element => element.getAttribute('class'),
-              renderHTML: attributes => ({
-                class: attributes.class,
-              }),
-            },
-          };
-        },
       }),
       TableRow,
       TableHeader,
-
       TableCell,
       CustomImage.configure({
         // HTMLAttributes are now handled by the NodeView
@@ -248,9 +252,16 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
     ],
     content,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      // SPY 2 EINBAUEN:
+      const html = editor.getHTML();
+      console.log('SPY 2 (onUpdate): Editor-HTML hat sich geändert:', html);
+      onChange(html);
     },
-    onSelectionUpdate: () => {
+    onSelectionUpdate: ({ editor }) => {
+      // SPY 3 EINBAUEN:
+      if (editor.isActive('table')) {
+        console.log('SPY 3 (onSelectionUpdate): Tiptap-Tabellen-Attribute:', editor.getAttributes('table'));
+      }
       setForceUpdate(val => val + 1);
     },
     editorProps: {
@@ -273,28 +284,13 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
 
   // Hilfsfunktion zum Umschalten der Tabellen-Klassen
   const toggleTableClass = (className: string) => {
+    // SPY 1 EINBAUEN:
+    console.log('SPY 1: Button geklickt! Ziel-Klasse:', className);
     if (!editor) return;
-
-    // Finde den 'table' Node basierend auf der aktuellen Auswahl
-    const { state } = editor;
-    const { selection } = state;
-    const tableNode = findParentNode(node => node.type.name === 'table')(selection);
-    
-    if (!tableNode) return; // Abbruch, falls keine Tabelle gefunden wurde
-
-    const { tr } = state;
-    
-    // Setze das Attribut 'class' auf dem gefundenen Tabellen-Node
-    editor.view.dispatch(
-      tr.setNodeMarkup(tableNode.pos, undefined, {
-        ...tableNode.node.attrs, // Behalte alle alten Attribute
-        class: className,      // Setze (oder überschreibe) nur die Klasse
-      })
-    );
-    
-    // Setze den Fokus, um die Toolbar zu aktualisieren
-    editor.chain().focus().run();
-  }; 
+    // Verwende die Tiptap-Standardmethode 'updateAttributes',
+    // um das 'class'-Attribut des übergeordneten Tabellen-Nodes zu aktualisieren.
+    editor.chain().focus().updateAttributes('table', { class: className }).run();
+  };
 
   return (
     <div className={cn("border rounded-md bg-background", className)}>
@@ -370,7 +366,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
 
           {/* Table Controls - Grouped */}
           <div className="flex items-center gap-1">
-            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} className="h-8 w-8 p-0">
+            <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="sm" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: false }).run()} className="h-8 w-8 p-0">
               <TableIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Tabelle einfügen</p></TooltipContent></Tooltip>
             
             {editor.can().deleteTable() && (
