@@ -22,7 +22,7 @@ import {
   AlignRight, AlignJustify, Variable, Search, ImageIcon, Table as TableIcon, Trash2,
   Combine, Split, Pilcrow, Heading1, Heading2, Heading3, Columns, Rows,
   ArrowLeftToLine, ArrowRightToLine, ArrowUpToLine, ArrowDownToLine, Trash,
-  BorderAll, BorderNone, Minus } from 'lucide-react';
+  Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IndentExtension } from '@/lib/indent-extension';
 import { supabase } from '@/integrations/supabase/client';
@@ -413,21 +413,21 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
                   !editor.getAttributes('table').class?.includes('no-border')
                 }
               >
-                <Minus className="w-4 h-4" />
+                <Minus className="w-4 h-4 rotate-90" />
               </ToolbarButton>
               <ToolbarButton
                 onClick={() => toggleTableClass('full-border')}
                 tooltip="Gitter-Ansicht umschalten"
                 isActive={editor.getAttributes('table').class?.includes('full-border')}
               >
-                <BorderAll className="h-4 w-4" />
+                <Columns className="h-4 w-4" />
               </ToolbarButton>
               <ToolbarButton 
                 onClick={() => toggleTableClass('no-border')} 
                 tooltip="Keine Ränder umschalten" 
                 isActive={editor.getAttributes('table').class?.includes('no-border')}
               >
-                <BorderNone className="h-4 w-4" />
+                <Pilcrow className="h-4 w-4" />
               </ToolbarButton>
             </>
           )}
