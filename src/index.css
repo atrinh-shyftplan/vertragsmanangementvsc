@@ -409,13 +409,13 @@
 /* 3. Standard-Trennlinie (Haupt-Anwendungsfall DE/EN) 
    Fügt NUR nach der ERSTEN Spalte eine rechte Linie hinzu.
 */
-.prose table:not(.full-border):not(.no-border) td:first-child,
-.prose table:not(.full-border):not(.no-border) th:first-child,
-.tiptap table:not(.full-border):not(.no-border) td:first-child,
-.prose table:not(.full-border):not(.no-border) th:first-child,
-.ProseMirror table:not(.full-border):not(.no-border) td:first-child,
-.ProseMirror table:not(.full-border):not(.no-border) th:first-child {
-  border-right: 1px solid #e5e7eb; /* Vertikale Trennlinie (gray-200) */
+.prose table:not(.full-border):not(.no-border) td:not(:first-child),
+.prose table:not(.full-border):not(.no-border) th:not(:first-child),
+.tiptap table:not(.full-border):not(.no-border) td:not(:first-child),
+.tiptap table:not(.full-border):not(.no-border) th:not(:first-child),
+.ProseMirror table:not(.full-border):not(.no-border) td:not(:first-child),
+.ProseMirror table:not(.full-border):not(.no-border) th:not(:first-child) {
+  border-left: 1px solid #e5e7eb; /* Vertikale Trennlinie (gray-200) */
 }
 
 /* 4. Kopfzeile (optional, aber sauber) */
