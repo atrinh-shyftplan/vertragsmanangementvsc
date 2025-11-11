@@ -266,7 +266,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose-base max-w-none focus:outline-none min-h-[300px] p-4',
+        class: 'prose prose-sm sm:prose-base max-w-none focus:outline-none min-h-[300px] p-4 contract preview',
       },
     },
   });

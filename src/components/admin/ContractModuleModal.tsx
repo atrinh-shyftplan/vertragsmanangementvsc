@@ -102,7 +102,7 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[95vw] lg:max-w-[90vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-4xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {contractModule ? 'Modul bearbeiten' : 'Neues Modul erstellen'}
@@ -167,11 +167,11 @@ export function ContractModuleModal({ open, onOpenChange, onSave, onUpdate, cont
             />
           </div>
           
-          <div className="grid grid-cols-6 items-start gap-4">
-            <Label htmlFor="content" className="text-right pt-2">
+          <div className="grid grid-cols-1 items-start gap-2">
+            <Label htmlFor="content" className="">
               Inhalt
             </Label>
-            <div className="col-span-5">
+            <div className="p-8 border rounded-lg bg-white shadow-inner">
               <RichTextEditor
                 content={formData.content || ''}
                 onChange={(content) => handleChange('content', content)}

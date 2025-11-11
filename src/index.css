@@ -305,7 +305,7 @@
   }
 
   /* Prevent paragraph breaks in list items and keep content inline */
-  .ProseMirror li p {
+  /*.ProseMirror li p {
     @apply m-0 inline;
   }
 
@@ -468,9 +468,19 @@
     margin-right: 0;
   }
 
-  /* Sorgt für konsistente Abstände von Paragraphen in der Vorschau */
-  .prose p:not(:last-child) {
-    margin-bottom: 1em;
+ /* Sorgt für konsistente Abstände von Paragraphen (Editor & Vorschau) */
+  .prose p {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+  }
+
+  /* Verhindert doppelte Abstände, wenn Elemente direkt aufeinander folgen */
+  .prose p:first-child {
+    margin-top: 0;
+  }
+
+  .prose p:last-child {
+    margin-bottom: 0;
   }
 
   /*
