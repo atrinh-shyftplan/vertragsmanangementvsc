@@ -25,10 +25,8 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { AttachmentWithModule } from '@/integrations/supabase/types';
-// import { ContractEditModal } from '@/components/ContractEditModal'; // Veraltet
-import ContractViewer from '@/components/ContractViewer';
 import NewContractEditor from '@/components/NewContractEditor';
+import { AttachmentWithModule } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 
 // A more specific type for template variables
@@ -69,8 +67,6 @@ export default function Contracts() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [viewingContract, setViewingContract] = useState<Contract | null>(null);
-  const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
@@ -164,11 +160,6 @@ export default function Contracts() {
 
   const handleNewContract = () => {
     setIsNewContractModalOpen(true);
-  };
-
-  const handleViewContract = (contract: Contract) => {
-    setViewingContract(contract);
-    setIsViewerOpen(true);
   };
 
   const handleSaveContract = (updatedContract: Contract) => {
@@ -385,21 +376,6 @@ export default function Contracts() {
         </DialogContent>
       </Dialog>
 
-      {/* Contract Viewer Modal */}
-      {viewingContract && isViewerOpen && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm overflow-y-auto">
-          <div className="min-h-screen py-4">
-            <ContractViewer
-              contract={viewingContract}
-              template={contractTemplate}
-              onClose={() => {
-                setIsViewerOpen(false);
-                setViewingContract(null);
-              }}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
