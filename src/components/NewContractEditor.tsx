@@ -17,6 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import * as yup from 'yup';
 import { v4 as uuidv4 } from 'uuid';
 import type { Attachment, ContractModule, Database, EditableModule } from '@/integrations/supabase/types';
+import '@/lib/contract-print-styles.css';
 
 type ContractComposition = Database['public']['Tables']['contract_compositions']['Row'];
 type ContractTemplate = Database['public']['Tables']['contract_templates']['Row'];
@@ -884,167 +885,9 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                       ref={previewRef}
                       id="contract-viewer-for-export"
                       className="prose prose-sm sm:prose-base max-w-none bg-white p-6 h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
-                      style={{ lineHeight: '1.6', fontFamily: 'Inter, sans-serif' }}
+                      style={{ lineHeight: '1.6' }} // fontFamily wird jetzt von CSS gesteuert
                       dangerouslySetInnerHTML={{ 
-                        __html: `
-                        <style>
-                          .contract-preview h1 {
-                            font-size: 1.5rem !important; /* text-2xl */
-                          }
-                          .contract-preview h2 {
-                            font-size: 1.25rem !important; /* text-xl */
-                          }
-                          .contract-preview h3 {
-                            font-size: 1.125rem !important; /* text-lg */
-                            font-weight: 700 !important; 
-                            color: #1f2937 !important;
-                            margin-top: 0 !important;
-                            margin-bottom: 0.75rem !important; /* mb-3 */
-                          }
-
-                          .contract-preview .side-by-side-table {
-                            width: 100%;
-                            margin: 1.5rem 0;
-                          }
-                          .contract-preview .table-content-de,
-                          .contract-preview .table-content-en {
-                            vertical-align: top;
-                          }
-                          .contract-preview .table-content-de p,
-                          .contract-preview .table-content-en p {
-                            margin: 0.75rem 0;
-                          }
-                          .contract-preview .table-content-de ul,
-                          .contract-preview .table-content-en ul {
-                            margin: 0.75rem 0;
-                            padding-left: 1.5rem;
-                            list-style-type: disc;
-                          }
-                          .contract-preview .table-content-de ol,
-                          .contract-preview .table-content-en ol {
-                            margin: 0.75rem 0;
-                            padding-left: 1.5rem;
-                            list-style-type: decimal;
-                          }
-                          .contract-preview .table-content-de li,
-                          .contract-preview .table-content-en li {
-                            margin: 0.25rem 0;
-                          }
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin: 10px 0;
-                          .header-content table td {
-                            padding: 8px 12px;
-                            vertical-align: top;
-                            border: 1px solid #e5e7eb;
-                          }
-                          .header-content table td:first-child {
-                            font-weight: 600;
-                            background-color: #f9fafb;
-                            width: 40%;
-                          }
-                          .header-content .company-logo {
-                            font-size: 24px;
-                            font-weight: bold;
-                            color: #1f2937;
-                            margin-bottom: 30px;
-                          }
-                          .header-content .offer-info-block {
-                            margin: 25px 0;
-                            padding: 15px;
-                            background-color: white;
-                            border: 1px solid #d1d5db;
-                            border-radius: 6px;
-                          }
-                          .header-content .convenience-block {
-                            margin: 25px 0;
-                            padding: 15px;
-                            background-color: white;
-                            border: 1px solid #d1d5db;
-                            border-radius: 6px;
-                            border-style: dashed;
-                          }
-                          .header-content .company-section {
-                            margin: 30px 0;
-                            padding: 20px;
-                            background-color: white;
-                            border: 1px solid #e5e7eb;
-                            border-radius: 8px;
-                          }
-                          .header-content .company-divider {
-                            margin: 40px 0;
-                            height: 2px;
-                            background-color: #e5e7eb;
-                            border-radius: 1px;
-                          }
-                          .header-content .info-line {
-                            display: flex;
-                            justify-content: space-between;
-                            margin: 8px 0;
-                            padding: 6px 10px;
-                            background-color: #f8fafc;
-                            border-radius: 4px;
-                            border-left: 4px solid #8C5AF5;
-                          }
-                          .header-content .info-label {
-                            font-weight: 600;
-                            color: #374151;
-                            min-width: 120px;
-                          }
-                          .header-content .info-value {
-                            color: #1f2937;
-                          }
-                          .header-content p {
-                            margin: 8px 0;
-                            line-height: 1.5;
-                          }
-                          .header-content strong {
-                            font-weight: 600;
-                          }
-                          .header-content .between-text {
-                            margin: 30px 0 20px 0;
-                            font-size: 14px;
-                            color: #6b7280;
-                            font-style: italic;
-                          }
-                    .contract-preview ul {
-                      list-style-type: disc !important;
-                      padding-left: 1.5rem !important;
-                      margin: 0.5rem 0 !important;
-                      color: #000000 !important;
-                    }
-                    .contract-preview ul li {
-                      color: #000000 !important;
-                      margin: 0.25rem 0 !important;
-                    }
-                    .contract-preview ul li::marker { color: #000000 !important; content: "●" !important; }
-                    .contract-preview ol {
-                            padding-left: 1.5rem !important;
-                            margin: 0.5rem 0 !important;
-                            color: #000000 !important;
-                          }
-                          .contract-preview ol li {
-                            color: #000000 !important;
-                            margin: 0.25rem 0 !important;
-                          }
-                          .contract-preview p {
-                            color: #000000 !important;
-                            margin: 0.5rem 0 !important;
-                          }
-                    .contract-preview * {
-                      color: #000000 !important;
-                    }
-                    .contract-preview li::before {
-                      color: #000000 !important;
-                    }
-                    .contract-preview ul > li::marker,
-                    .contract-preview ol > li::marker {
-                            color: #000000 !important;
-                            font-weight: bold !important;
-                          }
-                        </style>
-                        ${generatePreview()}
-                        ` 
+                        __html: generatePreview() // Nur noch die reine HTML-Vorschau
                       }}
                     />
                   </CardContent>

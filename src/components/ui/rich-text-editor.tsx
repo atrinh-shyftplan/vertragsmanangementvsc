@@ -27,6 +27,7 @@ import { cn } from '@/lib/utils';
 import { IndentExtension } from '@/lib/indent-extension';
 import { supabase } from '@/integrations/supabase/client';
 import { VariableHighlight } from '../../lib/variable-highlight-extension';
+import '@/lib/contract-print-styles.css';
 
 // NEU: Erweiterte Bild-Konfiguration
 import {
@@ -266,7 +267,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose-base max-w-none focus:outline-none min-h-[300px] p-4 contract preview',
+        class: 'prose prose-sm sm:prose-base max-w-none focus:outline-none min-h-[300px] p-4 contract-preview',
       },
     },
   });
