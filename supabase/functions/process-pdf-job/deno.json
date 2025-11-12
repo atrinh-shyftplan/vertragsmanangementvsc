@@ -1,1 +1,5 @@
-{}
+{
+  "tasks": {
+    "start": "deno run --allow-all --watch index.ts"
+  }
+}

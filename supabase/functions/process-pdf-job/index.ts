@@ -4,11 +4,9 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 console.log(`Function 'process-pdf-job' starting up.`);
 
-// *** START NEUE CSS-LOGIK (VON UNSEREM PLAN) ***
 
-// 1. Lade den Inhalt unserer "Single Source of Truth" CSS-Datei
-//    (Liest die Datei, die wir dorthin kopiert haben)
-const cssStyles = await Deno.readTextFile('./contract-print-styles.css');
+// 1. Importiere den CSS-String aus der automatisch generierten Datei
+import { cssString as cssStyles } from './css-as-string.ts';
 
 // 2. Erstelle das vollständige HTML-Dokument für das PDF
 function createFullHtml(htmlContent: string): string {
@@ -38,9 +36,6 @@ function createFullHtml(htmlContent: string): string {
       </body>
     </html>`;
 }
-// *** ENDE NEUE CSS-LOGIK ***
-
-
 // Erstelle einen Supabase-Admin-Client
 // (Verwendet den KEY_NAME, den wir in 4.4a als "SERVICE_KEY" definiert haben)
 const supabaseAdmin = createClient(

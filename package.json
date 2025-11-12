@@ -9,8 +9,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "copy:css-to-function": "copyfiles -f src/lib/contract-print-styles.css supabase/functions/process-pdf-job",
-    "deploy:pdf-function": "npm run copy:css-to-function && supabase functions deploy process-pdf-job --no-verify-jwt"
+    "embed:css": "node scripts/embed-css.mjs",
+    "deploy:pdf-function": "npm run embed:css && supabase functions deploy process-pdf-job --no-verify-jwt"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
