@@ -12,23 +12,17 @@ import { cssString as cssStyles } from './css-as-string.ts';
 function createFullHtml(htmlContent: string): string {
   
   // PDF-spezifische Overrides (z.B. kleinere Schrift)
-  const pdfOnlyOverrides = `
-    .contract-preview {
-      font-size: 12px;
-    }
-  `;
-
   return `<!DOCTYPE html>
     <html>
       <head>
         <meta charset="UTF-8">
-        <title>Vertrag</title>
+        <title>shyftplan Vertrag</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
         <style>
           /* Lade die Stile aus unserer zentralen Datei */
           ${cssStyles}
-          
-          /* Lade die reinen PDF-Overrides */
-          ${pdfOnlyOverrides}
         </style>
       </head>
       <body class="contract-preview"> 
@@ -123,7 +117,8 @@ serve(async (req) => {
       formData.append('delay', '3000');
       // WICHTIG: Sag PDFLayer, dass es unsere @page CSS-Regeln beachten soll!
       formData.append('use_print_media', '1');
-
+      formData.append('zoom', '1');
+      
       const response = await fetch(apiUrl, {
         method: 'POST',
         body: formData,

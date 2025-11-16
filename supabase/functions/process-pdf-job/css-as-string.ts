@@ -4,7 +4,6 @@
 export const cssString = `
 /* src/lib/contract-print-styles.css */
 /* Unsere "Single Source of Truth" für das Vertrags-Styling */
-
 /* * 1. SEITEN-LAYOUT FÜR PDF
  * (aus supabase/functions/pdf-export/index.ts) 
  */
@@ -20,9 +19,10 @@ export const cssString = `
  * damit die Stile sicher gekapselt sind.
  */
 .contract-preview {
-  font-family: 'Inter', sans-serif; /* Deine Schriftart aus NewContractEditor */
+  font-family: 'Inter', 'Arial', sans-serif; /* Angepasst an die Live-Vorschau */
   line-height: 1.6; /* Guter Zeilenabstand (aus pdf-export) */
   color: #000000 !important; /* Grundfarbe sicherstellen */
+  font-size: 14px;
 }
 
 /* * 3. ALLE DETAIL-STILE
@@ -70,9 +70,11 @@ export const cssString = `
 .contract-preview .table-content-en li {
   margin: 0.25rem 0;
 }
-  width: 100%;
-  border-collapse: collapse;
-  margin: 10px 0;
+.contract-preview table {
+  width: 100%; /* Ensure tables take full width */
+  border-collapse: collapse; /* Collapse borders for a cleaner look */
+  margin: 10px 0; /* Add some vertical margin for spacing */
+}
 .header-content table td {
   padding: 8px 12px;
   vertical-align: top;
@@ -181,5 +183,75 @@ export const cssString = `
 .contract-preview ol > li::marker {
   color: #000000 !important;
   font-weight: bold !important;
+}
+
+/* Punkt 4: Standard-Abstand für ALLE Tabellenzellen */
+.contract-preview table th,
+.contract-preview table td {
+  padding: 8px; /* Sorgt für sauberen Abstand zur Linie */
+  vertical-align: top; /* Stellt sicher, dass Texte oben beginnen */
+  line-height: 1.5; /* Verbessert Lesbarkeit in Zellen */
+}
+
+/* Punkt 3: Styling für Tabellen MIT Rand (Gitter-Ansicht) */
+.contract-preview table.full-border {
+  border-collapse: collapse; /* Wichtig für saubere Linien */
+  width: 100%;
+}
+.contract-preview table.full-border th,
+.contract-preview table.full-border td {
+  border: 1px solid #000; /* Solider schwarzer Rand */
+}
+
+/* Punkt 3: Styling für Standard-Tabellen (nur vertikale Linien, wie im Beispiel) */
+.contract-preview table:not(.full-border):not(.no-border) {
+   border-collapse: collapse;
+   width: 100%;
+}
+/* Wir stylen hier nur die vertikalen Ränder für DE/EN-Spalten */
+.contract-preview table:not(.full-border):not(.no-border) td,
+.contract-preview table:not(.full-border):not(.no-border) th {
+   border-left: 1px solid #000;
+   border-right: 1px solid #000;
+}
+/* Entferne den Rand für die erste und letzte Zelle */
+.contract-preview table:not(.full-border):not(.no-border) td:first-child,
+.contract-preview table:not(.full-border):not(.no-border) th:first-child {
+  border-left: none;
+}
+.contract-preview table:not(.full-border):not(.no-border) td:last-child,
+.contract-preview table:not(.full-border):not(.no-border) th:last-child {
+  border-right: none;
+}
+
+/* Erzwingt A4-Maße (210mm) und die PDF-Ränder (20mm) */
+.a4-preview-frame {
+  width: 210mm; /* A4-Breite */
+  /* min-height: 297mm; /* (Optional, wenn du das Papier-Gefühl willst) */
+  
+  padding: 20mm; /* Unsere PDF-Ränder! (aus process-pdf-job) */
+  
+  margin-left: auto;
+  margin-right: auto;
+  
+  /* Visuelle Simulation eines Blattes Papier */
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  border: 1px solid #ddd;
+  background: #fff;
+  
+  box-sizing: border-box; 
+}
+
+/* * FIX FÜR 50/50-SPALTEN:
+ * Zwingt Spalten in Standard-Tabellen (DE/EN) auf 50% Breite.
+ * Tiptap fügt manchmal <col>-Tags mit festen Breiten hinzu, 
+ * die wir hier überschreiben müssen.
+ */
+.contract-preview table:not(.full-border):not(.no-border) col {
+  width: 50% !important;
+}
+
+.contract-preview table:not(.full-border):not(.no-border) td {
+  width: 50%;
 }
 `;

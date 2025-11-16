@@ -884,7 +884,7 @@ export default function NewContractEditor({ existingContract, onClose }: NewCont
                       <div 
                       ref={previewRef}
                       id="contract-viewer-for-export"
-                      className="prose prose-sm sm:prose-base max-w-none bg-white p-6 h-[70vh] overflow-y-auto border border-gray-200 shadow-inner contract-preview"
+                      className="a4-preview-frame contract-preview shadow-inner overflow-y-auto h-[70vh]"
                       style={{ lineHeight: '1.6' }} // fontFamily wird jetzt von CSS gesteuert
                       dangerouslySetInnerHTML={{ 
                         __html: generatePreview() // Nur noch die reine HTML-Vorschau

@@ -267,7 +267,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose-base max-w-none focus:outline-none min-h-[300px] p-4 contract-preview',
+        class: 'max-w-none focus:outline-none min-h-[300px] p-4 contract-preview',
       },
     },
   });
@@ -598,7 +598,7 @@ export function RichTextEditor({ content, onChange, placeholder, className, glob
         <div className="relative">
           <EditorContent 
             editor={editor} 
-            className="prose max-w-none min-h-[400px] max-h-[600px] overflow-y-auto"
+            className="max-w-none min-h-[400px] max-h-[600px] overflow-y-auto"
           />
         </div>
       </TooltipProvider>
