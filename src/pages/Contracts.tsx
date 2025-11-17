@@ -5,24 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PdfGenerationJobs } from '@/components/PdfGenerationJobs';
 
-import { 
-  FileText, 
-  Search,
-  Filter,
-  Plus,
-  Calendar,
-  User,
-  Euro,
-  Edit,
-  MoreHorizontal
-} from 'lucide-react';
+import { FileText, Search, Plus, Edit } from 'lucide-react';
 import { contractTemplate } from '@/lib/mockData';
 import { supabase } from '@/integrations/supabase/client';
 import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import NewContractEditor from '@/components/NewContractEditor';
@@ -211,85 +201,46 @@ export default function Contracts() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Verträge</h1>
           <p className="text-muted-foreground">
             Verwalten Sie alle Ihre Verträge an einem Ort
           </p>
         </div>
-        <Button className="sm:w-auto w-full" onClick={handleNewContract} style={{ backgroundColor: '#8C5AF5', color: 'white' }}>
+        <Button className="sm:w-auto w-full rounded-full" onClick={handleNewContract} style={{ backgroundColor: '#9865f6', color: 'white' }}>
           <Plus className="mr-2 h-4 w-4" />
           Neuer Vertrag
         </Button>
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Verträge durchsuchen..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={filterStatus === 'all' ? 'default' : 'outline'}
-              style={filterStatus === 'all' ? { backgroundColor: '#8C5AF5', color: 'white' } : {}}
-                size="sm"
-                onClick={() => setFilterStatus('all')}
-              >
-                Alle
-              </Button>
-              <Button
-                variant={filterStatus === 'draft' ? 'default' : 'outline'}
-              style={filterStatus === 'draft' ? { backgroundColor: '#8C5AF5', color: 'white' } : {}}
-                size="sm"
-                onClick={() => setFilterStatus('draft')}
-              >
-                Entwurf
-              </Button>
-              <Button
-                variant={filterStatus === 'ready_for_review' ? 'default' : 'outline'}
-              style={filterStatus === 'ready_for_review' ? { backgroundColor: '#8C5AF5', color: 'white' } : {}}
-                size="sm"
-                onClick={() => setFilterStatus('ready_for_review')}
-              >
-                Zur Prüfung
-              </Button>
-              <Button
-                variant={filterStatus === 'active' ? 'default' : 'outline'}
-              style={filterStatus === 'active' ? { backgroundColor: '#8C5AF5', color: 'white' } : {}}
-                size="sm"
-                onClick={() => setFilterStatus('active')}
-              >
-                Aktiv
-              </Button>
-              <Button
-                variant={filterStatus === 'archived' ? 'default' : 'outline'}
-              style={filterStatus === 'archived' ? { backgroundColor: '#8C5AF5', color: 'white' } : {}}
-                size="sm"
-                onClick={() => setFilterStatus('archived')}
-              >
-                Archiviert
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Verträge durchsuchen..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 rounded-full"
+          />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant={filterStatus === 'all' ? 'default' : 'ghost'} size="sm" onClick={() => setFilterStatus('all')} style={filterStatus === 'all' ? { backgroundColor: '#9865f6', color: 'white' } : {}}>Alle</Button>
+          <Button variant={filterStatus === 'draft' ? 'default' : 'ghost'} size="sm" onClick={() => setFilterStatus('draft')} style={filterStatus === 'draft' ? { backgroundColor: '#9865f6', color: 'white' } : {}}>Entwurf</Button>
+          <Button variant={filterStatus === 'ready_for_review' ? 'default' : 'ghost'} size="sm" onClick={() => setFilterStatus('ready_for_review')} style={filterStatus === 'ready_for_review' ? { backgroundColor: '#9865f6', color: 'white' } : {}}>Zur Prüfung</Button>
+          <Button variant={filterStatus === 'active' ? 'default' : 'ghost'} size="sm" onClick={() => setFilterStatus('active')} style={filterStatus === 'active' ? { backgroundColor: '#9865f6', color: 'white' } : {}}>Aktiv</Button>
+          <Button variant={filterStatus === 'archived' ? 'default' : 'ghost'} size="sm" onClick={() => setFilterStatus('archived')} style={filterStatus === 'archived' ? { backgroundColor: '#9865f6', color: 'white' } : {}}>Archiviert</Button>
+        </div>
+      </div>
 
       {/* NEU: PDF Job Status Liste */}
       <PdfGenerationJobs />
 
       {/* Contracts Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredContracts.map((contract) => {
           const productAttachments = contract.contract_attachments
             .map(ca => ca.attachments)
@@ -297,45 +248,35 @@ export default function Contracts() {
           const productNames: string[] = productAttachments.map(att => att.name).filter(Boolean);
 
           return (
-            <Card key={contract.id} className="flex flex-col hover:shadow-lg transition-shadow duration-200">
+            <Card key={contract.id} className="flex flex-col border-border/60">
               <CardHeader>
-                <div className="flex justify-between items-start gap-2">
-                  <CardTitle className="text-lg line-clamp-2 pr-2">{contract.title}</CardTitle>
-                  <Badge className={getStatusColor(contract.status)} variant="outline">
-                    {statusLabels[contract.status as keyof typeof statusLabels]}
+                <CardTitle className="text-lg font-semibold">{contract.title}</CardTitle>
+                <CardDescription>
+                  {contract.client}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow space-y-4">
+                <div className="flex items-center justify-between">
+                  <Badge variant={contract.status === 'active' ? 'default' : contract.status === 'ready_for_review' ? 'destructive' : 'outline'}>
+                    {statusLabels[contract.status]}
                   </Badge>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4 flex-grow">
                 <div>
-                  <p className="text-xs text-muted-foreground">Kunde</p>
-                  <p className="text-sm font-medium">{contract.client}</p>
+                  <p className="text-xs font-medium text-muted-foreground">Ansprechpartner</p>
+                  <p className="text-sm">{contract.assignedTo}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Zugewiesen an</p>
-                  <p className="text-sm font-medium">{contract.assignedTo}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Vertragstyp</p>
-                  <p className="text-sm font-medium">{contract.contract_types?.name_de || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Produkte</p>
+                  <p className="text-xs font-medium text-muted-foreground">Produkte</p>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {productNames.length > 0 ? (
-                      productNames.map((name) => (
-                        <Badge key={name} variant="secondary">{name}</Badge>
-                      ))
-                    ) : (
-                      <Badge variant="outline">Keine</Badge>
-                    )}
+                    {productNames.length > 0 ? productNames.map((name) => (
+                      <Badge key={name} variant="secondary" className="font-normal">{name}</Badge>
+                    )) : <p className="text-sm text-muted-foreground">-</p>}
                   </div>
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full" onClick={() => handleEditContract(contract)} style={{ backgroundColor: '#8C5AF5', color: 'white' }}>
-                  <Edit className="mr-2 h-3 w-3" />
-                  Bearbeiten
+                <Button variant="secondary" className="w-full rounded-lg" onClick={() => handleEditContract(contract)}>
+                  Details anzeigen
                 </Button>
               </CardFooter>
             </Card>
@@ -344,14 +285,14 @@ export default function Contracts() {
       </div>
 
       {filteredContracts.length === 0 && (
-        <Card>
+        <Card className="border-dashed">
           <CardContent className="py-12 text-center">
             <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">Keine Verträge gefunden</h3>
             <p className="text-muted-foreground mb-4">
               Passen Sie Ihre Suchkriterien an oder erstellen Sie einen neuen Vertrag.
             </p>
-            <Button onClick={handleNewContract}>
+            <Button onClick={handleNewContract} className="rounded-full" style={{ backgroundColor: '#9865f6', color: 'white' }}>
               <Plus className="mr-2 h-4 w-4" />
               Neuer Vertrag
             </Button>

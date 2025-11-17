@@ -32,8 +32,8 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-md rounded-b-xl mx-auto max-w-5xl mt-4">
-        <div className="flex h-20 items-center justify-between px-8">
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex h-20 items-center justify-between px-8 max-w-5xl mx-auto">
           <div className="flex items-center gap-3">
             <img src="/favicon.png" alt="shyftcontract Logo" className="h-10 w-10" />
             <div className="hidden sm:block">
@@ -49,9 +49,9 @@ export default function Layout({ children }: LayoutProps) {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`px-4 py-2 rounded-full text-base font-normal transition-all
-                    ${isActive(item.href)
-                      ? 'bg-primary/90 text-primary-foreground shadow'
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors
+                    ${isActive(item.href) // Hier wird die Hervorhebung angepasst
+                      ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'}
                   `}
                   style={{ letterSpacing: '0.01em' }}
@@ -69,9 +69,6 @@ export default function Layout({ children }: LayoutProps) {
                   <Button variant="ghost" className="flex items-center gap-2 px-3 py-2 rounded-full">
                     <UserIcon className="h-5 w-5" />
                     <span className="hidden md:inline text-base font-light">{profile.display_name || profile.email}</span>
-                    <Badge variant={profile.role === 'admin' ? 'default' : 'secondary'}>
-                      {profile.role === 'admin' ? 'Admin' : 'AE'}
-                    </Badge>
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -98,8 +95,8 @@ export default function Layout({ children }: LayoutProps) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 mx-auto max-w-5xl mt-8">
-        <div className="p-4 lg:p-8">
+      <main className="flex-1">
+        <div className="mx-auto max-w-5xl mt-8 p-4 lg:p-8">
           {children}
         </div>
       </main>

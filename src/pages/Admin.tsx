@@ -105,19 +105,17 @@ export default function Admin() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-            <p className="text-muted-foreground">
-              Verwalten Sie Vertragstypen, Module, Kategorien, Variablen und Templates.
-            </p>
-          </div>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+          <p className="text-muted-foreground">
+            Verwalten Sie Vertragstypen, Module, Kategorien, Variablen und Templates.
+          </p>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="types" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -139,23 +137,20 @@ export default function Admin() {
 
         {/* Vertragstypen */}
         <TabsContent value="types" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+          <div className="pt-6">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <CardTitle>Vertragstypen</CardTitle>
-                <CardDescription>
-                  Verwalten Sie die verfügbaren Vertragstypen für das System.
-                </CardDescription>
+                <h2 className="text-2xl font-semibold tracking-tight">Vertragstypen</h2>
+                <p className="text-muted-foreground">Verwalten Sie die verfügbaren Vertragstypen für das System.</p>
               </div>
-              <Button onClick={() => {
-                setSelectedContractType(null);
-                setContractTypeModalOpen(true);
-              }}>
+              <Button className="rounded-full" style={{ backgroundColor: '#9865f6', color: 'white' }} onClick={() => { setSelectedContractType(null); setContractTypeModalOpen(true); }}>
                 <Plus className="h-4 w-4 mr-2" />
                 Neuer Typ
               </Button>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="border rounded-lg">
+              <Table>
+                <TableBody>
               <div className="grid gap-4">
                 {contractTypes.map((type) => (
                   <div key={type.id} className="flex items-center justify-between p-4 border rounded-lg">
@@ -168,15 +163,15 @@ export default function Admin() {
                     </div>
                     <div className="flex gap-2">
                       <Button
-                        variant="outline"
-                        size="sm"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleEditContractType(type)}
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm">
+                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
@@ -199,34 +194,33 @@ export default function Admin() {
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+                </TableBody>
+              </Table>
+            </div>
+          </div>
         </TabsContent>
 
         {/* Module */}
         <TabsContent value="modules" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+          <div className="pt-6">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <CardTitle>Vertragsmodule</CardTitle>
-                <CardDescription>
-                  Verwalten Sie die Bausteine für Ihre Verträge.
-                </CardDescription>
+                <h2 className="text-2xl font-semibold tracking-tight">Vertragsmodule</h2>
+                <p className="text-muted-foreground">Verwalten Sie die Bausteine für Ihre Verträge.</p>
               </div>
-              <Button onClick={() => {
-                setSelectedContractModule(null);
-                setContractModuleModalOpen(true);
-              }}>
+              <Button className="rounded-full" style={{ backgroundColor: '#9865f6', color: 'white' }} onClick={() => { setSelectedContractModule(null); setContractModuleModalOpen(true); }}>
                 <Plus className="h-4 w-4 mr-2" />
                 Neues Modul
               </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
+            </div>
+            <div className="border rounded-lg">
+              <Table>
+                <TableBody>
                 {contractModules.map((module) => {
                   const category = contractCategories.find(cat => cat.key === module.category);
                   return (
-                    <div key={module.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <TableRow key={module.id}>
+                      <TableCell>
                       <div>
                         <h3 className="font-medium">{module.name || module.title_de}</h3>
                         <div className="flex items-center gap-2 mt-1">
@@ -241,30 +235,32 @@ export default function Admin() {
                           {!module.is_active && <Badge variant="secondary">Inaktiv</Badge>}
                         </div>
                       </div>
+                      </TableCell>
+                      <TableCell className="text-right">
                       <div className="flex gap-2">
                         <Button
-                          variant="outline"
-                          size="sm"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleEditContractModule(module)}
                         >
                           <Edit2 className="h-4 w-4" />
                         </Button>
                         <Button
-                          variant="outline" 
-                          size="sm"
+                          variant="ghost" 
+                          size="icon"
                           onClick={() => cloneContractModule(module.id)}
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm">
+                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Modul löschen</AlertDialogTitle>
+                              <AlertDialogTitle>Modul wirklich löschen?</AlertDialogTitle>
                               <AlertDialogDescription>
                                 Sind Sie sicher, dass Sie "{module.title_de}" löschen möchten?
                               </AlertDialogDescription>
@@ -278,34 +274,30 @@ export default function Admin() {
                           </AlertDialogContent>
                         </AlertDialog>
                       </div>
-                    </div>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </div>
-            </CardContent>
-          </Card>
+                </TableBody>
+              </Table>
+            </div>
+          </div>
         </TabsContent>
 
         {/* Variablen */}
         <TabsContent value="variables" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+          <div className="pt-6">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <CardTitle>Globale Variablen</CardTitle>
-                <CardDescription>
-                  Verwalten Sie globale Variablen für alle Verträge.
-                </CardDescription>
+                <h2 className="text-2xl font-semibold tracking-tight">Globale Variablen</h2>
+                <p className="text-muted-foreground">Verwalten Sie globale Variablen für alle Verträge.</p>
               </div>
-              <Button onClick={() => {
-                setSelectedGlobalVariable(null);
-                setGlobalVariableModalOpen(true);
-              }}>
+              <Button className="rounded-full" style={{ backgroundColor: '#9865f6', color: 'white' }} onClick={() => { setSelectedGlobalVariable(null); setGlobalVariableModalOpen(true); }}>
                 <Plus className="h-4 w-4 mr-2" />
                 Neue Variable
               </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
+            </div>
+            <div className="border rounded-lg">
                 {globalVariables.map((variable) => (
                   <div key={variable.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="space-y-1">
@@ -324,15 +316,15 @@ export default function Admin() {
                     </div>
                     <div className="flex gap-2">
                       <Button
-                        variant="outline"
-                        size="sm"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleEditGlobalVariable(variable)}
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm">
+                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
@@ -354,9 +346,8 @@ export default function Admin() {
                     </div>
                   </div>
                  ))}
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
         {/* Unified Template Editor */}

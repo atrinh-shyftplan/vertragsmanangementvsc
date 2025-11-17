@@ -40,7 +40,7 @@ export function PdfGenerationJobs() {
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const { toast } = useToast();
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   const fetchJobs = useCallback(async () => {
     if (!user) return;
@@ -206,12 +206,12 @@ export function PdfGenerationJobs() {
         <CollapsibleContent>
           <CardContent>
             <div className="flex flex-col sm:flex-row gap-2 mb-4">
-              <div className="relative flex-grow">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="PDF suchen..."
-                  className="pl-8 w-full"
+                  className="pl-10 w-full rounded-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -249,7 +249,7 @@ export function PdfGenerationJobs() {
             {filteredAndSortedJobs.length > 0 && (
               <ul className="space-y-3">
                 {filteredAndSortedJobs.map((job) => (
-                  <li key={job.id} className="flex items-center justify-between p-3 border rounded-md bg-card hover:bg-muted/50 transition-colors">
+                  <li key={job.id} className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-muted/50 transition-colors">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate" title={job.filename}>{job.filename}</p>
                       <p className="text-xs text-muted-foreground">
@@ -266,7 +266,7 @@ export function PdfGenerationJobs() {
                       {job.status === 'completed' && job.storage_path && (
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="secondary"
                           onClick={() => handleDownload(job)}
                           disabled={downloadingId === job.id}
                           aria-label="PDF herunterladen"
@@ -280,7 +280,7 @@ export function PdfGenerationJobs() {
                       )}
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive" aria-label="PDF löschen">
+                          <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive h-8 w-8" aria-label="PDF löschen">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>

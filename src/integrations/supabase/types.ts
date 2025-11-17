@@ -196,8 +196,7 @@ export type Database = {
         Insert: {
           category?: string | null
           content?: string | null
-          content_de: string
-          content_en?: string | null
+
           created_at?: string
           created_by?: string | null
           id?: string
