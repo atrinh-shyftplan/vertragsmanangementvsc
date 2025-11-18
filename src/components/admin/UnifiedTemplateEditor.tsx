@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, Loader2, Eye, BookOpen, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Loader2, Eye, GripVertical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminData } from '@/hooks/useAdminData';
@@ -13,6 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { Database, Attachment, ContractModule, CompositionWithModuleAndAttachment, ContractComposition } from '@/integrations/supabase/types';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -27,17 +28,17 @@ function SortableCompositionItem({ composition, onRemove }: { composition: Compo
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center justify-between p-3 border rounded-lg bg-white shadow-sm">
+    <TableRow ref={setNodeRef} style={style}>
       <div className="flex items-center space-x-3">
-        <Button variant="ghost" size="sm" {...attributes} {...listeners} className="cursor-grab">
+        <TableCell className="w-12">
+          <Button variant="ghost" size="icon" {...attributes} {...listeners} className="cursor-grab">
           <GripVertical className="h-5 w-5 text-muted-foreground" />
         </Button>
-        <span className="font-semibold text-slate-900">{composition.contract_modules?.name}</span>
+        </TableCell>
+        <TableCell className="font-medium">{composition.contract_modules?.name}</TableCell>
       </div>
-      <Button variant="outline" size="sm" onClick={() => onRemove(composition.id)}>
-        <Trash2 className="h-4 w-4 text-destructive" />
-      </Button>
-    </div>
+      <TableCell className="text-right w-20"><Button variant="ghost" size="icon" onClick={() => onRemove(composition.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
+    </TableRow>
   );
 }
 
@@ -310,17 +311,18 @@ export function UnifiedTemplateEditor() {
   };
 
   return (
-    <Card style={{ fontFamily: 'Inter, sans-serif', backgroundColor: 'white', border: 'none', borderRadius: 0 }}>
-      <CardHeader>
-        <CardTitle style={{ color: 'black' }}>Unified Template Editor</CardTitle>
-        <CardDescription>
+    <div className="space-y-6 pt-6">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <h2 className="text-2xl font-semibold tracking-tight">Template Editor</h2>
+          <p className="text-muted-foreground">
           Verwalten Sie die feste Struktur und die wählbaren Anhänge für einen Vertragstyp an einem Ort.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+          </p>
+        </div>
+      </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 items-end">
           <div className="space-y-2">
-            <Label style={{ color: 'black' }}>Vertragstyp auswählen</Label>
+            <Label>Vertragstyp auswählen</Label>
             <Select value={selectedContractTypeKey} onValueChange={setSelectedContractTypeKey}>
               <SelectTrigger><SelectValue placeholder="Vertragstyp wählen" /></SelectTrigger>
               <SelectContent>
@@ -334,7 +336,7 @@ export function UnifiedTemplateEditor() {
             <Button variant="outline" onClick={() => setIsPreviewOpen(true)} disabled={!selectedContractTypeKey}>
               <Eye className="h-4 w-4 mr-2" /> Vollständige Vorschau
             </Button>
-            <Button style={{ backgroundColor: '#8C5AF5', color: 'white' }} onClick={() => setAddModuleOpen(true)} disabled={!selectedContractTypeKey}>
+            <Button className="rounded-full" style={{ backgroundColor: '#9865f6', color: 'white' }} onClick={() => setAddModuleOpen(true)} disabled={!selectedContractTypeKey}>
               <Plus className="h-4 w-4 mr-2" /> Modul hinzufügen
             </Button>
           </div>
@@ -346,71 +348,69 @@ export function UnifiedTemplateEditor() {
           ) : compositions.length > 0 ? (
             <div className="space-y-8">
               {/* Section 1: Module Order */}
-              <div style={{ backgroundColor: '#F6F8FF', padding: '1rem', borderTop: '4px solid #77A0F6' }}>
-                <h3 className="text-lg font-semibold mb-4" style={{ color: 'black' }}>Reihenfolge aller Bausteine</h3>
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={compositions} strategy={verticalListSortingStrategy}>
-                    <div className="space-y-2">
-                      {compositions.map((composition) => (
-                        <SortableCompositionItem key={composition.id} composition={composition} onRemove={removeModuleFromComposition} />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Reihenfolge aller Bausteine</h3>
+                <div className="border rounded-lg">
+                  <Table>
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                      <SortableContext items={compositions} strategy={verticalListSortingStrategy}>
+                        <TableBody>
+                          {compositions.map((composition) => (
+                            <SortableCompositionItem key={composition.id} composition={composition} onRemove={removeModuleFromComposition} />
+                          ))}
+                        </TableBody>
+                      </SortableContext>
+                    </DndContext>
+                  </Table>
+                </div>
               </div>
 
               {/* Section 2: Attachment Configuration */}
-              <div style={{ backgroundColor: '#F6F8FF', padding: '1rem', borderTop: '4px solid #8C5AF5' }}>
-                <h3 className="text-lg font-semibold mb-4" style={{ color: 'black' }}>Konfiguration der wählbaren Anhänge</h3>
-                <div className="space-y-2">
-                  {attachmentConfigurations.map((composition, index) => {
-                    const colors = ['#77A0F6', '#8C5AF5', '#FF8EB7', '#367CC1'];
-                    const borderColor = colors[index % colors.length];
-                    return (
-                      <div 
-                        key={composition.id} 
-                        className="flex items-center justify-between p-3" 
-                        style={{ 
-                          backgroundColor: '#F6F8FF', 
-                          borderLeft: `4px solid ${borderColor}` 
-                        }}
-                      >
-                        <span className="font-medium" style={{ color: 'black' }}>{composition.contract_modules?.name}</span>
-                        <Select
-                          value={composition.attachments?.type || 'none'}
-                          onValueChange={(value) =>
-                            handleAttachmentTypeChange(
-                              composition.module_key,
-                              value as 'fest' | 'produkt' | 'zusatz' | 'none'
-                            )
-                          }
-                        >
-                          <SelectTrigger className="w-[240px] bg-white">
-                            <SelectValue placeholder="Anhang-Typ festlegen..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Kein Anhang (Standard)</SelectItem>
-                            <SelectItem value="fest">Fester Bestandteil</SelectItem>
-                            <SelectItem value="produkt">Produkt (wählbar)</SelectItem>
-                            <SelectItem value="zusatz">Zusatzleistung (optional)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    );
-                  })}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Konfiguration der wählbaren Anhänge</h3>
+                <div className="border rounded-lg">
+                  <Table>
+                    <TableBody>
+                      {attachmentConfigurations.map((composition) => (
+                        <TableRow key={composition.id}>
+                          <TableCell className="font-medium">{composition.contract_modules?.name}</TableCell>
+                          <TableCell className="text-right">
+                            <Select
+                              value={composition.attachments?.type || 'none'}
+                              onValueChange={(value) =>
+                                handleAttachmentTypeChange(
+                                  composition.module_key,
+                                  value as 'fest' | 'produkt' | 'zusatz' | 'none'
+                                )
+                              }
+                            >
+                              <SelectTrigger className="w-[240px]">
+                                <SelectValue placeholder="Anhang-Typ festlegen..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">Kein Anhang (Standard)</SelectItem>
+                                <SelectItem value="fest">Fester Bestandteil</SelectItem>
+                                <SelectItem value="produkt">Produkt (wählbar)</SelectItem>
+                                <SelectItem value="zusatz">Zusatzleistung (optional)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               </div>
             </div>
           ) : (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">Für diesen Vertragstyp wurden noch keine Module hinzugefügt.</p>
-              <Button style={{ backgroundColor: '#8C5AF5', color: 'white' }} onClick={() => setAddModuleOpen(true)}>
+              <Button className="rounded-full" style={{ backgroundColor: '#9865f6', color: 'white' }} onClick={() => setAddModuleOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" /> Modul hinzufügen
               </Button>
             </div>
           )
         )}
-      </CardContent>
 
       <Dialog open={isAddModuleOpen} onOpenChange={setAddModuleOpen}>
         <DialogContent className="sm:max-w-[600px]">
@@ -430,7 +430,7 @@ export function UnifiedTemplateEditor() {
           </ScrollArea>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddModuleOpen(false)}>Abbrechen</Button>
-            <Button style={{ backgroundColor: '#8C5AF5', color: 'white' }} onClick={() => handleAddModules(modulesToAdd)} disabled={modulesToAdd.length === 0}>Hinzufügen</Button>
+            <Button style={{ backgroundColor: '#9865f6', color: 'white' }} onClick={() => handleAddModules(modulesToAdd)} disabled={modulesToAdd.length === 0}>Hinzufügen</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -445,6 +445,6 @@ export function UnifiedTemplateEditor() {
           </ScrollArea>
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   );
 }

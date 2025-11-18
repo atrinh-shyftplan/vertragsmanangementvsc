@@ -156,15 +156,13 @@ export default function Users() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Benutzerverwaltung</h1>
-          <p className="text-muted-foreground">Verwalten Sie Benutzer und deren Rollen im System.</p>
-        </div>
+    <div className="container mx-auto py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Benutzerverwaltung</h1>
+        
         <AlertDialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
           <AlertDialogTrigger asChild>
-            <Button className="flex items-center gap-2 rounded-full" style={{ backgroundColor: '#9865f6', color: 'white' }}>
+            <Button className="flex items-center gap-2" style={{ backgroundColor: '#8C5AF5', color: 'white' }}>
               <UserPlus className="h-4 w-4" />
               Benutzer einladen
             </Button>
@@ -192,7 +190,7 @@ export default function Users() {
             </div>
             <AlertDialogFooter>
               <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-              <AlertDialogAction onClick={inviteUser} style={{ backgroundColor: '#9865f6', color: 'white' }}>
+              <AlertDialogAction onClick={inviteUser} style={{ backgroundColor: '#8C5AF5', color: 'white' }}>
                 Einladung senden
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -200,74 +198,82 @@ export default function Users() {
         </AlertDialog>
       </div>
 
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>E-Mail</TableHead>
-              <TableHead>Telefon</TableHead>
-              <TableHead>Rolle</TableHead>
-              <TableHead className="text-right w-[100px]">Aktionen</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {profiles.map((profile) => (
-              <TableRow key={profile.id}>
-                <TableCell className="font-medium">
-                  {profile.display_name || 'Nicht angegeben'}
-                </TableCell>
-                <TableCell className="text-muted-foreground">{profile.email || 'Nicht angegeben'}</TableCell>
-                <TableCell className="text-muted-foreground">{profile.phone_number || 'Nicht angegeben'}</TableCell>
-                <TableCell>
-                  <Select
-                    value={profile.role}
-                    onValueChange={(value: 'admin' | 'ae') => 
-                      updateUserRole(profile.user_id, value)
-                    }
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="ae">AE</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-                <TableCell className="text-right">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Benutzer wirklich löschen?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Diese Aktion kann nicht rückgängig gemacht werden. Der Benutzer und alle zugehörigen Daten werden dauerhaft gelöscht.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteUser(profile.user_id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Löschen</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </TableCell>
-              </TableRow>
-            ))}
-            {profiles.length === 0 && (
+      <Card>
+        <CardHeader>
+          <CardTitle>Alle Benutzer</CardTitle>
+          <CardDescription>
+            Verwalten Sie Benutzer und deren Rollen im System.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                  Keine Benutzer gefunden.
-                </TableCell>
+                <TableHead>Name</TableHead>
+                <TableHead>E-Mail</TableHead>
+                <TableHead>Telefon</TableHead>
+                <TableHead>Rolle</TableHead>
+                <TableHead className="text-right">Aktionen</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {profiles.map((profile) => (
+                <TableRow key={profile.id}>
+                  <TableCell>
+                    {profile.display_name || 'Nicht angegeben'}
+                  </TableCell>
+                  <TableCell>{profile.email || 'Nicht angegeben'}</TableCell>
+                  <TableCell>{profile.phone_number || 'Nicht angegeben'}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={profile.role}
+                      onValueChange={(value: 'admin' | 'ae') => 
+                        updateUserRole(profile.user_id, value)
+                      }
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="ae">AE</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Benutzer wirklich löschen?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Diese Aktion kann nicht rückgängig gemacht werden. Der Benutzer und alle zugehörigen Daten werden dauerhaft gelöscht.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteUser(profile.user_id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Löschen</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {profiles.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    Keine Benutzer gefunden.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

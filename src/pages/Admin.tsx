@@ -150,50 +150,47 @@ export default function Admin() {
             </div>
             <div className="border rounded-lg">
               <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Typ</TableHead>
+                    <TableHead className="text-right w-[120px]">Aktionen</TableHead>
+                  </TableRow>
+                </TableHeader>
                 <TableBody>
-              <div className="grid gap-4">
-                {contractTypes.map((type) => (
-                  <div key={type.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h3 className="font-medium">{type.name_de}</h3>
-                      <p className="text-sm text-muted-foreground">Key: {type.key}</p>
-                      {type.description && (
-                        <p className="text-sm text-muted-foreground mt-1">{type.description}</p>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditContractType(type)}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
+                  {contractTypes.map((type) => (
+                    <TableRow key={type.id}>
+                      <TableCell>
+                        <div className="font-medium">{type.name_de}</div>
+                        <div className="text-sm text-muted-foreground">Key: {type.key}</div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="ghost" size="icon" onClick={() => handleEditContractType(type)}>
+                            <Edit2 className="h-4 w-4" />
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Vertragstyp löschen</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Sind Sie sicher, dass Sie "{type.name_de}" löschen möchten?
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteContractType(type.id)}>
-                              Löschen
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Vertragstyp löschen</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Sind Sie sicher, dass Sie "{type.name_de}" löschen möchten?
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteContractType(type.id)}>Löschen</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </div>
@@ -215,6 +212,12 @@ export default function Admin() {
             </div>
             <div className="border rounded-lg">
               <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Modul</TableHead>
+                    <TableHead className="text-right w-[160px]">Aktionen</TableHead>
+                  </TableRow>
+                </TableHeader>
                 <TableBody>
                 {contractModules.map((module) => {
                   const category = contractCategories.find(cat => cat.key === module.category);
@@ -237,7 +240,7 @@ export default function Admin() {
                       </div>
                       </TableCell>
                       <TableCell className="text-right">
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 justify-end">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -298,54 +301,54 @@ export default function Admin() {
               </Button>
             </div>
             <div className="border rounded-lg">
-                {globalVariables.map((variable) => (
-                  <div key={variable.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium">{variable.name_de}</h3>
-                        {variable.is_required && <Badge variant="destructive">Erforderlich</Badge>}
-                        {!variable.is_active && <Badge variant="secondary">Inaktiv</Badge>}
-                      </div>
-                      <p className="text-sm text-muted-foreground">Key: {variable.key}</p>
-                      {variable.description && (
-                        <p className="text-sm text-muted-foreground">{variable.description}</p>
-                      )}
-                      {variable.default_value && (
-                        <p className="text-xs text-muted-foreground">Standard: {variable.default_value}</p>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditGlobalVariable(variable)}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Variable</TableHead>
+                    <TableHead className="text-right w-[120px]">Aktionen</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {globalVariables.map((variable) => (
+                    <TableRow key={variable.id}>
+                      <TableCell>
+                        <div className="font-medium">{variable.name_de}</div>
+                        <div className="text-sm text-muted-foreground">Key: {variable.key}</div>
+                        <div className="flex items-center gap-2 mt-1">
+                          {variable.is_required && <Badge variant="destructive">Erforderlich</Badge>}
+                          {!variable.is_active && <Badge variant="secondary">Inaktiv</Badge>}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="ghost" size="icon" onClick={() => handleEditGlobalVariable(variable)}>
+                            <Edit2 className="h-4 w-4" />
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Variable löschen</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Sind Sie sicher, dass Sie "{variable.name_de}" löschen möchten?
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteGlobalVariable(variable.id)}>
-                              Löschen
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                 ))}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Variable löschen</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Sind Sie sicher, dass Sie "{variable.name_de}" löschen möchten?
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteGlobalVariable(variable.id)}>Löschen</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </div>
         </TabsContent>
